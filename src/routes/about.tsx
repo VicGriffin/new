@@ -79,26 +79,17 @@ function About() {
     <PageShell>
       <section className="hero-mesh text-white relative overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28 grid lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-6">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
-              About AMTMTI
-            </span>
-            <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
-              An African institute, building African solutions for safer medication use.
-            </h1>
-            <p className="mt-6 text-lg text-white/80 max-w-2xl leading-relaxed">
-              AMTMTI was founded to close the medication therapy management gap in African health
-              systems — through accredited training, research, and a thriving community of practice.
-            </p>
-          </div>
-          <div className="lg:col-span-6">
-            <img
-              src="/images/leadership-team.png"
-              alt="Diverse African healthcare leaders and professionals"
-              className="rounded-2xl shadow-2xl w-full h-auto object-cover"
-            />
-          </div>
+        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28">
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
+            About AMTMTI
+          </span>
+          <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
+            An African institute, building African solutions for safer medication use.
+          </h1>
+          <p className="mt-6 text-lg text-white/80 max-w-2xl leading-relaxed">
+            AMTMTI was founded to close the medication therapy management gap in African health
+            systems — through accredited training, research, and a thriving community of practice.
+          </p>
         </div>
       </section>
 
@@ -184,23 +175,9 @@ function About() {
             A pan-African team of clinicians, academics, and operators.
           </p>
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {leaders.map((l, i) => (
-              <div key={l.n} className="rounded-2xl bg-card border border-border p-6 text-center overflow-hidden">
-                <div className="mx-auto size-32 rounded-full bg-gradient-to-br from-medical to-emerald-brand shadow-lg overflow-hidden">
-                  <img
-                    src={[
-                      "/images/leadership-wanjiru.png",
-                      "/images/leadership-samuel.png",
-                      "/images/leadership-fatima.png",
-                      "/images/leadership-brian.png",
-                    ][i]}
-                    alt={l.n}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                </div>
+            {leaders.map((l) => (
+              <div key={l.n} className="rounded-2xl bg-card border border-border p-6 text-center">
+                <div className="mx-auto size-20 rounded-full bg-gradient-to-br from-medical to-emerald-brand" />
                 <h3 className="mt-4 font-bold text-navy">{l.n}</h3>
                 <p className="text-xs font-semibold uppercase tracking-wider text-medical">{l.r}</p>
                 <p className="mt-2 text-sm text-foreground/70">{l.b}</p>

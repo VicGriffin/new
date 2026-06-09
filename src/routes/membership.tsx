@@ -78,26 +78,17 @@ function Membership() {
     <PageShell>
       <section className="hero-mesh text-white relative overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-24 grid lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-6">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
-              Affiliate Membership
-            </span>
-            <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
-              Join Africa's leading MTM community.
-            </h1>
-            <p className="mt-5 text-lg text-white/80 max-w-2xl">
-              Networking, recognition, research access, and training discounts — for individuals and
-              institutions advancing pharmaceutical care.
-            </p>
-          </div>
-          <div className="lg:col-span-6">
-            <img
-              src="/images/patient-care.png"
-              alt="AMTMTI membership community"
-              className="rounded-2xl shadow-2xl w-full h-auto object-cover"
-            />
-          </div>
+        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-24">
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
+            Affiliate Membership
+          </span>
+          <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
+            Join Africa's leading MTM community.
+          </h1>
+          <p className="mt-5 text-lg text-white/80 max-w-2xl">
+            Networking, recognition, research access, and training discounts — for individuals and
+            institutions advancing pharmaceutical care.
+          </p>
         </div>
       </section>
 
