@@ -256,6 +256,11 @@ function Home() {
 
           <div className="lg:col-span-5">
             <div className="relative">
+              <img
+                src="/images/hero-medical-professionals.png"
+                alt="Diverse African healthcare professionals collaborating"
+                className="rounded-2xl shadow-2xl w-full h-auto object-cover mb-6"
+              />
               <div className="glass rounded-2xl p-6 shadow-2xl">
                 <div className="flex items-center gap-3">
                   <div className="size-11 rounded-xl bg-emerald-brand/20 grid place-items-center">
@@ -326,15 +331,20 @@ function Home() {
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-5">
+            <img
+              src="/images/mtm-education.png"
+              alt="African students engaged in MTM education"
+              className="rounded-2xl shadow-xl w-full h-auto object-cover"
+            />
+          </div>
+          <div className="lg:col-span-7">
             <span className="text-xs font-bold uppercase tracking-[0.18em] text-medical">
               The Institute
             </span>
             <h2 className="mt-3 text-3xl lg:text-4xl font-bold text-navy leading-tight">
               A world-class home for medication therapy management in Africa
             </h2>
-          </div>
-          <div className="lg:col-span-7">
-            <p className="text-lg text-foreground/75 leading-relaxed">
+            <p className="mt-6 text-lg text-foreground/75 leading-relaxed">
               AMTMTI delivers world-class education and skills enhancement training in medication
               therapy management — including professional development courses, certificates,
               diplomas, and postgraduate diplomas — designed for pharmacists, clinicians, and the
@@ -461,18 +471,12 @@ function Home() {
                 Explore Research <ArrowRight className="size-4" />
               </Link>
             </div>
-            <div className="lg:col-span-6 grid sm:grid-cols-2 gap-3">
-              {research.map((r) => (
-                <div
-                  key={r.area}
-                  className={`relative aspect-[16/10] rounded-xl bg-gradient-to-br ${r.color} p-5 flex flex-col justify-end overflow-hidden`}
-                >
-                  <div className="absolute top-3 right-3 size-8 rounded-full bg-white/15 grid place-items-center">
-                    <Microscope className="size-4" />
-                  </div>
-                  <p className="font-bold">{r.area}</p>
-                </div>
-              ))}
+            <div className="lg:col-span-6">
+              <img
+                src="/images/research-laboratory.png"
+                alt="African researchers and scientists in a pharmaceutical research laboratory"
+                className="rounded-2xl shadow-2xl w-full h-auto object-cover"
+              />
             </div>
           </div>
         </div>
