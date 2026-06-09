@@ -46,7 +46,7 @@
   --card-foreground: oklch(0.18 0.04 250);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.04 250);
-  --primary: oklch(0.52 0.17 245);          /* medical blue */
+  --primary: oklch(0.52 0.17 245); /* medical blue */
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.96 0.012 245);
   --secondary-foreground: oklch(0.18 0.04 250);
@@ -60,12 +60,12 @@
   --input: oklch(0.91 0.01 245);
   --ring: oklch(0.52 0.17 245);
 
-  --navy: oklch(0.22 0.06 255);             /* deep navy */
+  --navy: oklch(0.22 0.06 255); /* deep navy */
   --navy-foreground: oklch(0.98 0 0);
-  --medical: oklch(0.55 0.17 245);          /* medical blue */
+  --medical: oklch(0.55 0.17 245); /* medical blue */
   --medical-foreground: oklch(1 0 0);
-  --emerald-brand: oklch(0.65 0.16 165);    /* emerald accent */
-  --soft: oklch(0.975 0.012 230);           /* soft gray-blue bg */
+  --emerald-brand: oklch(0.65 0.16 165); /* emerald accent */
+  --soft: oklch(0.975 0.012 230); /* soft gray-blue bg */
 }
 
 .dark {
@@ -91,14 +91,22 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
 }
 
 /* Hero gradient with subtle medical mesh */

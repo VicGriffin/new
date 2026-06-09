@@ -1,14 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/site/layout";
-import { Microscope, BookOpen, Users, Download, ArrowRight, FileText } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Microscope, BookOpen, Users, ArrowRight, FileText, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/research")({
   head: () => ({
     meta: [
       { title: "AMTMTI Research — Evidence for African Pharmaceutical Care" },
-      { name: "description", content: "Publications, research areas, and partnerships at the AMTMTI Research Division." },
+      {
+        name: "description",
+        content: "Publications, research areas, and partnerships at the AMTMTI Research Division.",
+      },
       { property: "og:title", content: "AMTMTI Research Division" },
-      { property: "og:description", content: "Advancing pharmaceutical care through African-led research." },
+      {
+        property: "og:description",
+        content: "Advancing pharmaceutical care through African-led research.",
+      },
       { property: "og:url", content: "/research" },
     ],
     links: [{ rel: "canonical", href: "/research" }],
@@ -17,39 +25,88 @@ export const Route = createFileRoute("/research")({
 });
 
 const areas = [
-  { t: "Medication Safety", d: "Adverse drug events, pharmacovigilance, and safety culture in African hospitals." },
-  { t: "Clinical Pharmacy", d: "Service delivery models, clinical pharmacy outcomes, and workforce development." },
-  { t: "Pharmaceutical Care", d: "Patient-centered care plans, MTM service evaluation, and quality indicators." },
-  { t: "Public Health", d: "Antimicrobial stewardship, vaccination uptake, and health systems strengthening." },
-  { t: "Medication Adherence", d: "Behavioral, digital, and community interventions to improve adherence." },
-];
-
-const publications = [
-  { y: "2026", t: "Implementing Pharmacist-Led MTM Services in Kenyan County Hospitals: A Mixed-Methods Evaluation", j: "African Journal of Pharmacy Practice" },
-  { y: "2025", t: "Polypharmacy and Deprescribing Opportunities in West African Elderly Outpatients", j: "BMC Geriatrics" },
-  { y: "2025", t: "Mobile-Health Adherence Tools for HIV Patients: A Pan-African Systematic Review", j: "PLOS Global Public Health" },
-  { y: "2024", t: "Pharmacovigilance Capacity Across SADC: A Cross-Sectional Study", j: "Drug Safety" },
+  {
+    t: "Medication Safety",
+    d: "Adverse drug events, pharmacovigilance, and safety culture in African hospitals.",
+  },
+  {
+    t: "Clinical Pharmacy",
+    d: "Service delivery models, clinical pharmacy outcomes, and workforce development.",
+  },
+  {
+    t: "Pharmaceutical Care",
+    d: "Patient-centered care plans, MTM service evaluation, and quality indicators.",
+  },
+  {
+    t: "Public Health",
+    d: "Antimicrobial stewardship, vaccination uptake, and health systems strengthening.",
+  },
+  {
+    t: "Medication Adherence",
+    d: "Behavioral, digital, and community interventions to improve adherence.",
+  },
 ];
 
 function Research() {
+  const { data: articles, isLoading } = useQuery({
+    queryKey: ["research-public"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("research_articles")
+        .select("*")
+        .eq("is_published", true)
+        .order("published_date", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const areasWithCount = areas.map((a) => ({
+    ...a,
+    count: articles?.filter((art) => art.area === a.t).length ?? 0,
+  }));
+
   return (
     <PageShell>
       <section className="hero-mesh text-white relative overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden/>
+        <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden />
         <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28 grid lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7">
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">Research Division</span>
-            <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight">African evidence. Global standards. Better medication therapy.</h1>
-            <p className="mt-6 text-lg text-white/80 max-w-2xl">AMTMTI Research advances pharmaceutical care through rigorous clinical, implementation, and health systems research — and translates findings into curriculum, policy, and practice.</p>
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
+              Research Division
+            </span>
+            <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight">
+              African evidence. Global standards. Better medication therapy.
+            </h1>
+            <p className="mt-6 text-lg text-white/80 max-w-2xl">
+              AMTMTI Research advances pharmaceutical care through rigorous clinical,
+              implementation, and health systems research — and translates findings into curriculum,
+              policy, and practice.
+            </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a href="#publications" className="inline-flex items-center gap-2 rounded-md bg-emerald-brand px-6 py-3 font-semibold text-navy">View publications <ArrowRight className="size-4"/></a>
-              <Link to="/contact" className="inline-flex items-center gap-2 rounded-md glass px-6 py-3 font-semibold text-white">Propose a collaboration</Link>
+              <a
+                href="#publications"
+                className="inline-flex items-center gap-2 rounded-md bg-emerald-brand px-6 py-3 font-semibold text-navy"
+              >
+                View publications <ArrowRight className="size-4" />
+              </a>
+              <Link
+                to="/contact"
+                className="inline-flex items-center gap-2 rounded-md glass px-6 py-3 font-semibold text-white"
+              >
+                Propose a collaboration
+              </Link>
             </div>
           </div>
           <div className="lg:col-span-5">
             <div className="grid grid-cols-2 gap-3">
-              {[["45","Publications"],["18","Active studies"],["12","Country partners"],["7","Funded grants"]].map(([n,l])=>(
-                <div key={l} className="glass rounded-2xl p-5">
+              {[
+                [articles?.length ?? 0, "Publications"],
+                ["18", "Active studies"],
+                ["12", "Country partners"],
+                ["7", "Funded grants"],
+              ].map(([n, l]) => (
+                <div key={l as string} className="glass rounded-2xl p-5">
                   <div className="text-3xl font-bold text-emerald-brand">{n}</div>
                   <div className="text-xs text-white/70 mt-1">{l}</div>
                 </div>
@@ -59,65 +116,125 @@ function Research() {
         </div>
       </section>
 
-      {/* Research areas */}
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-20">
-        <span className="text-xs font-bold uppercase tracking-[0.18em] text-medical">Research areas</span>
+        <span className="text-xs font-bold uppercase tracking-[0.18em] text-medical">
+          Research areas
+        </span>
         <h2 className="mt-3 text-3xl lg:text-4xl font-bold text-navy">Where we focus</h2>
         <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {areas.map(a=>(
-            <div key={a.t} className="rounded-2xl bg-card border border-border p-6 hover:border-medical/40 hover:shadow-lg transition">
-              <div className="size-11 rounded-lg bg-medical/10 text-medical grid place-items-center"><Microscope className="size-5"/></div>
+          {areasWithCount.map((a) => (
+            <div
+              key={a.t}
+              className="rounded-2xl bg-card border border-border p-6 hover:border-medical/40 hover:shadow-lg transition"
+            >
+              <div className="size-11 rounded-lg bg-medical/10 text-medical grid place-items-center">
+                <Microscope className="size-5" />
+              </div>
               <h3 className="mt-5 font-bold text-navy text-lg">{a.t}</h3>
               <p className="mt-2 text-sm text-foreground/70">{a.d}</p>
+              {a.count > 0 && (
+                <p className="mt-3 text-xs font-semibold text-medical">{a.count} publication(s)</p>
+              )}
             </div>
           ))}
         </div>
       </section>
 
-      {/* Publications */}
       <section id="publications" className="bg-soft border-y border-border">
         <div className="mx-auto max-w-7xl px-5 lg:px-8 py-20">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <span className="text-xs font-bold uppercase tracking-[0.18em] text-medical">Publications</span>
-              <h2 className="mt-3 text-3xl lg:text-4xl font-bold text-navy">Recent peer-reviewed work</h2>
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-medical">
+                Publications
+              </span>
+              <h2 className="mt-3 text-3xl lg:text-4xl font-bold text-navy">
+                Recent peer-reviewed work
+              </h2>
             </div>
-            <a href="#" className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-semibold text-navy hover:border-medical hover:text-medical"><Download className="size-4"/> Download full list</a>
           </div>
+          {isLoading && (
+            <p className="mt-10 text-center text-muted-foreground">Loading publications…</p>
+          )}
+          {!isLoading && !articles?.length && (
+            <p className="mt-10 rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+              Publications will appear here once published by our research team.
+            </p>
+          )}
           <div className="mt-10 space-y-3">
-            {publications.map(p=>(
-              <article key={p.t} className="flex gap-5 rounded-xl bg-card border border-border p-5 hover:border-medical/40 transition">
-                <div className="hidden sm:grid place-items-center w-16 h-16 rounded-lg bg-navy text-white font-bold">{p.y}</div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-navy leading-snug">{p.t}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{p.j}</p>
+            {articles?.map((p) => (
+              <article
+                key={p.id}
+                className="flex gap-5 rounded-xl bg-card border border-border p-5 hover:border-medical/40 transition"
+              >
+                <div className="hidden sm:grid place-items-center w-16 h-16 rounded-lg bg-navy text-white font-bold text-sm">
+                  {p.published_date ? new Date(p.published_date).getFullYear() : "—"}
                 </div>
-                <a href="#" className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-medical hover:underline self-center"><FileText className="size-4"/> PDF</a>
+                <div className="flex-1">
+                  <h3 className="font-bold text-navy leading-snug">{p.title}</h3>
+                  {p.area && <p className="mt-1 text-xs text-medical font-semibold">{p.area}</p>}
+                  {p.abstract && (
+                    <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.abstract}</p>
+                  )}
+                  {p.authors && <p className="mt-1 text-xs text-muted-foreground">{p.authors}</p>}
+                </div>
+                {p.url ? (
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-medical hover:underline self-center"
+                  >
+                    <ExternalLink className="size-4" /> View
+                  </a>
+                ) : (
+                  <span className="hidden md:inline-flex items-center gap-1.5 text-sm text-muted-foreground self-center">
+                    <FileText className="size-4" /> Abstract
+                  </span>
+                )}
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Partnerships + CTA */}
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-20 grid lg:grid-cols-2 gap-6">
         <div className="rounded-2xl bg-card border border-border p-8">
-          <div className="size-12 rounded-xl bg-emerald-brand/15 text-emerald-brand grid place-items-center"><Users className="size-5"/></div>
+          <div className="size-12 rounded-xl bg-emerald-brand/15 text-emerald-brand grid place-items-center">
+            <Users className="size-5" />
+          </div>
           <h3 className="mt-5 text-2xl font-bold text-navy">Research partnerships</h3>
-          <p className="mt-3 text-foreground/75">We collaborate with universities, ministries, and global health agencies across Africa to design, fund, and deliver impactful research.</p>
+          <p className="mt-3 text-foreground/75">
+            We collaborate with universities, ministries, and global health agencies across Africa
+            to design, fund, and deliver impactful research.
+          </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            {["UCT","Makerere","UI Ibadan","KEMRI","WHO AFRO","Africa CDC"].map(p=>(
-              <span key={p} className="rounded-full bg-soft border border-border px-3 py-1 text-xs font-semibold text-navy">{p}</span>
+            {["UCT", "Makerere", "UI Ibadan", "KEMRI", "WHO AFRO", "Africa CDC"].map((p) => (
+              <span
+                key={p}
+                className="rounded-full bg-soft border border-border px-3 py-1 text-xs font-semibold text-navy"
+              >
+                {p}
+              </span>
             ))}
           </div>
         </div>
         <div className="rounded-2xl bg-navy text-white p-8 relative overflow-hidden">
-          <div className="absolute inset-0 hero-mesh opacity-70" aria-hidden/>
+          <div className="absolute inset-0 hero-mesh opacity-70" aria-hidden />
           <div className="relative">
-            <div className="size-12 rounded-xl bg-emerald-brand/20 text-emerald-brand grid place-items-center"><BookOpen className="size-5"/></div>
+            <div className="size-12 rounded-xl bg-emerald-brand/20 text-emerald-brand grid place-items-center">
+              <BookOpen className="size-5" />
+            </div>
             <h3 className="mt-5 text-2xl font-bold">Call for collaboration</h3>
-            <p className="mt-3 text-white/75">Are you a researcher, health system, or funder working on medication safety, adherence, or pharmaceutical care? Let's build the next study together.</p>
-            <Link to="/contact" className="mt-6 inline-flex items-center gap-2 rounded-md bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-navy">Get in touch <ArrowRight className="size-4"/></Link>
+            <p className="mt-3 text-white/75">
+              Are you a researcher, health system, or funder working on medication safety,
+              adherence, or pharmaceutical care? Let's build the next study together.
+            </p>
+            <Link
+              to="/contact"
+              className="mt-6 inline-flex items-center gap-2 rounded-md bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-navy"
+            >
+              Get in touch <ArrowRight className="size-4" />
+            </Link>
           </div>
         </div>
       </section>

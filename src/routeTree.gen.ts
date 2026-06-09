@@ -11,12 +11,18 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResearchRouteImport } from './routes/research'
 import { Route as ProgramsRouteImport } from './routes/programs'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as MembershipRouteImport } from './routes/membership'
+import { Route as EventsRouteImport } from './routes/events'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProgramsSlugRouteImport } from './routes/programs.$slug'
+import { Route as NewsSlugRouteImport } from './routes/news.$slug'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
@@ -30,9 +36,24 @@ const ProgramsRoute = ProgramsRouteImport.update({
   path: '/programs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MembershipRoute = MembershipRouteImport.update({
   id: '/membership',
   path: '/membership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -59,6 +80,21 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProgramsSlugRoute = ProgramsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ProgramsRoute,
+} as any)
+const NewsSlugRoute = NewsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => NewsRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   id: '/portal',
   path: '/portal',
@@ -75,22 +111,34 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/events': typeof EventsRoute
   '/membership': typeof MembershipRoute
-  '/programs': typeof ProgramsRoute
+  '/news': typeof NewsRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/programs': typeof ProgramsRouteWithChildren
   '/research': typeof ResearchRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/news/$slug': typeof NewsSlugRoute
+  '/programs/$slug': typeof ProgramsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/events': typeof EventsRoute
   '/membership': typeof MembershipRoute
-  '/programs': typeof ProgramsRoute
+  '/news': typeof NewsRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/programs': typeof ProgramsRouteWithChildren
   '/research': typeof ResearchRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/news/$slug': typeof NewsSlugRoute
+  '/programs/$slug': typeof ProgramsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -99,11 +147,17 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/events': typeof EventsRoute
   '/membership': typeof MembershipRoute
-  '/programs': typeof ProgramsRoute
+  '/news': typeof NewsRouteWithChildren
+  '/privacy': typeof PrivacyRoute
+  '/programs': typeof ProgramsRouteWithChildren
   '/research': typeof ResearchRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/news/$slug': typeof NewsSlugRoute
+  '/programs/$slug': typeof ProgramsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -112,22 +166,34 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/events'
     | '/membership'
+    | '/news'
+    | '/privacy'
     | '/programs'
     | '/research'
     | '/admin'
     | '/portal'
+    | '/admin/login'
+    | '/news/$slug'
+    | '/programs/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/auth'
     | '/contact'
+    | '/events'
     | '/membership'
+    | '/news'
+    | '/privacy'
     | '/programs'
     | '/research'
     | '/admin'
     | '/portal'
+    | '/admin/login'
+    | '/news/$slug'
+    | '/programs/$slug'
   id:
     | '__root__'
     | '/'
@@ -135,11 +201,17 @@ export interface FileRouteTypes {
     | '/about'
     | '/auth'
     | '/contact'
+    | '/events'
     | '/membership'
+    | '/news'
+    | '/privacy'
     | '/programs'
     | '/research'
     | '/_authenticated/admin'
     | '/_authenticated/portal'
+    | '/admin/login'
+    | '/news/$slug'
+    | '/programs/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -148,9 +220,13 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  EventsRoute: typeof EventsRoute
   MembershipRoute: typeof MembershipRoute
-  ProgramsRoute: typeof ProgramsRoute
+  NewsRoute: typeof NewsRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
+  ProgramsRoute: typeof ProgramsRouteWithChildren
   ResearchRoute: typeof ResearchRoute
+  AdminLoginRoute: typeof AdminLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -169,11 +245,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProgramsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/membership': {
       id: '/membership'
       path: '/membership'
       fullPath: '/membership'
       preLoaderRoute: typeof MembershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -211,6 +308,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/programs/$slug': {
+      id: '/programs/$slug'
+      path: '/$slug'
+      fullPath: '/programs/$slug'
+      preLoaderRoute: typeof ProgramsSlugRouteImport
+      parentRoute: typeof ProgramsRoute
+    }
+    '/news/$slug': {
+      id: '/news/$slug'
+      path: '/$slug'
+      fullPath: '/news/$slug'
+      preLoaderRoute: typeof NewsSlugRouteImport
+      parentRoute: typeof NewsRoute
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/portal': {
       id: '/_authenticated/portal'
       path: '/portal'
@@ -241,16 +359,52 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface NewsRouteChildren {
+  NewsSlugRoute: typeof NewsSlugRoute
+}
+
+const NewsRouteChildren: NewsRouteChildren = {
+  NewsSlugRoute: NewsSlugRoute,
+}
+
+const NewsRouteWithChildren = NewsRoute._addFileChildren(NewsRouteChildren)
+
+interface ProgramsRouteChildren {
+  ProgramsSlugRoute: typeof ProgramsSlugRoute
+}
+
+const ProgramsRouteChildren: ProgramsRouteChildren = {
+  ProgramsSlugRoute: ProgramsSlugRoute,
+}
+
+const ProgramsRouteWithChildren = ProgramsRoute._addFileChildren(
+  ProgramsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  EventsRoute: EventsRoute,
   MembershipRoute: MembershipRoute,
-  ProgramsRoute: ProgramsRoute,
+  NewsRoute: NewsRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
+  ProgramsRoute: ProgramsRouteWithChildren,
   ResearchRoute: ResearchRoute,
+  AdminLoginRoute: AdminLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

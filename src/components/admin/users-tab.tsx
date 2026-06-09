@@ -1,0 +1,206 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { adminCreateUser, adminDeleteUser, adminSetUserRoles } from "@/lib/api/admin.functions";
+import { ALL_ROLES, type AppRole } from "@/lib/auth/roles";
+import { toast } from "sonner";
+import { inp, EmptyState } from "./shared";
+
+export function UsersTab() {
+  const qc = useQueryClient();
+  const [createForm, setCreateForm] = useState({
+    email: "",
+    password: "",
+    full_name: "",
+    role: "student" as AppRole,
+  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editRoles, setEditRoles] = useState<AppRole[]>([]);
+
+  const { data: users, isLoading } = useQuery({
+    queryKey: ["adm-users"],
+    queryFn: async () => {
+      const [profiles, roles] = await Promise.all([
+        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("user_id, role"),
+      ]);
+      if (profiles.error) throw profiles.error;
+      if (roles.error) throw roles.error;
+      const roleMap = new Map<string, AppRole[]>();
+      roles.data?.forEach((r) => {
+        const list = roleMap.get(r.user_id) ?? [];
+        list.push(r.role as AppRole);
+        roleMap.set(r.user_id, list);
+      });
+      return (profiles.data ?? []).map((p) => ({
+        ...p,
+        roles: roleMap.get(p.id) ?? [],
+      }));
+    },
+  });
+
+  const create = useMutation({
+    mutationFn: async () => adminCreateUser({ data: createForm }),
+    onSuccess: () => {
+      toast.success("User created");
+      setCreateForm({ email: "", password: "", full_name: "", role: "student" });
+      qc.invalidateQueries({ queryKey: ["adm-users"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const saveRoles = useMutation({
+    mutationFn: async ({ userId, roles }: { userId: string; roles: AppRole[] }) =>
+      adminSetUserRoles({ data: { userId, roles } }),
+    onSuccess: () => {
+      toast.success("Roles updated");
+      setEditingId(null);
+      qc.invalidateQueries({ queryKey: ["adm-users"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const del = useMutation({
+    mutationFn: async (userId: string) => adminDeleteUser({ data: { userId } }),
+    onSuccess: () => {
+      toast.success("User deleted");
+      qc.invalidateQueries({ queryKey: ["adm-users"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function toggleRole(role: AppRole) {
+    setEditRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
+    );
+  }
+
+  return (
+    <div className="grid lg:grid-cols-3 gap-6">
+      <form
+        className="rounded-xl border border-border bg-card p-5 space-y-3 h-fit"
+        onSubmit={(e) => {
+          e.preventDefault();
+          create.mutate();
+        }}
+      >
+        <h3 className="font-bold text-navy">Create user</h3>
+        <input
+          required
+          type="email"
+          placeholder="Email"
+          value={createForm.email}
+          onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+          className={inp}
+        />
+        <input
+          required
+          type="password"
+          placeholder="Password (min 8)"
+          minLength={8}
+          value={createForm.password}
+          onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+          className={inp}
+        />
+        <input
+          required
+          placeholder="Full name"
+          value={createForm.full_name}
+          onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
+          className={inp}
+        />
+        <select
+          value={createForm.role}
+          onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as AppRole })}
+          className={inp}
+        >
+          {ALL_ROLES.map((r) => (
+            <option key={r} value={r}>
+              {r}
+            </option>
+          ))}
+        </select>
+        <button
+          type="submit"
+          disabled={create.isPending}
+          className="w-full rounded-md bg-medical text-white py-2.5 text-sm font-semibold"
+        >
+          Create user
+        </button>
+      </form>
+
+      <div className="lg:col-span-2 space-y-3">
+        {isLoading && <EmptyState message="Loading users…" />}
+        {users?.map((u) => (
+          <div key={u.id} className="rounded-lg border border-border bg-card p-4">
+            <div className="flex flex-wrap justify-between gap-3">
+              <div>
+                <div className="font-semibold text-navy">{u.full_name ?? "—"}</div>
+                <div className="text-xs text-muted-foreground">
+                  {u.profession ?? "—"} · {u.country ?? "—"} ·{" "}
+                  {new Date(u.created_at).toLocaleDateString()}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {u.roles.map((r) => (
+                    <span
+                      key={r}
+                      className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-medical/10 text-medical"
+                    >
+                      {r}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingId(u.id);
+                    setEditRoles(u.roles);
+                  }}
+                  className="text-xs px-2 py-1 rounded border border-border hover:bg-muted"
+                >
+                  Roles
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!confirm("Delete this user permanently?")) return;
+                    del.mutate(u.id);
+                  }}
+                  className="text-xs px-2 py-1 rounded border border-destructive/30 text-destructive hover:bg-destructive/10"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+            {editingId === u.id && (
+              <div className="mt-4 pt-4 border-t border-border space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {ALL_ROLES.map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => toggleRole(r)}
+                      className={`text-xs px-2 py-1 rounded border ${editRoles.includes(r) ? "bg-medical text-white border-medical" : "border-border"}`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => saveRoles.mutate({ userId: u.id, roles: editRoles })}
+                  className="text-xs px-3 py-1.5 rounded bg-medical text-white font-semibold"
+                >
+                  Save roles
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+        {!isLoading && !users?.length && <EmptyState message="No users found." />}
+      </div>
+    </div>
+  );
+}

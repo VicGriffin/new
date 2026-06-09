@@ -79,7 +79,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "AMTMTI — Africa Medication Therapy Management Training Institute" },
-      { name: "description", content: "Accredited education, professional development, certification, and research in medication therapy management across Africa." },
+      {
+        name: "description",
+        content:
+          "Accredited education, professional development, certification, and research in medication therapy management across Africa.",
+      },
       { name: "author", content: "AMTMTI" },
       { property: "og:site_name", content: "AMTMTI" },
       { property: "og:type", content: "website" },
@@ -89,7 +93,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap",
+      },
     ],
   }),
 
@@ -127,7 +134,9 @@ function RootComponent() {
       });
       return () => sub.subscription.unsubscribe();
     });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [router, queryClient]);
 
   return (
