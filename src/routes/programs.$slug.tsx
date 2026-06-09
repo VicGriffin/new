@@ -98,11 +98,6 @@ function ProgramDetail() {
       </section>
 
       <section className="mx-auto max-w-4xl px-5 lg:px-8 py-16">
-        <img
-          src="/images/clinical-pharmacy.png"
-          alt={program.title}
-          className="rounded-2xl shadow-xl w-full h-auto object-cover mb-10"
-        />
         {program.description && (
           <div className="prose prose-neutral max-w-none">
             <h2 className="text-xl font-bold text-navy">About this program</h2>
