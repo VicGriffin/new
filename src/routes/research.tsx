@@ -99,19 +99,11 @@ function Research() {
             </div>
           </div>
           <div className="lg:col-span-5">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                [articles?.length ?? 0, "Publications"],
-                ["18", "Active studies"],
-                ["12", "Country partners"],
-                ["7", "Funded grants"],
-              ].map(([n, l]) => (
-                <div key={l as string} className="glass rounded-2xl p-5">
-                  <div className="text-3xl font-bold text-emerald-brand">{n}</div>
-                  <div className="text-xs text-white/70 mt-1">{l}</div>
-                </div>
-              ))}
-            </div>
+            <img
+              src="/images/research-laboratory.png"
+              alt="African researchers and scientists in a pharmaceutical research laboratory"
+              className="rounded-2xl shadow-2xl w-full h-auto object-cover"
+            />
           </div>
         </div>
       </section>
