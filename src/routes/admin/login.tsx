@@ -14,7 +14,7 @@ export const Route = createFileRoute("/admin/login")({
 
 function AdminLogin() {
   const nav = useNavigate();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("admin@amtmti.org");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,11 +31,23 @@ function AdminLogin() {
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      if (!data.user || !(await isAdmin(data.user.id))) {
-        await supabase.auth.signOut();
-        throw new Error("This account does not have admin access.");
+      if (error) {
+        if (error.message.toLowerCase().includes("invalid login")) {
+          throw new Error(
+            "Admin account not provisioned yet. Add SUPABASE_DB_PASSWORD or SUPABASE_SERVICE_ROLE_KEY to .env, then run: npm run setup:admin",
+          );
+        }
+        throw error;
       }
+      if (!data.user) throw new Error("Sign in failed");
+
+      if (!(await isAdmin(data.user.id))) {
+        await supabase.auth.signOut();
+        throw new Error(
+          "This account does not have admin access. Run npm run setup:admin to provision the admin role.",
+        );
+      }
+
       toast.success("Welcome back, Administrator");
       nav({ to: "/admin", replace: true });
     } catch (err: unknown) {
@@ -97,9 +109,6 @@ function AdminLogin() {
         </form>
 
         <div className="mt-6 flex flex-col gap-2 text-center text-xs text-muted-foreground">
-          <Link to="/auth" className="hover:text-medical">
-            Forgot password? Reset via account portal
-          </Link>
           <Link to="/" className="hover:text-medical">
             ← Back to public site
           </Link>

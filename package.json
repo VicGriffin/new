@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "seed:admin": "node --env-file=.env scripts/seed-admin.mjs"
+    "seed:admin": "node --env-file=.env scripts/seed-admin.mjs",
+    "setup:admin": "node --env-file=.env scripts/setup-admin.mjs",
+    "predev": "node --env-file=.env scripts/setup-admin.mjs --soft"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -83,6 +85,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "nitro": "3.0.260603-beta",
+    "pg": "^8.21.0",
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
