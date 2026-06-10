@@ -1,6 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/site/layout";
 import {
   ArrowRight,
@@ -188,33 +186,11 @@ const fallbackPartners = [
 ];
 
 function Home() {
-  const { data: dbTestimonials } = useQuery({
-    queryKey: ["home-testimonials"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("testimonials")
-        .select("quote, author_name, author_role")
-        .eq("is_published", true)
-        .order("sort_order");
-      return data ?? [];
-    },
-  });
-  const { data: dbPartners } = useQuery({
-    queryKey: ["home-partners"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("partners")
-        .select("name, website")
-        .eq("is_published", true)
-        .order("sort_order");
-      return data ?? [];
-    },
-  });
+  const dbTestimonials = undefined;
+  const dbPartners = undefined;
 
-  const testimonials = dbTestimonials?.length
-    ? dbTestimonials.map((t) => ({ q: t.quote, n: t.author_name, r: t.author_role ?? "" }))
-    : fallbackTestimonials;
-  const partners = dbPartners?.length ? dbPartners : fallbackPartners.map((name) => ({ name }));
+  const testimonials = fallbackTestimonials;
+  const partners = fallbackPartners.map((name) => ({ name }));
 
   return (
     <PageShell>

@@ -9,7 +9,6 @@ const nav = [
   { label: "Programs", to: "/programs" },
   { label: "Research", to: "/research" },
   { label: "News", to: "/news" },
-  { label: "Membership", to: "/membership" },
   { label: "E-Learning", to: "/portal" },
   { label: "Contact", to: "/contact" },
 ] as const;
@@ -49,22 +48,22 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/85 backdrop-blur-xl">
-      <div className="absolute left-4 lg:left-8 top-3 z-50">
-        <Logo />
-      </div>
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 lg:px-8 h-18 py-3 lg:pl-[440px]">
-        <nav className="hidden lg:flex items-center gap-1">
-          {nav.map((n) => (
-            <Link
-              key={n.to}
-              to={n.to}
-              className="px-3.5 py-2 text-sm font-medium text-foreground/80 rounded-md hover:text-medical hover:bg-soft transition"
-              activeProps={{ className: "text-medical bg-soft" }}
-            >
-              {n.label}
-            </Link>
-          ))}
-        </nav>
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 lg:px-8 h-18 py-3">
+        <div className="hidden lg:flex items-center gap-6">
+          <Logo />
+          <nav className="hidden lg:flex items-center gap-1">
+            {nav.map((n) => (
+              <Link
+                key={n.to}
+                to={n.to}
+                className="px-3.5 py-2 text-sm font-medium text-foreground/80 rounded-md hover:text-medical hover:bg-soft transition"
+                activeProps={{ className: "text-medical bg-soft" }}
+              >
+                {n.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
         <div className="hidden lg:flex items-center gap-2">
           <Link
             to={adminTo}
@@ -85,14 +84,14 @@ export function Header() {
               to="/auth"
               className="text-sm font-medium text-foreground/80 hover:text-medical px-3 py-2"
             >
-              Sign In
+              Join Now
             </Link>
           )}
           <Link
             to="/membership"
             className="inline-flex items-center gap-1.5 rounded-md bg-medical px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-medical/90 transition"
           >
-            Apply Now
+            Apply for Membership
           </Link>
         </div>
         <button
@@ -138,7 +137,7 @@ export function Header() {
                 onClick={() => setOpen(false)}
                 className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft"
               >
-                Sign In
+                Join Now
               </Link>
             )}
             <Link
@@ -146,7 +145,7 @@ export function Header() {
               onClick={() => setOpen(false)}
               className="mt-2 rounded-md bg-medical px-4 py-3 text-sm font-semibold text-white text-center"
             >
-              Apply Now
+              Apply for Membership
             </Link>
           </div>
         </div>

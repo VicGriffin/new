@@ -10,8 +10,25 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_REF = process.env.SUPABASE_PROJECT_ID || process.env.VITE_SUPABASE_PROJECT_ID || "ocmdizojulrfpnvgdile";
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const PROJECT_REF =
+  process.env.SUPABASE_PROJECT_ID ||
+  process.env.VITE_SUPABASE_PROJECT_ID ||
+  deriveProjectRefFromUrl(SUPABASE_URL) ||
+  "ocmdizojulrfpnvgdile";
 const DB_PASSWORD = process.env.SUPABASE_DB_PASSWORD;
+
+function deriveProjectRefFromUrl(url) {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.host;
+    const match = host.match(/^([^.]+)\.supabase\.co$/);
+    return match?.[1];
+  } catch {
+    return undefined;
+  }
+}
 
 if (!DB_PASSWORD) {
   console.error(
