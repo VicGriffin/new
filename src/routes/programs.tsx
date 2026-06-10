@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/site/layout";
+import { imageUrl } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
 import {
@@ -87,26 +88,37 @@ function Programs() {
     <PageShell>
       <section className="hero-mesh text-white relative overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-24">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
-            Programs
-          </span>
-          <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
-            Accredited MTM pathways for every healthcare profession.
-          </h1>
-          <p className="mt-5 text-lg text-white/80 max-w-2xl">
-            Choose certificate, diploma, postgraduate, or CPD tracks — built for working
-            professionals across Africa.
-          </p>
+        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-24 grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-7">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
+              Programs
+            </span>
+            <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
+              Accredited MTM pathways for every healthcare profession.
+            </h1>
+            <p className="mt-5 text-lg text-white/80 max-w-2xl">
+              Choose certificate, diploma, postgraduate, or CPD tracks — built for working
+              professionals across Africa.
+            </p>
 
-          <div className="mt-8 max-w-2xl relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-white/60" />
-            <input
-              placeholder="Search programs by profession, level, or topic…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-full bg-white/10 backdrop-blur border border-white/20 py-3.5 pl-11 pr-4 text-sm placeholder:text-white/60 outline-none focus:ring-2 focus:ring-emerald-brand"
-            />
+            <div className="mt-8 max-w-2xl relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-white/60" />
+              <input
+                placeholder="Search programs by profession, level, or topic…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full rounded-full bg-white/10 backdrop-blur border border-white/20 py-3.5 pl-11 pr-4 text-sm placeholder:text-white/60 outline-none focus:ring-2 focus:ring-emerald-brand"
+              />
+            </div>
+          </div>
+          <div className="hidden lg:block lg:col-span-5">
+            <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+              <img
+                src={imageUrl("clinical_pharmacy.png")}
+                alt="Clinical pharmacy training"
+                className="w-full h-full min-h-[420px] object-cover"
+              />
+            </div>
           </div>
         </div>
       </section>

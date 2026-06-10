@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/site/layout";
+import { imageUrl } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Microscope, BookOpen, Users, ArrowRight, FileText, ExternalLink } from "lucide-react";
 
@@ -69,6 +70,14 @@ function Research() {
   return (
     <PageShell>
       <section className="hero-mesh text-white relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src={imageUrl("medical_adherence.png")}
+            alt="Medication adherence research"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/85 via-navy/20 to-navy/95" aria-hidden />
+        </div>
         <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden />
         <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28 grid lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7">
@@ -98,7 +107,14 @@ function Research() {
               </Link>
             </div>
           </div>
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 space-y-5">
+            <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+              <img
+                src={imageUrl("Pharmaceutical_care.png")}
+                alt="Pharmaceutical care research"
+                className="w-full h-full min-h-[420px] object-cover"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               {[
                 [articles?.length ?? 0, "Publications"],

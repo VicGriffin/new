@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/site/layout";
+import { imageUrl } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, Newspaper } from "lucide-react";
 
@@ -38,17 +39,36 @@ function NewsList() {
   return (
     <PageShell>
       <section className="hero-mesh text-white relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src={imageUrl("news_hero.png")}
+            alt="AMTMTI news and events"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/85 via-navy/25 to-navy/95" aria-hidden />
+        </div>
         <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-24">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
-            News
-          </span>
-          <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
-            Updates from AMTMTI
-          </h1>
-          <p className="mt-5 text-lg text-white/80 max-w-2xl">
-            Program launches, research highlights, partnerships, and institute announcements.
-          </p>
+        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-24 grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-7">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
+              News
+            </span>
+            <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
+              Updates from AMTMTI
+            </h1>
+            <p className="mt-5 text-lg text-white/80 max-w-2xl">
+              Program launches, research highlights, partnerships, and institute announcements.
+            </p>
+          </div>
+          <div className="hidden lg:block lg:col-span-5">
+            <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+              <img
+                src={imageUrl("news_hero1.png")}
+                alt="Institutional event imagery"
+                className="w-full h-full min-h-[420px] object-cover"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

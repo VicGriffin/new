@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/site/layout";
+import { imageUrl } from "@/lib/utils";
 import { GraduationCap, Stethoscope, Building2, Briefcase, Check, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -77,18 +78,37 @@ function Membership() {
   return (
     <PageShell>
       <section className="hero-mesh text-white relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src={imageUrl("membership_hero.png")}
+            alt="AMTMTI membership community"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/85 via-navy/20 to-navy/95" aria-hidden />
+        </div>
         <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-24">
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
-            Affiliate Membership
-          </span>
-          <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
-            Join Africa's leading MTM community.
-          </h1>
-          <p className="mt-5 text-lg text-white/80 max-w-2xl">
-            Networking, recognition, research access, and training discounts — for individuals and
-            institutions advancing pharmaceutical care.
-          </p>
+        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-24 grid lg:grid-cols-12 gap-10 items-center">
+          <div className="lg:col-span-7">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
+              Affiliate Membership
+            </span>
+            <h1 className="mt-4 text-4xl lg:text-6xl font-bold leading-tight max-w-3xl">
+              Join Africa's leading MTM community.
+            </h1>
+            <p className="mt-5 text-lg text-white/80 max-w-2xl">
+              Networking, recognition, research access, and training discounts — for individuals and
+              institutions advancing pharmaceutical care.
+            </p>
+          </div>
+          <div className="hidden lg:block lg:col-span-5">
+            <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+              <img
+                src={imageUrl("hero-medical-professionals.png")}
+                alt="Membership community"
+                className="w-full h-full min-h-[420px] object-cover"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

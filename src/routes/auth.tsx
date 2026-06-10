@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { PageShell } from "@/components/site/layout";
+import { imageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -81,7 +82,15 @@ function AuthPage() {
   return (
     <PageShell>
       <section className="min-h-[80vh] grid lg:grid-cols-2">
-        <div className="hero-mesh text-white relative hidden lg:flex flex-col justify-between p-12">
+        <div className="hero-mesh text-white relative hidden lg:flex flex-col justify-between p-12 overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src={imageUrl("login_signup_hero1.jfif")}
+              alt="AMTMTI portal sign in"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-navy/80" aria-hidden />
+          </div>
           <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden />
           <div className="relative">
             <div className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-brand">

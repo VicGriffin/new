@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/site/layout";
+import { imageUrl } from "@/lib/utils";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +54,14 @@ function Contact() {
   return (
     <PageShell>
       <section className="hero-mesh text-white relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src={imageUrl("contact_hero.jfif")}
+            alt="Contact AMTMTI"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/85 via-navy/15 to-navy/95" aria-hidden />
+        </div>
         <div className="absolute inset-0 grid-pattern opacity-25" aria-hidden />
         <div className="relative mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-24">
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">

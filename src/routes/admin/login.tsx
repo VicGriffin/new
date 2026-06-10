@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { imageUrl } from "@/lib/utils";
 import { isAdmin } from "@/lib/auth/roles";
 import { ShieldCheck, LogIn } from "lucide-react";
 import { toast } from "sonner";
@@ -58,7 +59,15 @@ function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-navy flex items-center justify-center p-6">
+    <div className="min-h-screen bg-navy flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute inset-0">
+        <img
+          src={imageUrl("admin_background.png")}
+          alt="Admin access"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-navy/80" aria-hidden />
+      </div>
       <div className="absolute inset-0 hero-mesh opacity-60" aria-hidden />
       <div className="relative w-full max-w-md rounded-2xl bg-card border border-border shadow-2xl p-8">
         <div className="flex items-center gap-3 mb-6">

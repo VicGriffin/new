@@ -103,45 +103,59 @@ const programs = [
     t: "MTM for Pharmacists",
     d: "Advance clinical decision-making, pharmaceutical care plans, and patient counselling.",
     tag: "Flagship",
+    img: "MTM_for_Pharmacists.png",
   },
   {
     icon: FlaskConical,
     t: "MTM for Pharmaceutical Technologists",
     d: "Strengthen dispensing, screening, and therapy review competencies.",
     tag: "Diploma",
+    img: "MTM_for_Pharmaceutical Technologists.png",
   },
   {
     icon: Activity,
     t: "MTM for Pharmaceutical Technicians",
     d: "Build core MTM skills for community and institutional practice.",
     tag: "Certificate",
+    img: "MTM_for_Pharmaceutical Technicians.jpg",
   },
   {
     icon: Stethoscope,
     t: "MTM for Clinicians",
     d: "Integrate medication review into multidisciplinary clinical care.",
     tag: "CPD",
+    img: "MTM_for_Clinicians.png",
   },
   {
     icon: HeartPulse,
     t: "MTM for Physicians",
     d: "Optimize prescribing, deprescribing, and chronic disease management.",
     tag: "CPD",
+    img: "MTM_for_Physicians.png",
   },
   {
     icon: Users,
     t: "MTM for Nurses",
     d: "Lead medication reconciliation, adherence support, and patient education.",
     tag: "CPD",
+    img: "MTM_for_Nurses.png",
   },
 ];
 
+// helper to safely reference files in public/images
+const imageUrl = (name: string) => `/images/${encodeURIComponent(name)}`;
+
+
 const research = [
-  { area: "Medication Safety", color: "from-blue-700 to-blue-500" },
-  { area: "Clinical Pharmacy", color: "from-emerald-700 to-emerald-500" },
-  { area: "Pharmaceutical Care", color: "from-cyan-700 to-sky-500" },
-  { area: "Public Health", color: "from-teal-700 to-emerald-500" },
-  { area: "Medication Adherence", color: "from-indigo-700 to-blue-500" },
+  {
+    area: "Medication Safety",
+    color: "from-blue-700 to-blue-500",
+    img: "medication_safety.png",
+  },
+  { area: "Clinical Pharmacy", color: "from-emerald-700 to-emerald-500", img: "clinical_pharmacy.png" },
+  { area: "Pharmaceutical Care", color: "from-cyan-700 to-sky-500", img: "Pharmaceutical_care.png" },
+  { area: "Public Health", color: "from-teal-700 to-emerald-500", img: "Public_health.png" },
+  { area: "Medication Adherence", color: "from-indigo-700 to-blue-500", img: "medical_adherence.png" },
 ];
 
 const fallbackTestimonials = [
@@ -206,118 +220,134 @@ function Home() {
     <PageShell>
       {/* HERO */}
       <section className="relative hero-mesh text-white overflow-hidden">
+        {/* background image */}
+        <div className="absolute inset-0 -z-10">
+          <img
+            src={imageUrl("hero-medical-professionals.png")}
+            alt="Healthcare professionals"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/50" aria-hidden />
+        </div>
         <div className="absolute inset-0 grid-pattern opacity-30" aria-hidden />
-        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 pt-20 pb-28 lg:pt-28 lg:pb-36 grid lg:grid-cols-12 gap-10 items-center">
-          <div className="lg:col-span-7">
-            {/* <span className="inline-flex items-center gap-2 rounded-full glass px-3.5 py-1.5 text-xs font-medium">
-              <Sparkles className="size-3.5 text-emerald-brand" /> Now enrolling — 2026 Cohort
-            </span> */}
-            <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.08] tracking-tight">
-              AFRICA MTM <span className="text-emerald-brand" > TRAINING </span> INSTITUTE{" "} <br />
-              <span className="text-emerald-brand">Africa</span>
-            </h1>
-            <p className="mt-6 text-lg text-white/80 max-w-2xl leading-relaxed">
-              World-class education, professional development, certification, research, and
-              innovation in medication therapy management — built by African experts, for African
-              healthcare systems.
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Link
-                to="/programs"
-                className="inline-flex items-center gap-2 rounded-md bg-emerald-brand px-6 py-3.5 font-semibold text-navy hover:opacity-90 transition shadow-lg shadow-emerald-brand/20"
-              >
-                Explore Programs <ArrowRight className="size-4" />
-              </Link>
-              <Link
-                to="/programs"
-                className="inline-flex items-center gap-2 rounded-md bg-white px-6 py-3.5 font-semibold text-navy hover:bg-white/90 transition"
-              >
-                Apply Now
-              </Link>
-              <Link
-                to="/membership"
-                className="inline-flex items-center gap-2 rounded-md glass px-6 py-3.5 font-semibold text-white hover:bg-white/15 transition"
-              >
-                Become a Partner
-              </Link>
-            </div>
-            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-xs text-white/60">
-              <span className="inline-flex items-center gap-2">
-                <ShieldCheck className="size-4 text-emerald-brand" /> Accredited curriculum
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Globe2 className="size-4 text-emerald-brand" /> Pan-African faculty
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <GraduationCap className="size-4 text-emerald-brand" /> Recognized credentials
-              </span>
-            </div>
+        <div className="relative mx-auto max-w-7xl px-5 lg:px-8 pt-24 pb-28 lg:pt-28 lg:pb-36">
+          <div className="pointer-events-none absolute right-0 bottom-0 hidden lg:block opacity-40">
+            <img
+              src={imageUrl("membership_hero.png")}
+              alt="Membership highlight"
+              className="h-[420px] w-[420px] object-cover rounded-[2rem] border border-white/10 shadow-2xl"
+            />
           </div>
+          <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+            <div className="lg:col-span-7">
+              <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.04] tracking-tight">
+                Africa's leading Medication Therapy Management institute for healthcare professionals.
+              </h1>
+              <p className="mt-6 text-lg text-white/80 max-w-2xl leading-relaxed">
+                Practical, accredited MTM education designed for pharmacists, clinicians, and allied
+                health teams across the continent.
+              </p>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Link
+                  to="/programs"
+                  className="inline-flex items-center gap-2 rounded-md bg-emerald-brand px-6 py-3.5 font-semibold text-navy hover:opacity-90 transition shadow-lg shadow-emerald-brand/20"
+                >
+                  Explore Programs <ArrowRight className="size-4" />
+                </Link>
+                <Link
+                  to="/membership"
+                  className="inline-flex items-center gap-2 rounded-md bg-white px-6 py-3.5 font-semibold text-navy hover:bg-white/90 transition"
+                >
+                  Join Membership
+                </Link>
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-6 py-3.5 font-semibold text-white hover:bg-white/15 transition"
+                >
+                  Talk to Admissions
+                </Link>
+              </div>
+              <div className="mt-10 grid gap-3 sm:grid-cols-3 text-xs text-white/70">
+                <div className="rounded-3xl bg-white/10 p-4">
+                  <p className="text-2xl font-bold text-emerald-brand">12K+</p>
+                  <p className="mt-1 uppercase tracking-[0.2em]">Professionals trained</p>
+                </div>
+                <div className="rounded-3xl bg-white/10 p-4">
+                  <p className="text-2xl font-bold text-emerald-brand">26</p>
+                  <p className="mt-1 uppercase tracking-[0.2em]">Countries served</p>
+                </div>
+                <div className="rounded-3xl bg-white/10 p-4">
+                  <p className="text-2xl font-bold text-emerald-brand">45+</p>
+                  <p className="mt-1 uppercase tracking-[0.2em]">Research publications</p>
+                </div>
+              </div>
+            </div>
 
-          <div className="lg:col-span-5">
-            <div className="relative">
-              <div className="glass rounded-2xl p-6 shadow-2xl">
+            <div className="lg:col-span-5">
+              <div className="relative rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                  <div className="size-11 rounded-xl bg-emerald-brand/20 grid place-items-center">
+                  <div className="size-12 rounded-3xl bg-emerald-brand/20 grid place-items-center">
                     <HeartPulse className="size-5 text-emerald-brand" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold">Featured Program</p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-brand">
+                      Featured Program
+                    </p>
                     <p className="text-xs text-white/60">Postgraduate Diploma · Hybrid</p>
                   </div>
                 </div>
-                <h3 className="mt-4 text-xl font-bold">
-                  Advanced Medication Therapy Management for Pharmacists
-                </h3>
-                <p className="mt-2 text-sm text-white/70 leading-relaxed">
-                  12-month accredited program with clinical placements, evidence-based protocols,
-                  and a capstone research project.
+                <h3 className="mt-6 text-2xl font-bold">Advanced MTM for Pharmacists</h3>
+                <p className="mt-4 text-sm text-white/70 leading-relaxed">
+                  A career-defining, evidence-based program with placements, hands-on skills,
+                  and professional certification for pharmacists across Africa.
                 </p>
-                <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+                <div className="mt-6 grid grid-cols-3 gap-3 text-center text-sm">
                   {[
                     ["12", "Months"],
                     ["48", "Modules"],
                     ["10", "Credits"],
                   ].map(([n, l]) => (
-                    <div key={l} className="rounded-lg bg-white/5 py-3">
-                      <div className="text-lg font-bold text-emerald-brand">{n}</div>
-                      <div className="text-[10px] uppercase tracking-wider text-white/60">{l}</div>
+                    <div key={l} className="rounded-3xl bg-white/10 p-4">
+                      <div className="text-xl font-bold text-emerald-brand">{n}</div>
+                      <div className="mt-1 uppercase tracking-[0.18em] text-white/60">{l}</div>
                     </div>
                   ))}
                 </div>
                 <Link
                   to="/programs"
-                  className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-navy"
+                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-brand px-5 py-3 text-sm font-semibold text-navy"
                 >
                   View Program <ArrowRight className="size-4" />
                 </Link>
-              </div>
-              <div className="absolute -bottom-6 -left-6 glass rounded-xl px-4 py-3 hidden md:block">
-                <div className="flex items-center gap-2.5">
+                <div className="mt-5 flex items-center gap-3 rounded-3xl bg-black/20 p-4 text-sm">
                   <div className="flex -space-x-2">
-                    {["bg-emerald-brand", "bg-medical", "bg-amber-400"].map((c) => (
-                      <div key={c} className={`size-7 rounded-full ${c} border-2 border-navy`} />
+                    {[
+                      "bg-emerald-brand",
+                      "bg-medical",
+                      "bg-amber-400",
+                    ].map((c) => (
+                      <div key={c} className={`size-8 rounded-full ${c} border-2 border-navy`} />
                     ))}
                   </div>
-                  <div className="text-xs">
-                    <div className="font-semibold">1,200+ enrolled</div>
-                    <div className="text-white/60">this cohort</div>
+                  <div>
+                    <p className="text-sm font-semibold">1,200+ enrolled</p>
+                    <p className="text-xs text-white/60">across current cohort</p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Stats strip */}
-        <div className="relative border-t border-white/10 bg-black/20">
-          <div className="mx-auto max-w-7xl px-5 lg:px-8 py-8 grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((s) => (
-              <div key={s.l}>
-                <div className="text-3xl font-bold text-emerald-brand">{s.v}</div>
-                <div className="text-xs text-white/70 mt-1">{s.l}</div>
-              </div>
-            ))}
+          {/* Stats strip */}
+          <div className="relative mt-12 border-t border-white/10 bg-black/20">
+            <div className="mx-auto max-w-7xl px-5 lg:px-8 py-8 grid grid-cols-2 lg:grid-cols-4 gap-6">
+              {stats.map((s) => (
+                <div key={s.l}>
+                  <div className="text-3xl font-bold text-emerald-brand">{s.v}</div>
+                  <div className="text-xs text-white/70 mt-1">{s.l}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -416,7 +446,17 @@ function Home() {
                 aria-hidden
               />
               <div className="relative">
-                <div className="flex items-center justify-between">
+                {/* thumbnail */}
+                {p.img ? (
+                  <div className="overflow-hidden rounded-lg">
+                    <img
+                      src={imageUrl(p.img)}
+                      alt={p.t}
+                      className="w-full h-40 object-cover object-center transition-transform group-hover:scale-105 rounded-lg"
+                    />
+                  </div>
+                ) : null}
+                <div className="flex items-center justify-between mt-4">
                   <div className="size-11 rounded-lg bg-navy text-white grid place-items-center">
                     <p.icon className="size-5" />
                   </div>
@@ -463,18 +503,57 @@ function Home() {
             </div>
             <div className="lg:col-span-6 grid sm:grid-cols-2 gap-3">
               {research.map((r) => (
-                <div
-                  key={r.area}
-                  className={`relative aspect-[16/10] rounded-xl bg-gradient-to-br ${r.color} p-5 flex flex-col justify-end overflow-hidden`}
-                >
-                  <div className="absolute top-3 right-3 size-8 rounded-full bg-white/15 grid place-items-center">
-                    <Microscope className="size-4" />
+                <div key={r.area} className="relative aspect-[16/10] rounded-xl overflow-hidden">
+                  {r.img ? (
+                    <img
+                      src={imageUrl(r.img)}
+                      alt={r.area}
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                    />
+                  ) : (
+                    <div className={`absolute inset-0 bg-gradient-to-br ${r.color}`} />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+                  <div className="relative p-5 flex flex-col justify-end h-full">
+                    <div className="absolute top-3 right-3 size-8 rounded-full bg-white/15 grid place-items-center">
+                      <Microscope className="size-4" />
+                    </div>
+                    <p className="font-bold text-white drop-shadow">{r.area}</p>
                   </div>
-                  <p className="font-bold">{r.area}</p>
                 </div>
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* News & Events - imagery focused */}
+      <section className="mx-auto max-w-7xl px-5 lg:px-8 py-16">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-medical">News & Events</span>
+            <h2 className="mt-2 text-2xl lg:text-3xl font-bold text-navy">Latest institutional updates</h2>
+          </div>
+          <Link to="/news" className="text-medical font-semibold hover:underline inline-flex items-center gap-2">
+            View all <ArrowRight className="size-4" />
+          </Link>
+        </div>
+        <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[
+            { title: "8 Reasons Your Baby Might Be Coughing", img: "8 Reasons Your Baby Might Be Coughing.jfif" },
+            { title: "Institutional briefing", img: "news_hero.png" },
+            { title: "Upcoming symposium", img: "news_hero1.png" },
+          ].map((n) => (
+            <Link key={n.title} to="/news" className="group rounded-2xl overflow-hidden border border-border bg-card">
+              <div className="w-full h-44 overflow-hidden">
+                <img src={imageUrl(n.img)} alt={n.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+              </div>
+              <div className="p-4">
+                <h3 className="font-semibold text-navy">{n.title}</h3>
+                <p className="text-xs text-foreground/70 mt-2">Institutional news & events from AMTMTI</p>
+              </div>
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -517,6 +596,13 @@ function Home() {
               </Link>
             </div>
             <div className="lg:col-span-5">
+              <div className="overflow-hidden rounded-2xl mb-6">
+                <img
+                  src={imageUrl("membership_hero.png")}
+                  alt="Membership"
+                  className="w-full h-56 object-cover object-center rounded-2xl shadow-md"
+                />
+              </div>
               <div className="rounded-2xl bg-navy text-white p-6 shadow-2xl">
                 <p className="text-xs uppercase tracking-wider text-emerald-brand font-bold">
                   Member Benefits

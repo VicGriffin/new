@@ -16,23 +16,15 @@ const nav = [
 
 export function Logo({ light = false }: { light?: boolean }) {
   return (
-    <Link to="/" className="flex items-center gap-2.5 select-none group">
-      <div className="relative grid place-items-center w-10 h-10 rounded-xl bg-gradient-to-br from-medical to-emerald-brand shadow-lg shadow-medical/25 group-hover:scale-105 transition">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M12 3v18M3 12h18" stroke="white" strokeWidth="3" strokeLinecap="round" />
-        </svg>
-      </div>
-      <div className="leading-tight">
-        <div
-          className={`font-display font-extrabold tracking-tight text-lg ${light ? "text-white" : "text-navy"}`}
-        >
-          AMTMTI
-        </div>
-        <div
-          className={`text-[10px] font-medium uppercase tracking-[0.14em] ${light ? "text-white/70" : "text-muted-foreground"}`}
-        >
-          Africa MTM Training Institute
-        </div>
+    <Link to="/" className="flex items-center select-none group">
+      <div className="w-[140px] sm:w-[200px] md:w-[300px] lg:w-[400px] h-auto flex-shrink-0">
+        <img
+          src="/images/logo.jpeg"
+          alt="AMTMTI logo"
+          className="w-full h-auto object-contain"
+          loading="lazy"
+          aria-label="AMTMTI logo"
+        />
       </div>
     </Link>
   );
@@ -57,8 +49,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/85 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 lg:px-8 h-18 py-3">
+      <div className="absolute left-4 lg:left-8 top-3 z-50">
         <Logo />
+      </div>
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 lg:px-8 h-18 py-3 lg:pl-[440px]">
         <nav className="hidden lg:flex items-center gap-1">
           {nav.map((n) => (
             <Link
@@ -164,8 +158,39 @@ export function Header() {
 export function Footer() {
   return (
     <footer className="bg-navy text-white/90 relative overflow-hidden">
+      <div className="absolute inset-0 -z-10">
+        <img
+          src="/images/footer.png"
+          alt="Footer background"
+          className="h-full w-full object-cover object-center opacity-20 brightness-110 contrast-110"
+        />
+        <div className="absolute inset-0 bg-navy/80" />
+      </div>
       <div className="absolute inset-0 hero-mesh opacity-60" aria-hidden />
       <div className="relative mx-auto max-w-7xl px-5 lg:px-8 pt-16 pb-8">
+        <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-sm mb-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.28em] text-emerald-brand">Ready to transform MTM in your organisation?</p>
+              <h3 className="mt-3 text-2xl font-bold text-white">Let's build stronger medication therapy systems together.</h3>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/contact"
+                className="inline-flex items-center justify-center rounded-full bg-emerald-brand px-5 py-3 text-sm font-semibold text-navy hover:opacity-90 transition"
+              >
+                Talk to Admissions
+              </Link>
+              <Link
+                to="/membership"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 px-5 py-3 text-sm font-semibold text-white hover:bg-white/15 transition"
+              >
+                Join Membership
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-10 lg:grid-cols-5">
           <div className="lg:col-span-2">
             <Logo light />
@@ -173,16 +198,10 @@ export function Footer() {
               Scaling Medication Therapy Management education, professional development,
               certification, and research across Africa.
             </p>
-            <div className="mt-6 flex gap-3">
-              {["Twitter", "LinkedIn", "YouTube", "Facebook"].map((s) => (
-                <a
-                  key={s}
-                  href="#"
-                  className="text-xs px-3 py-1.5 rounded-full border border-white/15 hover:border-emerald-brand hover:text-emerald-brand transition"
-                >
-                  {s}
-                </a>
-              ))}
+            <div className="mt-6 space-y-3 text-sm text-white/70">
+              <div>Contact: <Link to="/contact" className="text-white hover:text-emerald-brand">contact@amtmti.africa</Link></div>
+              <div>Phone: <a href="tel:+234800000000" className="text-white hover:text-emerald-brand">+234 800 000 000</a></div>
+              <div>Office: Lagos, Nigeria</div>
             </div>
           </div>
           {[
@@ -199,10 +218,9 @@ export function Footer() {
               h: "Institute",
               links: [
                 ["About", "/about"],
-                ["Leadership", "/about"],
                 ["News", "/news"],
                 ["Events", "/events"],
-                ["Careers", "/contact"],
+                ["Privacy", "/privacy"],
               ],
             },
             {
@@ -211,7 +229,6 @@ export function Footer() {
                 ["Contact", "/contact"],
                 ["Partners", "/membership"],
                 ["Support", "/contact"],
-                ["Privacy", "/privacy"],
               ],
             },
           ].map((col) => (
