@@ -103,45 +103,51 @@ const programs = [
     t: "MTM for Pharmacists",
     d: "Advance clinical decision-making, pharmaceutical care plans, and patient counselling.",
     tag: "Flagship",
+    img: "/images/MTM_for_Pharmacists.png",
   },
   {
     icon: FlaskConical,
     t: "MTM for Pharmaceutical Technologists",
     d: "Strengthen dispensing, screening, and therapy review competencies.",
     tag: "Diploma",
+    img: "/images/MTM_for_Pharmaceutical Technologists.png",
   },
   {
     icon: Activity,
     t: "MTM for Pharmaceutical Technicians",
     d: "Build core MTM skills for community and institutional practice.",
     tag: "Certificate",
+    img: "/images/MTM_for_Pharmaceutical Technicians.jpg",
   },
   {
     icon: Stethoscope,
     t: "MTM for Clinicians",
     d: "Integrate medication review into multidisciplinary clinical care.",
     tag: "CPD",
+    img: "/images/MTM_for_Clinicians.png",
   },
   {
     icon: HeartPulse,
     t: "MTM for Physicians",
     d: "Optimize prescribing, deprescribing, and chronic disease management.",
     tag: "CPD",
+    img: "/images/MTM_for_Physicians.png",
   },
   {
     icon: Users,
     t: "MTM for Nurses",
     d: "Lead medication reconciliation, adherence support, and patient education.",
     tag: "CPD",
+    img: "/images/MTM_for_Nurses.png",
   },
 ];
 
 const research = [
-  { area: "Medication Safety", color: "from-blue-700 to-blue-500" },
-  { area: "Clinical Pharmacy", color: "from-emerald-700 to-emerald-500" },
-  { area: "Pharmaceutical Care", color: "from-cyan-700 to-sky-500" },
-  { area: "Public Health", color: "from-teal-700 to-emerald-500" },
-  { area: "Medication Adherence", color: "from-indigo-700 to-blue-500" },
+  { area: "Medication Safety", img: "/images/medication_safety.png" },
+  { area: "Clinical Pharmacy", img: "/images/clinical_pharmacy.png" },
+  { area: "Pharmaceutical Care", img: "/images/Pharmaceutical_care.png" },
+  { area: "Public Health", img: "/images/Public_health.png" },
+  { area: "Medication Adherence", img: "/images/medical_adherence.png" },
 ];
 
 const fallbackTestimonials = [
@@ -256,6 +262,14 @@ function Home() {
 
           <div className="lg:col-span-5">
             <div className="relative">
+              <div className="relative overflow-hidden rounded-3xl mb-6">
+                <img
+                  src="/images/hero-medical-professionals.png"
+                  alt="Healthcare professionals collaborating on patient care"
+                  className="w-full h-72 object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-navy/40 to-transparent" />
+              </div>
               <div className="glass rounded-2xl p-6 shadow-2xl">
                 <div className="flex items-center gap-3">
                   <div className="size-11 rounded-xl bg-emerald-brand/20 grid place-items-center">
@@ -325,15 +339,7 @@ function Home() {
       {/* Overview */}
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28">
         <div className="grid lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-5">
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-medical">
-              The Institute
-            </span>
-            <h2 className="mt-3 text-3xl lg:text-4xl font-bold text-navy leading-tight">
-              A world-class home for medication therapy management in Africa
-            </h2>
-          </div>
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-5 order-2 lg:order-1">
             <p className="text-lg text-foreground/75 leading-relaxed">
               AMTMTI delivers world-class education and skills enhancement training in medication
               therapy management — including professional development courses, certificates,
@@ -353,6 +359,23 @@ function Home() {
               >
                 Visit Research Division <ArrowRight className="size-4" />
               </Link>
+            </div>
+          </div>
+          <div className="lg:col-span-7 order-1 lg:order-2">
+            <div className="lg:col-span-5">
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-medical">
+                The Institute
+              </span>
+              <h2 className="mt-3 text-3xl lg:text-4xl font-bold text-navy leading-tight">
+                A world-class home for medication therapy management in Africa
+              </h2>
+            </div>
+            <div className="mt-8 rounded-2xl overflow-hidden shadow-xl">
+              <img
+                src="/images/about_hero.png"
+                alt="AMTMTI institutional building and medical professionals"
+                className="w-full h-80 object-cover hover:scale-105 transition duration-300"
+              />
             </div>
           </div>
         </div>
@@ -409,13 +432,17 @@ function Home() {
             <Link
               to="/programs"
               key={p.t}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 hover:-translate-y-1 hover:shadow-2xl hover:shadow-medical/10 transition"
+              className="group relative overflow-hidden rounded-2xl border border-border bg-card hover:-translate-y-1 hover:shadow-2xl hover:shadow-medical/10 transition flex flex-col"
             >
-              <div
-                className="absolute -right-8 -top-8 size-32 rounded-full bg-gradient-to-br from-medical/10 to-emerald-brand/10 blur-2xl group-hover:scale-150 transition"
-                aria-hidden
-              />
-              <div className="relative">
+              <div className="relative overflow-hidden h-40 bg-medical/5">
+                <img
+                  src={p.img}
+                  alt={p.t}
+                  className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              </div>
+              <div className="relative p-6 flex-1 flex flex-col">
                 <div className="flex items-center justify-between">
                   <div className="size-11 rounded-lg bg-navy text-white grid place-items-center">
                     <p.icon className="size-5" />
@@ -424,11 +451,11 @@ function Home() {
                     {p.tag}
                   </span>
                 </div>
-                <h3 className="mt-5 text-lg font-bold text-navy group-hover:text-medical transition">
+                <h3 className="mt-4 text-lg font-bold text-navy group-hover:text-medical transition">
                   {p.t}
                 </h3>
-                <p className="mt-2 text-sm text-foreground/70 leading-relaxed">{p.d}</p>
-                <div className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-medical">
+                <p className="mt-2 text-sm text-foreground/70 leading-relaxed flex-1">{p.d}</p>
+                <div className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-medical">
                   View program <ArrowRight className="size-3.5" />
                 </div>
               </div>
@@ -465,12 +492,18 @@ function Home() {
               {research.map((r) => (
                 <div
                   key={r.area}
-                  className={`relative aspect-[16/10] rounded-xl bg-gradient-to-br ${r.color} p-5 flex flex-col justify-end overflow-hidden`}
+                  className="relative aspect-[16/10] rounded-xl overflow-hidden group"
                 >
-                  <div className="absolute top-3 right-3 size-8 rounded-full bg-white/15 grid place-items-center">
-                    <Microscope className="size-4" />
+                  <img
+                    src={r.img}
+                    alt={r.area}
+                    className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+                  <div className="absolute top-3 right-3 size-8 rounded-full bg-white/20 grid place-items-center hover:bg-white/30 transition">
+                    <Microscope className="size-4 text-white" />
                   </div>
-                  <p className="font-bold">{r.area}</p>
+                  <p className="absolute bottom-5 left-5 font-bold text-white text-sm">{r.area}</p>
                 </div>
               ))}
             </div>
@@ -480,12 +513,16 @@ function Home() {
 
       {/* Membership */}
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28">
-        <div className="rounded-3xl bg-gradient-to-br from-soft via-background to-soft border border-border p-8 lg:p-14 relative overflow-hidden">
-          <div
-            className="absolute -top-20 -right-20 size-72 rounded-full bg-emerald-brand/10 blur-3xl"
-            aria-hidden
-          />
-          <div className="relative grid lg:grid-cols-12 gap-10 items-center">
+        <div className="rounded-3xl border border-border overflow-hidden relative overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src="/images/membership_hero.png"
+              alt="AMTMTI membership community"
+              className="w-full h-full object-cover opacity-20"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/70" />
+          </div>
+          <div className="relative grid lg:grid-cols-12 gap-10 items-center p-8 lg:p-14">
             <div className="lg:col-span-7">
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-medical">
                 Affiliate Membership
@@ -502,7 +539,7 @@ function Home() {
                   (t) => (
                     <span
                       key={t}
-                      className="rounded-full bg-card border border-border px-3.5 py-1.5 text-xs font-medium text-navy"
+                      className="rounded-full bg-white/80 border border-border px-3.5 py-1.5 text-xs font-medium text-navy"
                     >
                       {t}
                     </span>
