@@ -79,9 +79,21 @@ function Contact() {
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-20 grid lg:grid-cols-12 gap-10">
         <div className="lg:col-span-5 space-y-5">
           {[
-            { icon: Mail, l: "Email", v: "admissions@amtmti.africa" },
-            { icon: Phone, l: "Phone", v: "+254 20 000 0000" },
-            { icon: MapPin, l: "Office", v: "AMTMTI House, Westlands, Nairobi, Kenya" },
+            {
+              icon: Mail,
+              l: "Opening Hours",
+              lines: ["Open 24 hours", "Monday - Sunday"],
+            },
+            {
+              icon: Phone,
+              l: "Call Us Anytime",
+              lines: ["+254 721 421 719", "+254 721 421 719"],
+            },
+            {
+              icon: MapPin,
+              l: "Our Location",
+              lines: ["Thika Superhighway", "Kimbo Ruiru, Kenya."],
+            },
           ].map((c) => (
             <div key={c.l} className="flex gap-4 rounded-2xl bg-card border border-border p-5">
               <div className="size-11 shrink-0 rounded-lg bg-medical/10 text-medical grid place-items-center">
@@ -89,7 +101,11 @@ function Contact() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-medical">{c.l}</p>
-                <p className="mt-0.5 font-semibold text-navy">{c.v}</p>
+                <div className="mt-0.5 font-semibold text-navy space-y-1">
+                  {c.lines.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                </div>
               </div>
             </div>
           ))}

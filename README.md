@@ -58,9 +58,9 @@ Copy `.env.example` to `.env` and configure:
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `VITE_SUPABASE_URL` | Yes | Supabase project URL (browser) |
-| `VITE_SUPABASE_ANON_KEY` | Yes | Supabase publishable / anon key (browser) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase publishable / anon key (browser) |
 | `SUPABASE_URL` | Yes | Same URL for SSR / scripts |
-| `SUPABASE_ANON_KEY` | Yes | Same key for SSR |
+| `SUPABASE_PUBLISHABLE_KEY` | Yes | Same key for SSR |
 | `SUPABASE_SERVICE_ROLE_KEY` | Admin setup | Secret key for admin seed and server user management |
 | `SUPABASE_DB_PASSWORD` | Admin setup | Alternative for `npm run setup:admin` via direct Postgres |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Optional | Defaults for admin bootstrap scripts (see `.env.example`) |
