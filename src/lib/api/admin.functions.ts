@@ -1,11 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { createSupabaseAdminClient } from "@/integrations/supabase/client.server";
 
 const roleSchema = z.enum(["admin", "instructor", "student", "member"]);
 
-async function assertAdmin(userId: string) {
+async function assertAdmin(userId: string, supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>) {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -27,7 +27,8 @@ export const adminCreateUser = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    const supabaseAdmin = createSupabaseAdminClient();
+    await assertAdmin(context.userId, supabaseAdmin);
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,
       password: data.password,
@@ -50,10 +51,8 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(z.object({ userId: z.string().uuid() }))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
-    if (data.userId === context.userId) {
-      throw new Error("Cannot delete your own account");
-    }
+    const supabaseAdmin = createSupabaseAdminClient();
+    await assertAdmin(context.userId, supabaseAdmin);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw error;
     return { ok: true };
@@ -68,7 +67,8 @@ export const adminSetUserRoles = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.userId);
+    const supabaseAdmin = createSupabaseAdminClient();
+    await assertAdmin(context.userId, supabaseAdmin);
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
     if (data.roles.length) {
       const { error } = await supabaseAdmin
