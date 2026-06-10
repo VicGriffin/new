@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/site/layout";
@@ -19,6 +19,25 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => ({ meta: [{ title: "E-Learning Portal — AMTMTI" }] }),
+  beforeLoad: async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) throw redirect({ to: "/auth" });
+    
+    // Check if user has at least one valid role (student, instructor, or admin)
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", u.user.id);
+    
+    const validRoles = ["student", "instructor", "admin"];
+    const hasValidRole = roles?.some((r: { role: string }) => validRoles.includes(r.role));
+    
+    if (!hasValidRole) {
+      throw redirect({ to: "/auth" });
+    }
+    
+    return { user: u.user };
+  },
   component: Portal,
 });
 

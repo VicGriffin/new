@@ -12,8 +12,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "seed:admin": "node --env-file=.env scripts/seed-admin.mjs",
-    "setup:admin": "node --env-file=.env scripts/setup-admin.mjs",
-    "predev": "node --env-file=.env scripts/setup-admin.mjs --soft"
+    "setup:admin": "node --env-file=.env scripts/setup-admin.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

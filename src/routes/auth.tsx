@@ -58,7 +58,14 @@ function AuthPage() {
         nav({ to: "/portal" });
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
+      const message = err instanceof Error ? err.message : "Authentication failed";
+      if (message.toLowerCase().includes("rate limit")) {
+        toast.error(
+          "Too many auth emails sent recently (Supabase limit). Wait about an hour, use Google sign-in, or disable “Confirm email” in Supabase → Authentication → Providers → Email for local dev.",
+        );
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }
