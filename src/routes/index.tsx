@@ -221,15 +221,22 @@ function Home() {
       {/* HERO */}
       <section className="relative hero-mesh text-white overflow-hidden">
         {/* background image */}
-        <div className="absolute inset-0 -z-10">
-          <img
-            src={imageUrl("hero-medical-professionals.png")}
-            alt="Healthcare professionals"
-            className="w-full h-full object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/50" aria-hidden />
-        </div>
-        <div className="absolute inset-0 grid-pattern opacity-30" aria-hidden />
+        <div className="absolute inset-0 z-0">
+  <img
+    src="/images/hero.png"
+    alt="Healthcare professionals"
+    className="h-full w-full object-cover brightness-30 saturate-50"
+  />
+
+  <div
+    className="absolute inset-0"
+    style={{
+      background:
+        "linear-gradient(135deg, rgba(5,26,54,0.92) 0%, rgba(5,26,54,0.75) 50%, rgba(5,26,54,0.55) 100%)",
+    }}
+  />
+</div>
+        <div className="absolute inset-0 grid-pattern opacity-15" aria-hidden />
         <div className="relative mx-auto max-w-7xl px-5 lg:px-8 pt-24 pb-28 lg:pt-28 lg:pb-36">
           <div className="pointer-events-none absolute right-0 bottom-0 hidden lg:block opacity-40">
             <img
@@ -241,7 +248,7 @@ function Home() {
           <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-7">
               <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.04] tracking-tight">
-                Africa's leading Medication Therapy Management institute for healthcare professionals.
+                Africa Medication Therapy Management Training Institute
               </h1>
               <p className="mt-6 text-lg text-white/80 max-w-2xl leading-relaxed">
                 Practical, accredited MTM education designed for pharmacists, clinicians, and allied
