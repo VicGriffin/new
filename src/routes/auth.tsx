@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { PageShell } from "@/components/site/layout";
 import { imageUrl } from "@/lib/utils";
+import { getEffectiveRole } from "@/lib/auth/roles";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -25,9 +26,17 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) nav({ to: "/portal" });
-    });
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.user) return;
+      const role = await getEffectiveRole(data.session.user.id);
+      if (role === "admin") {
+        nav({ to: "/admin", replace: true });
+      } else if (role === "student" || role === "member" || role === "instructor") {
+        nav({ to: "/portal", replace: true });
+      }
+    }
+    checkSession();
   }, [nav]);
 
   async function handleEmail(e: React.FormEvent) {
@@ -54,9 +63,18 @@ function AuthPage() {
         toast.success("Account created. Check your email to confirm, then sign in.");
         setMode("signin");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        nav({ to: "/portal" });
+        if (data?.user) {
+          const role = await getEffectiveRole(data.user.id);
+          if (role === "admin") {
+            nav({ to: "/admin", replace: true });
+          } else {
+            nav({ to: "/portal", replace: true });
+          }
+        } else {
+          nav({ to: "/portal", replace: true });
+        }
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Authentication failed";

@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Menu, X, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { isAdmin } from "@/lib/auth/roles";
+import { AppRole, getEffectiveRole, isAdminRole, isPortalRole } from "@/lib/auth/roles";
 
 const nav = [
   { label: "About", to: "/about" },
@@ -31,20 +31,29 @@ export function Logo({ light = false }: { light?: boolean }) {
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const [authed, setAuthed] = useState(false);
-  const [admin, setAdmin] = useState(false);
+  const [role, setRole] = useState<AppRole | undefined>(undefined);
+  const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
     async function syncAuth(session: { user: { id: string } } | null) {
-      setAuthed(!!session);
-      setAdmin(session ? await isAdmin(session.user.id) : false);
+      if (!session) {
+        setRole(undefined);
+        setHasSession(false);
+        return;
+      }
+      setHasSession(true);
+      setRole(await getEffectiveRole(session.user.id));
     }
     supabase.auth.getSession().then(({ data }) => syncAuth(data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => syncAuth(s));
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const adminTo = admin ? "/admin" : "/admin/login";
+  const showAdminNav = isAdminRole(role);
+  const showPortalNav = isPortalRole(role);
+  const adminLink = showAdminNav ? "/admin" : "/admin/login";
+  const isGuest = !hasSession;
+  const visibleNav = showAdminNav ? nav.filter((item) => item.to !== "/portal") : nav;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/85 backdrop-blur-xl">
@@ -65,24 +74,44 @@ export function Header() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to={adminTo}
-              className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition"
-            >
-              <ShieldCheck className="size-4" />
-              Admin
-            </Link>
-            {authed ? (
+            {isGuest && (
+              <>
+                <Link
+                  to={adminLink}
+                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition"
+                >
+                  <ShieldCheck className="size-4" />
+                  Admin
+                </Link>
+                <Link
+                  to="/auth"
+                  className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition"
+                >
+                  Join Now
+                </Link>
+              </>
+            )}
+            {!isGuest && showAdminNav && (
+              <Link
+                to="/admin"
+                className="inline-flex items-center gap-1.5 rounded-md bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:bg-emerald-brand/90 transition"
+              >
+                <ShieldCheck className="size-4" />
+                Admin Dashboard
+              </Link>
+            )}
+            {!isGuest && showPortalNav && (
               <Link
                 to="/portal"
-                className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition"
+                className="text-sm font-medium text-foreground/80 hover:text-medical px-3 py-2 rounded-md hover:bg-soft transition"
               >
                 My Portal
               </Link>
-            ) : (
+            )}
+            {!isGuest && !showAdminNav && !showPortalNav && (
               <Link
                 to="/auth"
-                className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition"
+                className="text-sm font-medium text-foreground/80 hover:text-medical px-3 py-2 rounded-md hover:bg-soft transition"
               >
                 Join Now
               </Link>
@@ -94,7 +123,7 @@ export function Header() {
         <div className="hidden lg:flex items-center gap-6">
           <Logo />
           <nav className="hidden lg:flex items-center gap-1">
-            {nav.map((n) => (
+            {visibleNav.map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
@@ -125,7 +154,7 @@ export function Header() {
       {open && (
         <div className="lg:hidden border-t border-border bg-background">
           <div className="px-5 py-4 flex flex-col gap-1">
-            {nav.map((n) => (
+            {visibleNav.map((n) => (
               <Link
                 key={n.to}
                 to={n.to}
@@ -135,15 +164,16 @@ export function Header() {
                 {n.label}
               </Link>
             ))}
-            <Link
-              to={adminTo}
-              onClick={() => setOpen(false)}
-              className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft inline-flex items-center gap-2"
-            >
-              <ShieldCheck className="size-4" />
-              Admin
-            </Link>
-            {authed ? (
+            {showAdminNav ? (
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft inline-flex items-center gap-2"
+              >
+                <ShieldCheck className="size-4" />
+                Admin Dashboard
+              </Link>
+            ) : showPortalNav ? (
               <Link
                 to="/portal"
                 onClick={() => setOpen(false)}

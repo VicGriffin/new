@@ -22,6 +22,25 @@ export async function isAdmin(userId: string): Promise<boolean> {
   return hasRole(userId, "admin");
 }
 
+export type EffectiveAppRole = AppRole | undefined;
+
+export async function getEffectiveRole(userId: string): Promise<EffectiveAppRole> {
+  const roles = await getUserRoles(userId);
+  if (roles.includes("admin")) return "admin";
+  if (roles.includes("student")) return "student";
+  if (roles.includes("member")) return "member";
+  if (roles.includes("instructor")) return "instructor";
+  return undefined;
+}
+
+export function isAdminRole(role?: AppRole): boolean {
+  return role === "admin";
+}
+
+export function isPortalRole(role?: AppRole): boolean {
+  return role === "student" || role === "member" || role === "instructor";
+}
+
 export async function requireAdmin(userId: string): Promise<void> {
   const ok = await isAdmin(userId);
   if (!ok) throw new Error("Forbidden: admin role required");

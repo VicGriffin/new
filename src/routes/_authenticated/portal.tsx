@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Clock,
   Library,
-  ShieldCheck,
   User,
   ExternalLink,
 } from "lucide-react";
@@ -22,20 +21,23 @@ export const Route = createFileRoute("/_authenticated/portal")({
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
-    
-    // Check if user has at least one valid role (student, instructor, or admin)
+
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", u.user.id);
-    
-    const validRoles = ["student", "instructor", "admin"];
+
+    if (roles?.some((r: { role: string }) => r.role === "admin")) {
+      throw redirect({ to: "/admin" });
+    }
+
+    const validRoles = ["student", "member", "instructor"];
     const hasValidRole = roles?.some((r: { role: string }) => validRoles.includes(r.role));
-    
+
     if (!hasValidRole) {
       throw redirect({ to: "/auth" });
     }
-    
+
     return { user: u.user };
   },
   component: Portal,
@@ -68,7 +70,6 @@ function Portal() {
     queryFn: async () =>
       (await supabase.from("user_roles").select("role").eq("user_id", user!.id)).data ?? [],
   });
-  const isAdmin = roles?.some((r) => r.role === "admin");
 
   const { data: programs } = useQuery({
     queryKey: ["programs"],
@@ -208,15 +209,6 @@ function Portal() {
             </p>
           </div>
           <div className="flex gap-2">
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="inline-flex items-center gap-1.5 rounded-md bg-emerald-brand text-navy px-4 py-2.5 text-sm font-semibold"
-              >
-                <ShieldCheck className="size-4" />
-                Admin
-              </Link>
-            )}
             <button
               onClick={signOut}
               className="inline-flex items-center gap-1.5 rounded-md bg-white/10 hover:bg-white/15 px-4 py-2.5 text-sm font-semibold border border-white/15"

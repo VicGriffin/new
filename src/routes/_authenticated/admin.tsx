@@ -98,12 +98,6 @@ function Admin() {
             <h1 className="mt-1 text-3xl lg:text-4xl font-bold">Manage AMTMTI</h1>
           </div>
           <div className="flex gap-2">
-            <Link
-              to="/portal"
-              className="inline-flex items-center gap-1.5 rounded-md bg-white/10 hover:bg-white/15 px-4 py-2.5 text-sm font-semibold border border-white/15"
-            >
-              Student portal
-            </Link>
             <button
               type="button"
               onClick={signOut}
