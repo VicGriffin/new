@@ -209,11 +209,11 @@ function Home() {
         <div className="absolute inset-0 grid-pattern opacity-30" aria-hidden />
         <div className="relative mx-auto max-w-7xl px-5 lg:px-8 pt-20 pb-28 lg:pt-28 lg:pb-36 grid lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7">
-            <span className="inline-flex items-center gap-2 rounded-full glass px-3.5 py-1.5 text-xs font-medium">
+            {/* <span className="inline-flex items-center gap-2 rounded-full glass px-3.5 py-1.5 text-xs font-medium">
               <Sparkles className="size-3.5 text-emerald-brand" /> Now enrolling — 2026 Cohort
-            </span>
-            <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight">
-              Scaling Medication Therapy Management Training in{" "}
+            </span> */}
+            <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.08] tracking-tight">
+              AFRICA MTM <span className="text-emerald-brand" > TRAINING </span> INSTITUTE{" "} <br />
               <span className="text-emerald-brand">Africa</span>
             </h1>
             <p className="mt-6 text-lg text-white/80 max-w-2xl leading-relaxed">
