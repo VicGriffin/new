@@ -1,7 +1,7 @@
 import { j as jsxRuntimeExports, r as reactExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
 import { supabase } from "./client-CZ7d5FUj.mjs";
-import { g as getEffectiveRole, b as isAdminRole, c as isPortalRole } from "./router-B9ucVT0q.mjs";
+import { g as getEffectiveRole, b as isAdminRole, c as isPortalRole } from "./router-CMAUGRB1.mjs";
 import { a as ShieldCheck, K as ChevronDown, X, O as Menu } from "../_libs/lucide-react.mjs";
 const nav = [
   { label: "About", to: "/about" },

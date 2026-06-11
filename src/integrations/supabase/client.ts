@@ -14,21 +14,16 @@ function createSupabaseClient() {
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Set them in .env or Vercel dashboard.`;
     console.error(`[Supabase] ${message}`);
-    
-    // During SSR, if env vars are missing, don't throw — return a stub client
-    // that will fail gracefully when actually used (client-side only).
+
     if (typeof window === "undefined") {
-      console.warn("[Supabase] SSR: env vars missing, returning stub client. This will fail on client-side access.");
-      // Return a dummy proxy that won't crash SSR but will error on use
-      return new Proxy({} as ReturnType<typeof createClient>, {
-        get: () => {
-          throw new Error(
-            `[Supabase] Env vars not configured. Check that VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in Vercel dashboard.`
-          );
-        },
-      });
+      console.warn(
+        "[Supabase] SSR: env vars missing, returning stub client. This will fail gracefully on use instead of crashing SSR."
+      );
+      return createSupabaseStub(
+        `[Supabase] Env vars not configured. Check that VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in Vercel dashboard.`,
+      );
     }
-    
+
     throw new Error(message);
   }
 
@@ -42,6 +37,40 @@ function createSupabaseClient() {
 }
 
 let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
+
+function createSupabaseStub(message: string) {
+  const error = new Error(message);
+  const createProxy = (path: string[] = []) => {
+    const stub = (..._args: unknown[]) => {
+      const key = path.join(".");
+      if (key === "auth.onAuthStateChange") {
+        return { data: { subscription: { unsubscribe: () => undefined } } };
+      }
+      if (key === "auth.getSession") {
+        return Promise.resolve({ data: { session: null } });
+      }
+      if (key === "auth.getUser") {
+        return Promise.resolve({ data: { user: null } });
+      }
+      if (path[path.length - 1] === "select" || path[path.length - 1] === "insert" || path[path.length - 1] === "update" || path[path.length - 1] === "delete" || path[path.length - 1] === "upsert" || path[path.length - 1] === "rpc" || path[path.length - 1] === "maybeSingle" || path[path.length - 1] === "single") {
+        return Promise.reject(error);
+      }
+      return createProxy(path);
+    };
+
+    return new Proxy(stub as any, {
+      get(_target, prop) {
+        if (prop === "then") return undefined;
+        return createProxy([...path, String(prop)]);
+      },
+      apply(_target, _thisArg, argArray) {
+        return stub(...argArray);
+      },
+    });
+  };
+
+  return createProxy();
+}
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

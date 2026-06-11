@@ -1,5 +1,5 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
-import { P as PageShell } from "./layout-DxlPml8Q.mjs";
+import { P as PageShell } from "./layout-E66c5M9F.mjs";
 import { i as imageUrl } from "./utils-BEYWXE59.mjs";
 import { supabase } from "./client-CZ7d5FUj.mjs";
 import { t as toast } from "../_libs/sonner.mjs";
@@ -18,7 +18,7 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-import "./router-B9ucVT0q.mjs";
+import "./router-CMAUGRB1.mjs";
 import "../_libs/tanstack__query-core.mjs";
 import "../_libs/tanstack__react-query.mjs";
 import "../_libs/supabase__supabase-js.mjs";

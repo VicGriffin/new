@@ -1,7 +1,7 @@
 import { j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
 import { u as useQuery } from "../_libs/tanstack__react-query.mjs";
-import { P as PageShell } from "./layout-DxlPml8Q.mjs";
+import { P as PageShell } from "./layout-E66c5M9F.mjs";
 import { i as imageUrl } from "./utils-BEYWXE59.mjs";
 import { supabase } from "./client-CZ7d5FUj.mjs";
 import "../_libs/sonner.mjs";
@@ -20,7 +20,7 @@ import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
 import "../_libs/tanstack__query-core.mjs";
-import "./router-B9ucVT0q.mjs";
+import "./router-CMAUGRB1.mjs";
 import "../_libs/supabase__supabase-js.mjs";
 import "../_libs/supabase__postgrest-js.mjs";
 import "../_libs/supabase__realtime-js.mjs";

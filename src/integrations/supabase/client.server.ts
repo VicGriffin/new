@@ -10,6 +10,30 @@ export type SupabaseServerEnv = {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 };
 
+function createSupabaseAdminStub(message: string) {
+  const error = new Error(message);
+  const createProxy = (path: string[] = []) => {
+    const stub = (..._args: unknown[]) => {
+      if (path[path.length - 1] === "select" || path[path.length - 1] === "insert" || path[path.length - 1] === "update" || path[path.length - 1] === "delete" || path[path.length - 1] === "upsert" || path[path.length - 1] === "rpc" || path[path.length - 1] === "maybeSingle" || path[path.length - 1] === "single") {
+        return Promise.reject(error);
+      }
+      return createProxy(path);
+    };
+
+    return new Proxy(stub as any, {
+      get(_target, prop) {
+        if (prop === "then") return undefined;
+        return createProxy([...path, String(prop)]);
+      },
+      apply(_target, _thisArg, argArray) {
+        return stub(...argArray);
+      },
+    });
+  };
+
+  return createProxy();
+}
+
 export function createSupabaseAdminClient(env?: SupabaseServerEnv) {
   const SUPABASE_URL = env?.SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = env?.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -21,22 +45,16 @@ export function createSupabaseAdminClient(env?: SupabaseServerEnv) {
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
     console.error(`[Supabase Admin] ${message}`);
-    
-    // On Vercel/production, if admin env vars are missing, create a client
-    // that will fail gracefully when called, rather than crashing SSR.
-    // This allows SSR to complete and display an error on the client side.
+
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NODE_ENV === "production") {
-      console.warn("[Supabase Admin] Production: service role key not set. Admin operations will fail at runtime.");
-      // Return a stub that errors on use
-      return new Proxy({} as ReturnType<typeof createClient>, {
-        get: () => {
-          throw new Error(
-            `[Supabase Admin] Not configured. SUPABASE_SERVICE_ROLE_KEY is required for admin operations.`
-          );
-        },
-      });
+      console.warn(
+        "[Supabase Admin] Production: service role key not set. Admin operations will fail at runtime."
+      );
+      return createSupabaseAdminStub(
+        `[Supabase Admin] Not configured. SUPABASE_SERVICE_ROLE_KEY is required for admin operations.`,
+      );
     }
-    
+
     throw new Error(message);
   }
 

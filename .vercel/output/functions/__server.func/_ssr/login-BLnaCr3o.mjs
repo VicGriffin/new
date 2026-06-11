@@ -2,7 +2,7 @@ import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { d as useNavigate, L as Link } from "../_libs/tanstack__react-router.mjs";
 import { supabase } from "./client-CZ7d5FUj.mjs";
 import { i as imageUrl } from "./utils-BEYWXE59.mjs";
-import { i as isAdmin } from "./router-B9ucVT0q.mjs";
+import { i as isAdmin } from "./router-CMAUGRB1.mjs";
 import { t as toast } from "../_libs/sonner.mjs";
 import { a as ShieldCheck, t as LogIn } from "../_libs/lucide-react.mjs";
 import "../_libs/tanstack__router-core.mjs";
