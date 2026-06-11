@@ -1,9 +1,9 @@
 import { j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
 import { u as useQuery } from "../_libs/tanstack__react-query.mjs";
-import { P as PageShell } from "./layout-5uvChYov.mjs";
+import { P as PageShell } from "./layout-WOXRQ1YO.mjs";
 import { supabase } from "./client-CZ7d5FUj.mjs";
-import { R as Route$4 } from "./router-DMvx1MT2.mjs";
+import { R as Route$4 } from "./router-D6Y-D7l5.mjs";
 import "../_libs/sonner.mjs";
 import { r as ArrowLeft, s as Sparkles, L as ListChecks } from "../_libs/lucide-react.mjs";
 import "../_libs/tanstack__router-core.mjs";

@@ -14,6 +14,21 @@ function createSupabaseClient() {
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Set them in .env or Vercel dashboard.`;
     console.error(`[Supabase] ${message}`);
+    
+    // During SSR, if env vars are missing, don't throw — return a stub client
+    // that will fail gracefully when actually used (client-side only).
+    if (typeof window === "undefined") {
+      console.warn("[Supabase] SSR: env vars missing, returning stub client. This will fail on client-side access.");
+      // Return a dummy proxy that won't crash SSR but will error on use
+      return new Proxy({} as ReturnType<typeof createClient>, {
+        get: () => {
+          throw new Error(
+            `[Supabase] Env vars not configured. Check that VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in Vercel dashboard.`
+          );
+        },
+      });
+    }
+    
     throw new Error(message);
   }
 

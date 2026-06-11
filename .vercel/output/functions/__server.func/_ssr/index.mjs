@@ -53,7 +53,7 @@ function renderErrorPage() {
 let serverEntryPromise;
 async function getServerEntry() {
   if (!serverEntryPromise) {
-    serverEntryPromise = import("./server-DbTzJLbO.mjs").then((n) => n.s).then(
+    serverEntryPromise = import("./server-BLoeHK_E.mjs").then((n) => n.s).then(
       (m) => m.default ?? m
     );
   }
@@ -67,12 +67,23 @@ function mergeVercelEnv(env) {
     "SUPABASE_ANON_KEY",
     "SUPABASE_SERVICE_ROLE_KEY",
     "VITE_SUPABASE_URL",
-    "VITE_SUPABASE_ANON_KEY"
+    "VITE_SUPABASE_ANON_KEY",
+    "NODE_ENV"
   ];
   for (const key of allowedKeys) {
     const value = rawEnv[key];
     if (typeof value === "string" && process.env[key] === void 0) {
       process.env[key] = value;
+    }
+  }
+  {
+    const missing = [];
+    if (!process.env.VITE_SUPABASE_URL) missing.push("VITE_SUPABASE_URL");
+    if (!process.env.VITE_SUPABASE_ANON_KEY) missing.push("VITE_SUPABASE_ANON_KEY");
+    if (missing.length > 0) {
+      console.error(
+        `[SSR] CRITICAL: Missing Supabase environment variables in production: ${missing.join(", ")}. Check your Vercel dashboard → Settings → Environment Variables.`
+      );
     }
   }
 }
@@ -98,7 +109,7 @@ const server = {
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
-      console.error(error);
+      console.error("[SSR] Unhandled error during fetch:", error);
       return new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" }

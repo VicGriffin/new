@@ -20,7 +20,23 @@ export function createSupabaseAdminClient(env?: SupabaseServerEnv) {
       ...(!SUPABASE_SERVICE_ROLE_KEY ? ["SUPABASE_SERVICE_ROLE_KEY"] : []),
     ];
     const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
+    console.error(`[Supabase Admin] ${message}`);
+    
+    // On Vercel/production, if admin env vars are missing, create a client
+    // that will fail gracefully when called, rather than crashing SSR.
+    // This allows SSR to complete and display an error on the client side.
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NODE_ENV === "production") {
+      console.warn("[Supabase Admin] Production: service role key not set. Admin operations will fail at runtime.");
+      // Return a stub that errors on use
+      return new Proxy({} as ReturnType<typeof createClient>, {
+        get: () => {
+          throw new Error(
+            `[Supabase Admin] Not configured. SUPABASE_SERVICE_ROLE_KEY is required for admin operations.`
+          );
+        },
+      });
+    }
+    
     throw new Error(message);
   }
 

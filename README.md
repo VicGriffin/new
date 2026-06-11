@@ -1,17 +1,20 @@
 # AMTMTI Platform
 
-Web platform for the **Africa Medication Therapy Management Training Institute (AMTMTI)** — a public marketing site, student e-learning portal, and admin console backed by Supabase.
+Concise overview: this repository powers the public marketing site, student e-learning portal, and admin console for the Africa Medication Therapy Management Institute (AMTMTI). It uses Supabase for auth and data, and TanStack Start (React + Vite) for the frontend and server runtime.
 
-Built with **TanStack Start** (React 19 + Vite + file-based routing), **Supabase** (auth, Postgres, RLS), and **Tailwind CSS**.
+What this project does
+- Serves a public marketing site with programs, research, news, and events.
+- Provides a student portal (`/portal`) for enrollments, resources, and progress tracking.
+- Includes an admin console (`/admin`) for content and user management (requires `admin` role).
 
----
+Key files & folders (brief)
+- `src/routes/` — file-based pages and route handlers (public pages, auth, portal, admin).
+- `src/components/site/` — header, footer, page shell and layout components.
+- `src/integrations/supabase/` — Supabase client (browser + server), auth middleware, and types.
+- `supabase/migrations/` — database schema, RLS policies, triggers, and seed SQL.
+- `scripts/` — helper scripts for admin provisioning and resource setup.
+- `.env.example` — required environment variables; copy to `.env` for local development.
 
-## Tech stack
-
-| Layer | Technology |
-| --- | --- |
-| Framework | TanStack Start, TanStack Router, TanStack Query |
-| UI | React 19, Tailwind CSS 4, Radix UI / shadcn-style components |
 | Backend / data | Supabase (Auth, Postgres, Row Level Security) |
 | Server | Nitro (SSR / production build), server functions via `createServerFn` |
 | Auth extras | Lovable Cloud Auth (Google OAuth) |

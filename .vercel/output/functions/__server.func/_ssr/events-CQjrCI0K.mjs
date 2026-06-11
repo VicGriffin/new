@@ -1,6 +1,6 @@
 import { j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { u as useQuery } from "../_libs/tanstack__react-query.mjs";
-import { P as PageShell } from "./layout-5uvChYov.mjs";
+import { P as PageShell } from "./layout-WOXRQ1YO.mjs";
 import { supabase } from "./client-CZ7d5FUj.mjs";
 import "../_libs/sonner.mjs";
 import { C as Clock, e as MapPin, f as Calendar } from "../_libs/lucide-react.mjs";
@@ -19,7 +19,7 @@ import "crypto";
 import "async_hooks";
 import "stream";
 import "../_libs/isbot.mjs";
-import "./router-DMvx1MT2.mjs";
+import "./router-D6Y-D7l5.mjs";
 import "../_libs/supabase__supabase-js.mjs";
 import "../_libs/supabase__postgrest-js.mjs";
 import "../_libs/supabase__realtime-js.mjs";

@@ -1,12 +1,12 @@
 import { r as reactExports, j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { d as useNavigate, L as Link } from "../_libs/tanstack__react-router.mjs";
-import { P as PageShell } from "./layout-5uvChYov.mjs";
+import { P as PageShell } from "./layout-WOXRQ1YO.mjs";
 import { supabase } from "./client-CZ7d5FUj.mjs";
 import { a as useQueryClient, u as useQuery, b as useMutation } from "../_libs/tanstack__react-query.mjs";
-import { a as adminCreateResource, b as adminDeleteResource, c as createSsrRpc } from "./resource.functions-Pn9lKAtL.mjs";
-import { a as createServerFn } from "./server-DbTzJLbO.mjs";
-import { r as requireSupabaseAuth } from "./auth-middleware-DaVfCUBa.mjs";
-import { A as ALL_ROLES } from "./router-DMvx1MT2.mjs";
+import { a as adminCreateResource, b as adminDeleteResource, c as createSsrRpc } from "./resource.functions-BiN06PMx.mjs";
+import { a as createServerFn } from "./server-BLoeHK_E.mjs";
+import { r as requireSupabaseAuth } from "./auth-middleware-Y4wvAYDa.mjs";
+import { A as ALL_ROLES } from "./router-D6Y-D7l5.mjs";
 import { t as toast } from "../_libs/sonner.mjs";
 import "../_libs/seroval.mjs";
 import { u as LogOut, y as LayoutDashboard, U as Users, B as BookOpen, G as GraduationCap, g as Mail, N as Newspaper, f as Calendar, M as Microscope, x as Library, z as Handshake, Q as Quote, p as Activity, D as Plus, k as CircleCheck, I as Pencil, J as Trash2 } from "../_libs/lucide-react.mjs";

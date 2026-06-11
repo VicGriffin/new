@@ -1,5 +1,5 @@
 import { j as jsxRuntimeExports } from "../_libs/react.mjs";
-import { P as PageShell } from "./layout-5uvChYov.mjs";
+import { P as PageShell } from "./layout-WOXRQ1YO.mjs";
 import "../_libs/sonner.mjs";
 import "../_libs/tanstack__react-router.mjs";
 import "../_libs/tanstack__router-core.mjs";
@@ -25,7 +25,7 @@ import "../_libs/iceberg-js.mjs";
 import "../_libs/supabase__auth-js.mjs";
 import "tslib";
 import "../_libs/supabase__functions-js.mjs";
-import "./router-DMvx1MT2.mjs";
+import "./router-D6Y-D7l5.mjs";
 import "../_libs/tanstack__query-core.mjs";
 import "../_libs/tanstack__react-query.mjs";
 import "../_libs/lucide-react.mjs";

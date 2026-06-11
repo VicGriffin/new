@@ -1,6 +1,6 @@
 import { j as jsxRuntimeExports } from "../_libs/react.mjs";
 import { L as Link } from "../_libs/tanstack__react-router.mjs";
-import { P as PageShell } from "./layout-5uvChYov.mjs";
+import { P as PageShell } from "./layout-WOXRQ1YO.mjs";
 import "../_libs/sonner.mjs";
 import { A as ArrowRight, l as HeartPulse, j as Award, B as BookOpen, m as Earth, M as Microscope, a as ShieldCheck, n as Pill, o as FlaskConical, p as Activity, b as Stethoscope, U as Users, Q as Quote, q as Star } from "../_libs/lucide-react.mjs";
 import "../_libs/tanstack__router-core.mjs";
@@ -26,7 +26,7 @@ import "../_libs/iceberg-js.mjs";
 import "../_libs/supabase__auth-js.mjs";
 import "tslib";
 import "../_libs/supabase__functions-js.mjs";
-import "./router-DMvx1MT2.mjs";
+import "./router-D6Y-D7l5.mjs";
 import "../_libs/tanstack__query-core.mjs";
 import "../_libs/tanstack__react-query.mjs";
 const stats = [{
