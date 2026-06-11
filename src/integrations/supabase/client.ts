@@ -17,7 +17,7 @@ function createSupabaseClient(): SupabaseClient<Database> {
 
     if (typeof window === "undefined") {
       console.warn(
-        "[Supabase] SSR: env vars missing, returning stub client. This will fail gracefully on use instead of crashing SSR."
+        "[Supabase] SSR: env vars missing, returning stub client. This will fail gracefully on use instead of crashing SSR.",
       );
       return createSupabaseStub(
         `[Supabase] Env vars not configured. Check that VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in Vercel dashboard.`,
@@ -29,11 +29,37 @@ function createSupabaseClient(): SupabaseClient<Database> {
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
-      storage: typeof window !== "undefined" ? localStorage : undefined,
+      storage: typeof window !== "undefined" ? createBrowserAuthStorage() : undefined,
       persistSession: true,
       autoRefreshToken: true,
     },
   });
+}
+
+function createBrowserAuthStorage() {
+  const rememberPreferenceKey = "amtmti_remember_session";
+
+  function preferredStorage() {
+    return window.localStorage.getItem(rememberPreferenceKey) === "false"
+      ? window.sessionStorage
+      : window.localStorage;
+  }
+
+  return {
+    getItem(key: string) {
+      return window.localStorage.getItem(key) ?? window.sessionStorage.getItem(key);
+    },
+    setItem(key: string, value: string) {
+      const target = preferredStorage();
+      const fallback = target === window.localStorage ? window.sessionStorage : window.localStorage;
+      fallback.removeItem(key);
+      target.setItem(key, value);
+    },
+    removeItem(key: string) {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    },
+  };
 }
 
 let _supabase: ReturnType<typeof createSupabaseClient> | undefined;
@@ -52,7 +78,16 @@ function createSupabaseStub(message: string): SupabaseClient<Database> {
       if (key === "auth.getUser") {
         return Promise.resolve({ data: { user: null } });
       }
-      if (path[path.length - 1] === "select" || path[path.length - 1] === "insert" || path[path.length - 1] === "update" || path[path.length - 1] === "delete" || path[path.length - 1] === "upsert" || path[path.length - 1] === "rpc" || path[path.length - 1] === "maybeSingle" || path[path.length - 1] === "single") {
+      if (
+        path[path.length - 1] === "select" ||
+        path[path.length - 1] === "insert" ||
+        path[path.length - 1] === "update" ||
+        path[path.length - 1] === "delete" ||
+        path[path.length - 1] === "upsert" ||
+        path[path.length - 1] === "rpc" ||
+        path[path.length - 1] === "maybeSingle" ||
+        path[path.length - 1] === "single"
+      ) {
         return Promise.reject(error);
       }
       return createProxy(path);

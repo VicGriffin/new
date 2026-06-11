@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { PageShell } from "@/components/site/layout";
@@ -17,6 +18,47 @@ export const Route = createFileRoute("/auth")({
   }),
   component: AuthPage,
 });
+
+type AuthMode = "signin" | "signup";
+
+type SignupForm = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  phone: string;
+  company: string;
+  jobTitle: string;
+  country: string;
+  termsAccepted: boolean;
+  marketingConsent: boolean;
+};
+
+const initialSignupForm: SignupForm = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  phone: "",
+  company: "",
+  jobTitle: "",
+  country: "",
+  termsAccepted: false,
+  marketingConsent: false,
+};
+
+const COUNTRIES = [
+  "Kenya",
+  "Uganda",
+  "Tanzania",
+  "Rwanda",
+  "Ghana",
+  "Nigeria",
+  "South Africa",
+  "Other",
+];
 
 function AuthPage() {
   const nav = useNavigate();
@@ -45,6 +87,15 @@ function AuthPage() {
       } else if (status === "approved") {
         nav({ to: "/portal", replace: true });
       }
+    },
+    [nav],
+  );
+
+  useEffect(() => {
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.user) return;
+      await routeAuthenticatedUser(data.session.user.id);
     }
 
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
@@ -84,7 +135,7 @@ function AuthPage() {
     );
   }
 
-  async function handleEmail(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setAuthError(null);
@@ -184,6 +235,8 @@ function AuthPage() {
     });
     if (r.error) toast.error(r.error.message ?? "Google sign-in failed");
   }
+
+  const signupErrors = getSignupValidationErrors();
 
   return (
     <PageShell>
@@ -301,11 +354,19 @@ function AuthPage() {
             <form onSubmit={handleEmail} className="space-y-4">
               {mode === "signup" && (
                 <Input
-                  label="Full name"
-                  value={fullName}
-                  onChange={setFullName}
+                  label="Email address"
+                  type="email"
+                  value={loginEmail}
+                  onChange={setLoginEmail}
                   required
-                  maxLength={120}
+                  maxLength={200}
+                  autoComplete="email"
+                  error={
+                    touched.loginEmail && !isValidEmail(loginEmail)
+                      ? "Enter a valid email."
+                      : undefined
+                  }
+                  onBlur={() => setTouched((current) => ({ ...current, loginEmail: true }))}
                 />
               )}
               {mode !== "updatePassword" && (
@@ -322,9 +383,68 @@ function AuthPage() {
               {mode !== "reset" && (
                 <Input
                   label="Password"
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
+                  value={loginPassword}
+                  onChange={setLoginPassword}
+                  visible={showLoginPassword}
+                  onToggleVisible={() => setShowLoginPassword((current) => !current)}
+                  autoComplete="current-password"
+                  error={
+                    touched.loginPassword && !loginPassword ? "Password is required." : undefined
+                  }
+                  onBlur={() => setTouched((current) => ({ ...current, loginPassword: true }))}
+                />
+
+                <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <label className="inline-flex items-center gap-2 text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="size-4 rounded border-input accent-medical"
+                    />
+                    Remember me
+                  </label>
+                  <Link to="/forgot-password" className="font-medium text-medical hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+
+                <button
+                  disabled={loading}
+                  className="w-full rounded-md bg-medical text-white py-2.5 font-semibold hover:bg-medical/90 transition disabled:opacity-60"
+                >
+                  {loading ? "Signing in…" : "Sign in"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSignup} className="space-y-4" noValidate>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input
+                    label="First name"
+                    value={signupForm.firstName}
+                    onChange={(v) => updateSignupField("firstName", v)}
+                    required
+                    maxLength={80}
+                    autoComplete="given-name"
+                    error={touched.firstName ? signupErrors.firstName : undefined}
+                    onBlur={() => setTouched((current) => ({ ...current, firstName: true }))}
+                  />
+                  <Input
+                    label="Last name"
+                    value={signupForm.lastName}
+                    onChange={(v) => updateSignupField("lastName", v)}
+                    required
+                    maxLength={80}
+                    autoComplete="family-name"
+                    error={touched.lastName ? signupErrors.lastName : undefined}
+                    onBlur={() => setTouched((current) => ({ ...current, lastName: true }))}
+                  />
+                </div>
+                <Input
+                  label="Email address"
+                  type="email"
+                  value={signupForm.email}
+                  onChange={(v) => updateSignupField("email", v)}
                   required
                   minLength={8}
                   maxLength={72}
@@ -406,6 +526,54 @@ function AuthPage() {
   );
 }
 
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function getPasswordStrength(password: string) {
+  const checks = [
+    { label: "At least 8 characters", valid: password.length >= 8 },
+    { label: "Uppercase letter", valid: /[A-Z]/.test(password) },
+    { label: "Lowercase letter", valid: /[a-z]/.test(password) },
+    { label: "Number", valid: /\d/.test(password) },
+    { label: "Symbol", valid: /[^A-Za-z0-9]/.test(password) },
+  ];
+  const score = checks.filter((check) => check.valid).length;
+  const label = score <= 2 ? "Weak" : score <= 4 ? "Good" : "Strong";
+  return { checks, score, label };
+}
+
+function PasswordRequirements({
+  password,
+  strength,
+}: {
+  password: string;
+  strength: ReturnType<typeof getPasswordStrength>;
+}) {
+  const percent = (strength.score / strength.checks.length) * 100;
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-3">
+      <div className="flex items-center justify-between text-xs font-semibold text-navy">
+        <span>Password strength</span>
+        <span>{password ? strength.label : "Not started"}</span>
+      </div>
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-border">
+        <div
+          className={`h-full rounded-full transition-all ${strength.score <= 2 ? "bg-destructive" : strength.score <= 4 ? "bg-amber-500" : "bg-emerald-brand"}`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <ul className="mt-3 grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+        {strength.checks.map((check) => (
+          <li key={check.label} className={check.valid ? "text-emerald-700" : undefined}>
+            {check.valid ? "✓" : "○"} {check.label}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function Input({
   label,
   type = "text",
@@ -427,17 +595,102 @@ function Input({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold uppercase tracking-wider text-navy">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-wider text-navy">
+        {label} {required && <span className="text-destructive">*</span>}
+      </span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         required={required}
         minLength={minLength}
         maxLength={maxLength}
         autoComplete={autoComplete}
         className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
       />
+      {error && <span className="mt-1 block text-xs text-destructive">{error}</span>}
+    </label>
+  );
+}
+
+function PasswordInput({
+  label,
+  value,
+  onChange,
+  visible,
+  onToggleVisible,
+  autoComplete,
+  error,
+  onBlur,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  visible: boolean;
+  onToggleVisible: () => void;
+  autoComplete: string;
+  error?: string;
+  onBlur?: () => void;
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold uppercase tracking-wider text-navy">
+        {label} <span className="text-destructive">*</span>
+      </span>
+      <div className="relative mt-1.5">
+        <input
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
+          required
+          minLength={8}
+          maxLength={72}
+          autoComplete={autoComplete}
+          aria-invalid={Boolean(error)}
+          className="w-full rounded-md border border-input bg-background px-4 py-2.5 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
+        />
+        <button
+          type="button"
+          onClick={onToggleVisible}
+          className="absolute inset-y-0 right-0 grid w-11 place-items-center text-muted-foreground hover:text-medical"
+          aria-label={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+        >
+          {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      </div>
+      {error && <span className="mt-1 block text-xs text-destructive">{error}</span>}
+    </label>
+  );
+}
+
+function SelectInput({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold uppercase tracking-wider text-navy">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
+      >
+        <option value="">Select country</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
     </label>
   );
 }

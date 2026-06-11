@@ -270,7 +270,7 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "course_enrollments";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       notifications: {
@@ -300,47 +300,54 @@ export type Database = {
         };
         Relationships: [];
       };
-        audit_logs: {
-          Row: {
-            actor_id: string | null;
-            action: string;
-            table_name: string;
-            row_id: string | null;
-            changes: Json | null;
-            meta: Json | null;
-            created_at: string;
-            id: string;
-          };
-          Insert: {
-            actor_id?: string | null;
-            action: string;
-            table_name: string;
-            row_id?: string | null;
-            changes?: Json | null;
-            meta?: Json | null;
-            created_at?: string;
-            id?: string;
-          };
-          Update: {
-            actor_id?: string | null;
-            action?: string;
-            table_name?: string;
-            row_id?: string | null;
-            changes?: Json | null;
-            meta?: Json | null;
-            created_at?: string;
-            id?: string;
-          };
-          Relationships: [];
+      audit_logs: {
+        Row: {
+          actor_id: string | null;
+          action: string;
+          table_name: string;
+          row_id: string | null;
+          changes: Json | null;
+          meta: Json | null;
+          created_at: string;
+          id: string;
         };
+        Insert: {
+          actor_id?: string | null;
+          action: string;
+          table_name: string;
+          row_id?: string | null;
+          changes?: Json | null;
+          meta?: Json | null;
+          created_at?: string;
+          id?: string;
+        };
+        Update: {
+          actor_id?: string | null;
+          action?: string;
+          table_name?: string;
+          row_id?: string | null;
+          changes?: Json | null;
+          meta?: Json | null;
+          created_at?: string;
+          id?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;
           bio: string | null;
+          company: string | null;
           country: string | null;
           created_at: string;
+          email_verified: boolean;
+          first_name: string | null;
           full_name: string | null;
           id: string;
+          job_title: string | null;
+          last_name: string | null;
+          marketing_consent: boolean;
+          phone: string | null;
           profession: string | null;
           status: string;
           updated_at: string;
@@ -348,10 +355,17 @@ export type Database = {
         Insert: {
           avatar_url?: string | null;
           bio?: string | null;
+          company?: string | null;
           country?: string | null;
           created_at?: string;
+          email_verified?: boolean;
+          first_name?: string | null;
           full_name?: string | null;
           id: string;
+          job_title?: string | null;
+          last_name?: string | null;
+          marketing_consent?: boolean;
+          phone?: string | null;
           profession?: string | null;
           status?: string;
           updated_at?: string;
@@ -359,10 +373,17 @@ export type Database = {
         Update: {
           avatar_url?: string | null;
           bio?: string | null;
+          company?: string | null;
           country?: string | null;
           created_at?: string;
+          email_verified?: boolean;
+          first_name?: string | null;
           full_name?: string | null;
           id?: string;
+          job_title?: string | null;
+          last_name?: string | null;
+          marketing_consent?: boolean;
+          phone?: string | null;
           profession?: string | null;
           status?: string;
           updated_at?: string;
