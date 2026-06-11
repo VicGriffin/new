@@ -124,7 +124,7 @@ pharmacy-site-clone/
 
 ### Prerequisites
 
-- Node.js 20+ or newer
+- Node.js 24.x
 - npm
 - Supabase project
 
@@ -138,7 +138,7 @@ cp .env.example .env
 npm run dev
 ```
 
-### Build
+### Build and preview
 
 ```bash
 npm run typecheck
@@ -146,6 +146,16 @@ npm run lint
 npm run build
 npm run preview
 ```
+
+`npm run build` emits Nitro's Vercel Build Output API bundle under `.vercel/output`.
+Use `npm run preview` after a build to serve that same Vercel/Nitro output locally; do not use `vite preview` for this TanStack Start SSR build because it looks for a `dist/server/server.js` file that the Vercel preset does not emit.
+
+### Vercel deployment notes
+
+- Keep the project on Node.js 24.x (the version is pinned in `package.json`).
+- The Vercel build command should be `npm run build`.
+- Configure these environment variables in Vercel for Production, Preview, and Development as needed: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
+- Do not commit `.vercel/output`; it is generated during each Vercel build.
 
 ## Environment variables
 

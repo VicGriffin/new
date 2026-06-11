@@ -33,3 +33,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Vercel/Nitro build output
+.vercel/output/

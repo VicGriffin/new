@@ -7,8 +7,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "preview": "vite preview",
-    "start": "node server.js",
+    "preview": "nitro preview",
+    "start": "nitro preview",
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"scripts/**/*.mjs\" vite.config.ts eslint.config.js",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
@@ -92,5 +92,8 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }
