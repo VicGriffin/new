@@ -2,8 +2,8 @@
  * Ensures the development admin account exists and has the admin role.
  * Uses only the anon key (no service role required).
  *
- * 1. Sign in or sign up admin@amtmti.org
- * 2. Call claim_seed_admin() RPC to grant admin role (idempotent)
+ * 1. Sign in or sign up ADMIN_EMAIL from the environment
+ * 2. Call bootstrap_first_admin() RPC if no admin exists yet
  *
  * Run automatically before `npm run dev`, or manually:
  *   node --env-file=.env scripts/ensure-dev-admin.mjs
@@ -12,12 +12,19 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@amtmti.org").toLowerCase();
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123456";
-const ADMIN_DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME || "AMTMTI Administrator";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME?.trim() || "AMTMTI Administrator";
 
-if (!SUPABASE_URL || !ANON_KEY) {
-  console.warn("[ensure-dev-admin] Skipped — missing SUPABASE_URL or anon key (VITE_SUPABASE_ANON_KEY / SUPABASE_ANON_KEY).");
+if (!SUPABASE_URL || !ANON_KEY || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.warn(
+    "[ensure-dev-admin] Skipped — missing SUPABASE_URL, anon key, ADMIN_EMAIL, or ADMIN_PASSWORD.",
+  );
+  process.exit(0);
+}
+
+if (ADMIN_PASSWORD.length < 12) {
+  console.warn("[ensure-dev-admin] Skipped — ADMIN_PASSWORD must be at least 12 characters.");
   process.exit(0);
 }
 
@@ -82,16 +89,20 @@ async function ensureAuthUser() {
 }
 
 async function ensureAdminRole() {
-  const { error } = await supabase.rpc("claim_seed_admin");
+  const { error } = await supabase.rpc("bootstrap_first_admin");
   if (error) {
-    if (error.message.includes("claim_seed_admin") || error.code === "PGRST202") {
+    if (error.message.includes("bootstrap_first_admin") || error.code === "PGRST202") {
       throw new Error(
-        "Database function claim_seed_admin is missing. Run supabase/seed_admin_complete.sql in the Supabase SQL Editor once, then re-run this script.",
+        "Database function bootstrap_first_admin is missing. Push migrations or run supabase/seed_admin_complete.sql once, then re-run this script.",
       );
+    }
+    if (error.message.toLowerCase().includes("admin account already exists")) {
+      console.log("[ensure-dev-admin] Admin already exists; skipping first-admin bootstrap.");
+      return;
     }
     throw error;
   }
-  console.log("[ensure-dev-admin] Admin role confirmed.");
+  console.log("[ensure-dev-admin] First admin role confirmed.");
 }
 
 async function main() {

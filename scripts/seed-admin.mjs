@@ -12,14 +12,19 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@amtmti.org";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123456";
-const ADMIN_DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME || "AMTMTI Administrator";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME?.trim() || "AMTMTI Administrator";
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
+if (!SUPABASE_URL || !SERVICE_KEY || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
   console.error(
-    "Missing SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY. Add them to .env before running seed:admin.",
+    "Missing SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_EMAIL, or ADMIN_PASSWORD. Add them to your environment before running seed:admin.",
   );
+  process.exit(1);
+}
+
+if (ADMIN_PASSWORD.length < 12) {
+  console.error("ADMIN_PASSWORD must be at least 12 characters for production-safe bootstrap.");
   process.exit(1);
 }
 
@@ -65,7 +70,7 @@ async function main() {
   let user = await findUserByEmail(ADMIN_EMAIL);
 
   if (user) {
-    console.log("Admin user exists — updating password and metadata.");
+    console.log("Admin user exists — reconciling password and metadata from environment.");
     const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
       password: ADMIN_PASSWORD,
       email_confirm: true,

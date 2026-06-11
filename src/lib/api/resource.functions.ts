@@ -5,7 +5,10 @@ import { createSupabaseAdminClient } from "@/integrations/supabase/client.server
 
 const RESOURCE_FILE_BUCKET = "resource_files";
 
-async function assertAdmin(userId: string, supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>) {
+async function assertAdmin(
+  userId: string,
+  supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>,
+) {
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")
@@ -89,8 +92,8 @@ export const adminCreateResource = createServerFn({ method: "POST" })
         url: data.kind === "document" ? null : data.url || null,
         description: data.description || null,
         is_public: data.is_public,
-        file_name: data.kind === "document" ? data.file_name : data.file_name ?? null,
-        content_type: data.kind === "document" ? data.content_type : data.content_type ?? null,
+        file_name: data.kind === "document" ? data.file_name : (data.file_name ?? null),
+        content_type: data.kind === "document" ? data.content_type : (data.content_type ?? null),
         storage_path,
       })
       .select()
@@ -117,8 +120,7 @@ export const adminDeleteResource = createServerFn({ method: "POST" })
     if (!resource) throw new Error("Resource not found");
 
     if (resource.storage_path) {
-      const { error: fileError } = await supabaseAdmin
-        .storage
+      const { error: fileError } = await supabaseAdmin.storage
         .from(RESOURCE_FILE_BUCKET)
         .remove([resource.storage_path]);
       if (fileError) {
@@ -172,17 +174,17 @@ export const getResourceDownloadUrl = createServerFn({ method: "POST" })
         .maybeSingle();
 
       if (enrollmentError) throw enrollmentError;
-      if (!enrollment || !["approved", "completed"].includes(enrollment.status)) {
+      if (!enrollment || !["active", "completed"].includes(enrollment.status)) {
         throw new Error("Forbidden: resource access denied");
       }
     }
 
     if (resource.storage_path) {
-      const { data: signed, error: signedError } = await supabaseAdmin
-        .storage
+      const { data: signed, error: signedError } = await supabaseAdmin.storage
         .from(RESOURCE_FILE_BUCKET)
         .createSignedUrl(resource.storage_path, 300);
-      if (signedError || !signed?.signedUrl) throw signedError ?? new Error("Failed to generate download URL");
+      if (signedError || !signed?.signedUrl)
+        throw signedError ?? new Error("Failed to generate download URL");
       return { downloadUrl: signed.signedUrl };
     }
 

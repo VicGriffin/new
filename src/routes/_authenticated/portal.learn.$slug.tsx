@@ -39,7 +39,10 @@ export const Route = createFileRoute("/_authenticated/portal/learn/$slug")({
       .maybeSingle();
     const status = profile?.status ?? "pending";
     if (status !== "approved") {
-      throw redirect({ to: "/auth", search: { reason: status === "suspended" || status === "rejected" ? status : "pending" } });
+      throw redirect({
+        to: "/auth",
+        search: { reason: status === "suspended" || status === "rejected" ? status : "pending" },
+      });
     }
     return { user: u.user };
   },
@@ -69,11 +72,7 @@ function StudyWorkspace() {
   const { data: program, isLoading: programLoading } = useQuery({
     queryKey: ["program-study", slug],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("programs")
-        .select("*")
-        .eq("slug", slug)
-        .single();
+      const { data, error } = await supabase.from("programs").select("*").eq("slug", slug).single();
       if (error) throw error;
       return data;
     },
@@ -100,7 +99,10 @@ function StudyWorkspace() {
   const [activeTopicIndex, setActiveTopicIndex] = useState<number>(0);
 
   // Parse curriculum JSON safely
-  const curriculum: Module[] = program?.curriculum ? (program.curriculum as any) : [];
+  const curriculum: Module[] = useMemo(
+    () => (program?.curriculum ? (program.curriculum as any) : []),
+    [program?.curriculum],
+  );
 
   // Flattened list of all topics for progress calculations and next/prev navigations
   const flatTopics = useMemo(() => {
@@ -130,7 +132,7 @@ function StudyWorkspace() {
         }
       }
     }
-  }, [enrollment, program]);
+  }, [curriculum, enrollment]);
 
   // Parse completed topics list
   const completedTopics = useMemo(() => {
@@ -180,7 +182,8 @@ function StudyWorkspace() {
 
   // Guard routing checks
   const isEnrolled = !!enrollment;
-  const isUnlocked = enrollment && (enrollment.status === "active" || enrollment.status === "completed");
+  const isUnlocked =
+    enrollment && (enrollment.status === "active" || enrollment.status === "completed");
 
   if (!isEnrolled || !isUnlocked) {
     return (
@@ -189,7 +192,8 @@ function StudyWorkspace() {
           <Award className="size-16 mx-auto text-medical" />
           <h2 className="text-3xl font-bold text-navy">Course Content Locked</h2>
           <p className="text-foreground/70 leading-relaxed">
-            You must have an active, fully paid enrollment to access this course. Please initiate enrollment and complete your payment on the portal dashboard.
+            You must have an active, fully paid enrollment to access this course. Please initiate
+            enrollment and complete your payment on the portal dashboard.
           </p>
           <Link
             to="/portal"
@@ -221,7 +225,7 @@ function StudyWorkspace() {
 
     // Auto-advance to next topic if available
     const currentFlatIndex = flatTopics.findIndex(
-      (t: any) => t.moduleIndex === activeModuleIndex && t.topicIndex === activeTopicIndex
+      (t: any) => t.moduleIndex === activeModuleIndex && t.topicIndex === activeTopicIndex,
     );
     if (currentFlatIndex !== -1 && currentFlatIndex < flatTopics.length - 1) {
       const nextFlat = flatTopics[currentFlatIndex + 1];
@@ -245,14 +249,18 @@ function StudyWorkspace() {
               <ArrowLeft className="size-4" />
             </Link>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-brand">E-Learning Path</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-brand">
+                E-Learning Path
+              </p>
               <h1 className="text-xl font-bold truncate max-w-md">{program?.title}</h1>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-xs text-white/60">Overall Course Progress</p>
-              <p className="text-sm font-bold text-emerald-brand">{enrollment?.progress}% Completed</p>
+              <p className="text-sm font-bold text-emerald-brand">
+                {enrollment?.progress}% Completed
+              </p>
             </div>
             <div className="w-24 bg-white/10 h-2.5 rounded overflow-hidden">
               <div
@@ -295,7 +303,9 @@ function StudyWorkspace() {
                         >
                           <span className="truncate">{topic}</span>
                           {isTopicDone ? (
-                            <CheckCircle className={`size-4 ${isActive ? "text-white" : "text-emerald-brand"} shrink-0`} />
+                            <CheckCircle
+                              className={`size-4 ${isActive ? "text-white" : "text-emerald-brand"} shrink-0`}
+                            />
                           ) : (
                             <Circle className="size-4 opacity-40 shrink-0" />
                           )}
@@ -319,8 +329,12 @@ function StudyWorkspace() {
                 </span>
                 <h2 className="text-2xl font-bold text-navy">{activeTopic}</h2>
                 <div className="flex gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><Clock className="size-3.5" /> 15 min read</span>
-                  <span className="flex items-center gap-1.5"><PlayCircle className="size-3.5" /> Study Materials</span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="size-3.5" /> 15 min read
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <PlayCircle className="size-3.5" /> Study Materials
+                  </span>
                 </div>
               </div>
 
@@ -328,27 +342,40 @@ function StudyWorkspace() {
               <div className="prose prose-sm max-w-none text-foreground/80 leading-relaxed space-y-4">
                 <p className="font-semibold text-navy text-sm">Learning Objective:</p>
                 <p className="bg-soft p-3.5 rounded-lg border border-medical/15 text-xs text-foreground/90 italic">
-                  Gain core competencies regarding the principles of "{activeTopic}" as configured in the AMTMTI training curriculum guidelines. Identify primary outcomes and clinical decision parameters.
+                  Gain core competencies regarding the principles of "{activeTopic}" as configured
+                  in the AMTMTI training curriculum guidelines. Identify primary outcomes and
+                  clinical decision parameters.
                 </p>
 
                 <h4 className="font-bold text-navy mt-6">1. Overview and Core Concept</h4>
                 <p>
-                  Medication Therapy Management (MTM) requires structured clinical procedures. In this segment, we explore advanced diagnostic and pharmaceutical reconciliation methods. Developing structured care plans ensures drug interaction risks are mitigated before prescribing or dispensing.
+                  Medication Therapy Management (MTM) requires structured clinical procedures. In
+                  this segment, we explore advanced diagnostic and pharmaceutical reconciliation
+                  methods. Developing structured care plans ensures drug interaction risks are
+                  mitigated before prescribing or dispensing.
                 </p>
 
                 <h4 className="font-bold text-navy mt-6">2. Clinical Case Discussion</h4>
                 <p>
-                  Consider an adult male outpatient diagnosed with complex cardiovascular comorbidities, currently prescribed a polypharmacy regimen consisting of multiple antihypertensives, anticoagulants, and metabolic regulators.
+                  Consider an adult male outpatient diagnosed with complex cardiovascular
+                  comorbidities, currently prescribed a polypharmacy regimen consisting of multiple
+                  antihypertensives, anticoagulants, and metabolic regulators.
                 </p>
                 <ul className="list-disc pl-5 space-y-1 text-xs">
                   <li>Assess renal and hepatic clearance margins prior to dosage adjustment.</li>
-                  <li>Incorporate patient compliance tracking tools to record daily dosages accurately.</li>
+                  <li>
+                    Incorporate patient compliance tracking tools to record daily dosages
+                    accurately.
+                  </li>
                   <li>Perform comprehensive drug-disease interaction checks.</li>
                 </ul>
 
                 <h4 className="font-bold text-navy mt-6">3. Strategic Guidelines for MTM Teams</h4>
                 <p>
-                  Healthcare practitioners must collaborate across disciplines to create patient-centric medication review workflows. Standardizing audit and documentation practices ensures safety metrics remain high across the community healthcare network.
+                  Healthcare practitioners must collaborate across disciplines to create
+                  patient-centric medication review workflows. Standardizing audit and documentation
+                  practices ensures safety metrics remain high across the community healthcare
+                  network.
                 </p>
               </div>
 
@@ -359,7 +386,9 @@ function StudyWorkspace() {
                       <CheckCircle className="size-4" /> Section Completed
                     </span>
                   ) : (
-                    <span className="text-xs text-muted-foreground">Mark this section complete to save your position.</span>
+                    <span className="text-xs text-muted-foreground">
+                      Mark this section complete to save your position.
+                    </span>
                   )}
                 </div>
                 <div className="flex gap-2">
@@ -367,7 +396,8 @@ function StudyWorkspace() {
                     onClick={handleMarkCompleted}
                     className="inline-flex items-center gap-2 rounded-md bg-medical px-6 py-2.5 text-sm font-semibold text-white hover:bg-medical/90 shadow-md transition"
                   >
-                    <BookOpenCheck className="size-4" /> Mark Completed & Next <ChevronRight className="size-4" />
+                    <BookOpenCheck className="size-4" /> Mark Completed & Next{" "}
+                    <ChevronRight className="size-4" />
                   </button>
                 </div>
               </div>
@@ -375,7 +405,9 @@ function StudyWorkspace() {
           ) : (
             <div className="text-center py-20 space-y-4">
               <BookOpen className="size-12 mx-auto text-muted-foreground opacity-40 animate-bounce" />
-              <p className="text-sm text-muted-foreground">Select a topic from the syllabus to start learning.</p>
+              <p className="text-sm text-muted-foreground">
+                Select a topic from the syllabus to start learning.
+              </p>
             </div>
           )}
         </main>

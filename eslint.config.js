@@ -6,7 +6,28 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi"] },
+  {
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/dist-ssr/**",
+      "**/.output/**",
+      "**/.vinxi/**",
+      "**/.tanstack/**",
+      "**/.nitro/**",
+      "**/.netlify/**",
+      "**/.lovable/**",
+      "**/.git/**",
+      "**/coverage/**",
+      "**/public/**",
+      "**/supabase/**",
+      "package-lock.json",
+      "bun.lock",
+      "*.md",
+      ".env",
+      ".env.*",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -34,7 +55,10 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "prettier/prettier": "off",
     },
   },
   eslintPluginPrettier,
+  { rules: { "prettier/prettier": "off" } },
 );
