@@ -50,12 +50,33 @@ export function Header() {
         setHasSession(false);
         return;
       }
-      setHasSession(true);
-      setRole(await getEffectiveRole(session.user.id));
+      try {
+        setHasSession(true);
+        setRole(await getEffectiveRole(session.user.id));
+      } catch (error) {
+        console.error("[Header] Failed to resolve user role:", error);
+        setRole(undefined);
+      }
     }
-    supabase.auth.getSession().then(({ data }) => syncAuth(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => syncAuth(s));
-    return () => sub.subscription.unsubscribe();
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => syncAuth(data.session))
+      .catch((error) => {
+        console.error("[Header] Supabase getSession failed:", error);
+        setRole(undefined);
+        setHasSession(false);
+      });
+
+    let unsubscribe: (() => void) | undefined;
+    try {
+      const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => syncAuth(s));
+      unsubscribe = () => sub.subscription.unsubscribe();
+    } catch (error) {
+      console.error("[Header] Supabase auth state listener failed:", error);
+    }
+
+    return () => unsubscribe?.();
   }, []);
 
   const showAdminNav = isAdminRole(role);

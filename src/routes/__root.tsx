@@ -125,15 +125,23 @@ function RootComponent() {
   const router = useRouter();
   useEffect(() => {
     let mounted = true;
-    import("@/integrations/supabase/client").then(({ supabase }) => {
-      if (!mounted) return;
-      const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-        if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-        router.invalidate();
-        if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+    import("@/integrations/supabase/client")
+      .then(({ supabase }) => {
+        if (!mounted) return;
+        try {
+          const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+            if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+            router.invalidate();
+            if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+          });
+          return () => sub.subscription.unsubscribe();
+        } catch (error) {
+          console.error("[Root] Supabase auth state listener failed:", error);
+        }
+      })
+      .catch((error) => {
+        console.error("[Root] Failed to import Supabase client:", error);
       });
-      return () => sub.subscription.unsubscribe();
-    });
     return () => {
       mounted = false;
     };
