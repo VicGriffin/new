@@ -20,16 +20,22 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const nav = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "reset" | "updatePassword">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkSession() {
       const { data } = await supabase.auth.getSession();
       if (!data.session?.user) return;
+      if (isPasswordRecoveryUrl()) {
+        setMode("updatePassword");
+        return;
+      }
       const [role, status] = await Promise.all([
         getEffectiveRole(data.session.user.id),
         getUserStatus(data.session.user.id),
@@ -40,29 +46,79 @@ function AuthPage() {
         nav({ to: "/portal", replace: true });
       }
     }
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("updatePassword");
+        setAuthError(null);
+      }
+    });
+
     checkSession();
+
+    return () => listener.subscription.unsubscribe();
   }, [nav]);
+
+  function isPasswordRecoveryUrl() {
+    if (typeof window === "undefined") return false;
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    return searchParams.get("type") === "recovery" || hashParams.get("type") === "recovery";
+  }
+
+  function normalizeAuthError(error: unknown) {
+    const message = error instanceof Error ? error.message : "Authentication failed";
+    if (/invalid login|invalid.*credentials|email not confirmed/i.test(message)) {
+      return "Incorrect email or password. Please check your details and try again.";
+    }
+    if (/rate limit/i.test(message)) {
+      return "Too many auth emails sent recently. Wait about an hour, then try again.";
+    }
+    return message;
+  }
 
   function isExistingAccountError(error: unknown) {
     if (!(error instanceof Error)) return false;
-    return /already registered|already exists|duplicate|already a user|user already exists/i.test(error.message);
+    return /already registered|already exists|duplicate|already a user|user already exists/i.test(
+      error.message,
+    );
   }
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setAuthError(null);
     try {
-      if (mode === "reset") {
+      if (mode === "updatePassword") {
+        if (password !== confirmPassword) {
+          const message = "Passwords do not match.";
+          setAuthError(message);
+          toast.error(message);
+          return;
+        }
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        toast.success("Password updated. Please sign in with your new password.");
+        await supabase.auth.signOut();
+        setPassword("");
+        setConfirmPassword("");
+        setMode("signin");
+        if (typeof window !== "undefined") window.history.replaceState({}, document.title, "/auth");
+      } else if (mode === "reset") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: `${window.location.origin}/auth?type=recovery`,
         });
         if (error) throw error;
         toast.success("Password reset link sent — check your email.");
+        setEmail("");
         setMode("signin");
       } else if (mode === "signup") {
         const { available } = await isEmailAvailable({ data: { email } });
         if (!available) {
-          toast.error("An account with this email already exists. Please sign in or reset your password.");
+          const message =
+            "An account with this email already exists. Please sign in or reset your password.";
+          setAuthError(message);
+          toast.error(message);
           return;
         }
         const { error } = await supabase.auth.signUp({
@@ -75,7 +131,10 @@ function AuthPage() {
         });
         if (error) {
           if (isExistingAccountError(error)) {
-            toast.error("An account with this email already exists. Please sign in or reset your password.");
+            const message =
+              "An account with this email already exists. Please sign in or reset your password.";
+            setAuthError(message);
+            toast.error(message);
             return;
           }
           throw error;
@@ -94,13 +153,14 @@ function AuthPage() {
             nav({ to: "/admin", replace: true });
           } else if (status !== "approved") {
             await supabase.auth.signOut();
-            if (status === "pending") {
-              toast.error("Your account is pending approval. Please wait for an admin to approve it.");
-            } else if (status === "rejected") {
-              toast.error("Your account has been rejected. Contact support for help.");
-            } else {
-              toast.error("Your account is not yet approved.");
-            }
+            const message =
+              status === "pending"
+                ? "Your account is pending approval. Please wait for an admin to approve it."
+                : status === "rejected"
+                  ? "Your account has been rejected. Contact support for help."
+                  : "Your account is not yet approved.";
+            setAuthError(message);
+            toast.error(message);
           } else {
             nav({ to: "/portal", replace: true });
           }
@@ -109,20 +169,16 @@ function AuthPage() {
         }
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Authentication failed";
-      if (message.toLowerCase().includes("rate limit")) {
-        toast.error(
-          "Too many auth emails sent recently (Supabase limit). Wait about an hour, use Google sign-in, or disable “Confirm email” in Supabase → Authentication → Providers → Email for local dev.",
-        );
-      } else {
-        toast.error(message);
-      }
+      const message = normalizeAuthError(err);
+      setAuthError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   }
 
   async function handleGoogle() {
+    setAuthError(null);
     const r = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin + "/portal",
     });
@@ -167,12 +223,17 @@ function AuthPage() {
 
         <div className="flex items-center justify-center p-6 lg:p-12 bg-soft">
           <div className="w-full max-w-md rounded-2xl bg-card border border-border p-8 shadow-xl">
-            {mode !== "reset" && (
+            {mode !== "reset" && mode !== "updatePassword" && (
               <div className="flex gap-2 mb-6">
                 {(["signin", "signup"] as const).map((m) => (
                   <button
                     key={m}
-                    onClick={() => setMode(m)}
+                    onClick={() => {
+                      setAuthError(null);
+                      setPassword("");
+                      setConfirmPassword("");
+                      setMode(m);
+                    }}
                     className={`flex-1 py-2 rounded-md text-sm font-semibold transition ${mode === m ? "bg-medical text-white" : "bg-muted text-foreground/70"}`}
                   >
                     {m === "signin" ? "Sign in" : "Create account"}
@@ -183,8 +244,16 @@ function AuthPage() {
             {mode === "reset" && (
               <h2 className="mb-6 text-lg font-bold text-navy">Reset your password</h2>
             )}
+            {mode === "updatePassword" && (
+              <div className="mb-6">
+                <h2 className="text-lg font-bold text-navy">Create a new password</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Enter and confirm your new AMTMTI password.
+                </p>
+              </div>
+            )}
 
-            {mode !== "reset" && (
+            {mode !== "reset" && mode !== "updatePassword" && (
               <button
                 onClick={handleGoogle}
                 className="w-full flex items-center justify-center gap-3 rounded-md border border-border bg-background py-2.5 text-sm font-semibold hover:bg-muted transition"
@@ -211,12 +280,21 @@ function AuthPage() {
               </button>
             )}
 
-            {mode !== "reset" && (
+            {mode !== "reset" && mode !== "updatePassword" && (
               <div className="relative my-6 text-center">
                 <span className="bg-card px-3 text-xs text-muted-foreground relative z-10">
                   or email
                 </span>
                 <div className="absolute inset-x-0 top-1/2 h-px bg-border -z-0" />
+              </div>
+            )}
+
+            {authError && (
+              <div
+                className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                role="alert"
+              >
+                {authError}
               </div>
             )}
 
@@ -230,14 +308,17 @@ function AuthPage() {
                   maxLength={120}
                 />
               )}
-              <Input
-                label="Email"
-                type="email"
-                value={email}
-                onChange={setEmail}
-                required
-                maxLength={200}
-              />
+              {mode !== "updatePassword" && (
+                <Input
+                  label="Email"
+                  type="email"
+                  value={email}
+                  onChange={setEmail}
+                  required
+                  maxLength={200}
+                  autoComplete="email"
+                />
+              )}
               {mode !== "reset" && (
                 <Input
                   label="Password"
@@ -247,6 +328,25 @@ function AuthPage() {
                   required
                   minLength={8}
                   maxLength={72}
+                  autoComplete={
+                    mode === "updatePassword"
+                      ? "new-password"
+                      : mode === "signup"
+                        ? "new-password"
+                        : "current-password"
+                  }
+                />
+              )}
+              {mode === "updatePassword" && (
+                <Input
+                  label="Confirm new password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  required
+                  minLength={8}
+                  maxLength={72}
+                  autoComplete="new-password"
                 />
               )}
               <button
@@ -259,23 +359,35 @@ function AuthPage() {
                     ? "Sign in"
                     : mode === "signup"
                       ? "Create account"
-                      : "Send reset link"}
+                      : mode === "updatePassword"
+                        ? "Update password"
+                        : "Send reset link"}
               </button>
             </form>
 
             {mode === "signin" && (
               <button
                 type="button"
-                onClick={() => setMode("reset")}
+                onClick={() => {
+                  setAuthError(null);
+                  setPassword("");
+                  setConfirmPassword("");
+                  setMode("reset");
+                }}
                 className="mt-3 w-full text-xs text-medical hover:underline"
               >
                 Forgot password?
               </button>
             )}
-            {mode === "reset" && (
+            {(mode === "reset" || mode === "updatePassword") && (
               <button
                 type="button"
-                onClick={() => setMode("signin")}
+                onClick={() => {
+                  setAuthError(null);
+                  setPassword("");
+                  setConfirmPassword("");
+                  setMode("signin");
+                }}
                 className="mt-3 w-full text-xs text-muted-foreground hover:text-medical"
               >
                 ← Back to sign in
@@ -302,6 +414,7 @@ function Input({
   required,
   minLength,
   maxLength,
+  autoComplete,
 }: {
   label: string;
   type?: string;
@@ -310,6 +423,7 @@ function Input({
   required?: boolean;
   minLength?: number;
   maxLength?: number;
+  autoComplete?: string;
 }) {
   return (
     <label className="block">
@@ -321,6 +435,7 @@ function Input({
         required={required}
         minLength={minLength}
         maxLength={maxLength}
+        autoComplete={autoComplete}
         className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
       />
     </label>
