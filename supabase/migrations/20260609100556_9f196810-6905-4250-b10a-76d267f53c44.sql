@@ -82,7 +82,7 @@ CREATE TABLE public.programs (
   duration TEXT,
   level TEXT,
   certification TEXT,
-  price_usd NUMERIC(10,2) DEFAULT 0,
+  price_ksh NUMERIC(12,2) DEFAULT 0,
   cover_url TEXT,
   is_published BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

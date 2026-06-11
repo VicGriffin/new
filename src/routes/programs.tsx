@@ -56,7 +56,7 @@ function Programs() {
       const { data, error } = await supabase
         .from("programs")
         .select(
-          "id,title,slug,summary,description,duration,level,certification,price_usd,program_categories(name)",
+          "id,title,slug,summary,description,duration,level,certification,price_ksh,program_categories(name)",
         )
         .eq("is_published", true)
         .order("created_at");
@@ -200,8 +200,8 @@ function Programs() {
                   <p className="mt-3 text-foreground/80 leading-relaxed">
                     {p.summary ?? p.description}
                   </p>
-                  {p.price_usd != null && p.price_usd > 0 && (
-                    <p className="mt-3 text-sm font-semibold text-navy">${p.price_usd} USD</p>
+                  {p.price_ksh != null && p.price_ksh > 0 && (
+                    <p className="mt-3 text-sm font-semibold text-navy">KSH {p.price_ksh.toLocaleString()}</p>
                   )}
                   <div className="mt-6 flex flex-wrap gap-3">
                     <Link

@@ -3558,6 +3558,7 @@ var ZodFirstPartyTypeKind;
   ZodFirstPartyTypeKind2["ZodReadonly"] = "ZodReadonly";
 })(ZodFirstPartyTypeKind || (ZodFirstPartyTypeKind = {}));
 const stringType = ZodString.create;
+const booleanType = ZodBoolean.create;
 ZodNever.create;
 const arrayType = ZodArray.create;
 const objectType = ZodObject.create;
@@ -3570,6 +3571,7 @@ ZodOptional.create;
 ZodNullable.create;
 export {
   arrayType as a,
+  booleanType as b,
   enumType as e,
   objectType as o,
   stringType as s

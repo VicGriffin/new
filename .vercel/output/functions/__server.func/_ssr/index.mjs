@@ -53,11 +53,28 @@ function renderErrorPage() {
 let serverEntryPromise;
 async function getServerEntry() {
   if (!serverEntryPromise) {
-    serverEntryPromise = import("./server-GTM5TjZt.mjs").then((n) => n.s).then(
+    serverEntryPromise = import("./server-DbTzJLbO.mjs").then((n) => n.s).then(
       (m) => m.default ?? m
     );
   }
   return serverEntryPromise;
+}
+function mergeVercelEnv(env) {
+  if (!env || typeof env !== "object") return;
+  const rawEnv = env;
+  const allowedKeys = [
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "VITE_SUPABASE_URL",
+    "VITE_SUPABASE_ANON_KEY"
+  ];
+  for (const key of allowedKeys) {
+    const value = rawEnv[key];
+    if (typeof value === "string" && process.env[key] === void 0) {
+      process.env[key] = value;
+    }
+  }
 }
 async function normalizeCatastrophicSsrResponse(response) {
   if (response.status < 500) return response;
@@ -76,6 +93,7 @@ async function normalizeCatastrophicSsrResponse(response) {
 const server = {
   async fetch(request, env, ctx) {
     try {
+      mergeVercelEnv(env);
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

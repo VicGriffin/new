@@ -1,16 +1,24 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, X, ShieldCheck } from "lucide-react";
+import { Menu, X, ShieldCheck, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppRole, getEffectiveRole, isAdminRole, isPortalRole } from "@/lib/auth/roles";
 
 const nav = [
   { label: "About", to: "/about" },
-  { label: "Programs", to: "/programs" },
+  { label: "Programs", to: "/programs", dropdown: true },
   { label: "Research", to: "/research" },
   { label: "News", to: "/news" },
   { label: "E-Learning", to: "/portal" },
   { label: "Contact", to: "/contact" },
+] as const;
+
+const programsDropdown = [
+  { label: "MTM Courses", to: "/programs?category=mtm" },
+  { label: "Professional Development Courses", to: "/programs?category=professional" },
+  { label: "Certificate Courses", to: "/programs?category=certificate" },
+  { label: "Short Courses", to: "/programs?category=short" },
+  { label: "Diploma Courses", to: "/programs?category=diploma" },
 ] as const;
 
 export function Logo({ light = false }: { light?: boolean }) {
@@ -31,6 +39,7 @@ export function Logo({ light = false }: { light?: boolean }) {
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [role, setRole] = useState<AppRole | undefined>(undefined);
   const [hasSession, setHasSession] = useState(false);
 
@@ -124,14 +133,35 @@ export function Header() {
           <Logo />
           <nav className="hidden lg:flex items-center gap-1">
             {visibleNav.map((n) => (
-              <Link
+              <div
                 key={n.to}
-                to={n.to}
-                className="px-3.5 py-2 text-sm font-medium text-foreground/80 rounded-md hover:text-medical hover:bg-soft transition"
-                activeProps={{ className: "text-medical bg-soft" }}
+                className="relative group"
+                onMouseEnter={() => n.dropdown && setOpenDropdown(n.label)}
+                onMouseLeave={() => setOpenDropdown(null)}
               >
-                {n.label}
-              </Link>
+                <Link
+                  to={n.to}
+                  className="px-3.5 py-2 text-sm font-medium text-foreground/80 rounded-md hover:text-medical hover:bg-soft transition flex items-center gap-1"
+                  activeProps={{ className: "text-medical bg-soft" }}
+                >
+                  {n.label}
+                  {n.dropdown && <ChevronDown className="size-4" />}
+                </Link>
+                {n.dropdown && openDropdown === n.label && (
+                  <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 min-w-56">
+                    {programsDropdown.map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setOpenDropdown(null)}
+                        className="block px-4 py-2.5 text-sm text-foreground/80 hover:text-medical hover:bg-soft transition first:rounded-t-md last:rounded-b-md"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </nav>
         </div>
@@ -155,14 +185,48 @@ export function Header() {
         <div className="lg:hidden border-t border-border bg-background">
           <div className="px-5 py-4 flex flex-col gap-1">
             {visibleNav.map((n) => (
-              <Link
-                key={n.to}
-                to={n.to}
-                onClick={() => setOpen(false)}
-                className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft"
-              >
-                {n.label}
-              </Link>
+              <div key={n.to}>
+                {n.dropdown ? (
+                  <>
+                    <button
+                      onClick={() => setOpenDropdown(openDropdown === n.label ? null : n.label)}
+                      className="w-full text-left px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft flex items-center justify-between"
+                    >
+                      {n.label}
+                      <ChevronDown
+                        className={`size-4 transition-transform ${
+                          openDropdown === n.label ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    {openDropdown === n.label && (
+                      <div className="ml-2 bg-soft/50 rounded-md mt-1">
+                        {programsDropdown.map((item) => (
+                          <Link
+                            key={item.to}
+                            to={item.to}
+                            onClick={() => {
+                              setOpenDropdown(null);
+                              setOpen(false);
+                            }}
+                            className="block px-3 py-2 text-sm text-foreground/80 hover:text-medical hover:bg-soft rounded-md transition"
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    to={n.to}
+                    onClick={() => setOpen(false)}
+                    className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft block"
+                  >
+                    {n.label}
+                  </Link>
+                )}
+              </div>
             ))}
             {showAdminNav ? (
               <Link

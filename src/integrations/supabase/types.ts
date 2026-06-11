@@ -247,6 +247,39 @@ export type Database = {
         };
         Relationships: [];
       };
+        audit_logs: {
+          Row: {
+            actor_id: string | null;
+            action: string;
+            table_name: string;
+            row_id: string | null;
+            changes: Json | null;
+            meta: Json | null;
+            created_at: string;
+            id: string;
+          };
+          Insert: {
+            actor_id?: string | null;
+            action: string;
+            table_name: string;
+            row_id?: string | null;
+            changes?: Json | null;
+            meta?: Json | null;
+            created_at?: string;
+            id?: string;
+          };
+          Update: {
+            actor_id?: string | null;
+            action?: string;
+            table_name?: string;
+            row_id?: string | null;
+            changes?: Json | null;
+            meta?: Json | null;
+            created_at?: string;
+            id?: string;
+          };
+          Relationships: [];
+        };
       profiles: {
         Row: {
           avatar_url: string | null;
@@ -303,48 +336,63 @@ export type Database = {
       };
       programs: {
         Row: {
+          apply_link: string | null;
           category_id: string | null;
           certification: string | null;
           cover_url: string | null;
           created_at: string;
+          curriculum: Json | null;
           description: string | null;
           duration: string | null;
           id: string;
           is_published: boolean;
+          learning_outcomes: string[] | null;
           level: string | null;
-          price_usd: number | null;
+          mode: string | null;
+          price_ksh: number | null;
+          requirements: string[] | null;
           slug: string;
           summary: string | null;
           title: string;
           updated_at: string;
         };
         Insert: {
+          apply_link?: string | null;
           category_id?: string | null;
           certification?: string | null;
           cover_url?: string | null;
           created_at?: string;
+          curriculum?: Json | null;
           description?: string | null;
           duration?: string | null;
           id?: string;
           is_published?: boolean;
+          learning_outcomes?: string[] | null;
           level?: string | null;
-          price_usd?: number | null;
+          mode?: string | null;
+          price_ksh?: number | null;
+          requirements?: string[] | null;
           slug: string;
           summary?: string | null;
           title: string;
           updated_at?: string;
         };
         Update: {
+          apply_link?: string | null;
           category_id?: string | null;
           certification?: string | null;
           cover_url?: string | null;
           created_at?: string;
+          curriculum?: Json | null;
           description?: string | null;
           duration?: string | null;
           id?: string;
           is_published?: boolean;
+          learning_outcomes?: string[] | null;
           level?: string | null;
-          price_usd?: number | null;
+          mode?: string | null;
+          price_ksh?: number | null;
+          requirements?: string[] | null;
           slug?: string;
           summary?: string | null;
           title?: string;
@@ -432,31 +480,43 @@ export type Database = {
       resources: {
         Row: {
           created_at: string;
+          content_type: string | null;
           description: string | null;
+          file_data: string | null;
+          file_name: string | null;
           id: string;
           is_public: boolean;
           kind: string;
           program_id: string | null;
+          storage_path: string | null;
           title: string;
           url: string | null;
         };
         Insert: {
           created_at?: string;
+          content_type?: string | null;
           description?: string | null;
+          file_data?: string | null;
+          file_name?: string | null;
           id?: string;
           is_public?: boolean;
           kind?: string;
           program_id?: string | null;
+          storage_path?: string | null;
           title: string;
           url?: string | null;
         };
         Update: {
           created_at?: string;
+          content_type?: string | null;
           description?: string | null;
+          file_data?: string | null;
+          file_name?: string | null;
           id?: string;
           is_public?: boolean;
           kind?: string;
           program_id?: string | null;
+          storage_path?: string | null;
           title?: string;
           url?: string | null;
         };
@@ -514,6 +574,17 @@ export type Database = {
           _user_id: string;
         };
         Returns: boolean;
+      };
+      insert_audit_log: {
+        Args: {
+          _actor_id?: string | null;
+          _action: string;
+          _table_name: string;
+          _row_id?: string | null;
+          _changes?: Json | null;
+          _meta?: Json | null;
+        };
+        Returns: undefined;
       };
     };
     Enums: {

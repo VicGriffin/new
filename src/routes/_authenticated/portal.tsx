@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-ro
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/site/layout";
+import { getResourceDownloadUrl } from "@/lib/api/resource.functions";
 import { useState } from "react";
 import {
   BookOpen,
@@ -77,7 +78,7 @@ function Portal() {
       (
         await supabase
           .from("programs")
-          .select("id,title,slug,summary,duration,level,certification,price_usd")
+          .select("id,title,slug,summary,duration,level,certification,price_ksh")
           .eq("is_published", true)
           .order("created_at")
       ).data ?? [],
@@ -154,6 +155,22 @@ function Portal() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
   });
+
+  async function openResource(resourceId: string) {
+    const popup = window.open("about:blank", "_blank", "noopener");
+    if (!popup) {
+      toast.error("Popup blocked. Please allow popups to download resources.");
+      return;
+    }
+
+    try {
+      const { downloadUrl } = await getResourceDownloadUrl({ data: { resourceId } });
+      popup.location.href = downloadUrl;
+    } catch (error) {
+      popup.close();
+      toast.error(error instanceof Error ? error.message : "Unable to load resource.");
+    }
+  }
 
   const saveProfile = useMutation({
     mutationFn: async () => {
@@ -302,7 +319,7 @@ function Portal() {
                     <h3 className="mt-3 font-bold text-navy">{p.title}</h3>
                     <p className="mt-1 text-sm text-foreground/70 flex-1">{p.summary}</p>
                     <div className="mt-3 text-xs text-muted-foreground">
-                      {p.duration} · {p.level} · ${p.price_usd}
+                      {p.duration} · {p.level} · KSH {(p.price_ksh as number)?.toLocaleString()}
                     </div>
                     <button
                       disabled={isEnrolled || enroll.isPending}
@@ -446,16 +463,13 @@ function Portal() {
                     <div className="text-xs text-muted-foreground">
                       {r.programs?.title} · {r.kind}
                     </div>
-                    {r.url && (
-                      <a
-                        href={r.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-1 inline-flex items-center gap-1 text-xs text-medical hover:underline"
-                      >
-                        <ExternalLink className="size-3" /> Open
-                      </a>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => openResource(r.id)}
+                      className="mt-1 inline-flex items-center gap-1 text-xs text-medical hover:underline"
+                    >
+                      <ExternalLink className="size-3" /> Open
+                    </button>
                   </li>
                 ))}
               </ul>

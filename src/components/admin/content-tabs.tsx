@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, TablesUpdate } from "@/integrations/supabase/types";
+import { adminCreateResource, adminDeleteResource } from "@/lib/api/resource.functions";
 import { toast } from "sonner";
 import { inp, RowActions, EmptyState, ActionBtn } from "./shared";
 
@@ -64,6 +65,25 @@ function useCrud<T extends { id: string }>(
   return { data, isLoading, create, update, remove };
 }
 
+function parseLines(value: string) {
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+async function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("Unable to read file."));
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 // ─── Programs ───────────────────────────────────────────────────────────────
 export function ProgramsTab() {
   const { data, isLoading, create, update, remove } = useCrud(
@@ -75,11 +95,18 @@ export function ProgramsTab() {
     title: "",
     slug: "",
     summary: "",
+    description: "",
     duration: "",
     level: "Foundation",
+    mode: "Online",
     certification: "",
-    price_usd: 0,
-    description: "",
+    price_ksh: 0,
+    cover_url: "",
+    apply_link: "",
+    learning_outcomes: "",
+    requirements: "",
+    curriculum: "",
+    pdf_url: "",
   });
   const [editId, setEditId] = useState<string | null>(null);
   const [edit, setEdit] = useState(form);
@@ -95,8 +122,15 @@ export function ProgramsTab() {
             ["summary", "text"],
             ["description", "textarea"],
             ["duration", "text"],
+            ["mode", "text"],
             ["certification", "text"],
-            ["price_usd", "number"],
+            ["price_ksh", "number"],
+            ["cover_url", "text"],
+            ["apply_link", "text"],
+            ["learning_outcomes", "textarea"],
+            ["requirements", "textarea"],
+            ["curriculum", "textarea"],
+            ["pdf_url", "text"],
           ]}
           values={editId ? edit : form}
           onChange={(k, v) =>
@@ -106,10 +140,30 @@ export function ProgramsTab() {
       }
       onSubmit={(e) => {
         e.preventDefault();
+        const activeForm = (editId ? edit : form) as typeof form;
+        let curriculum: unknown = null;
+        if (activeForm.curriculum.trim()) {
+          try {
+            curriculum = JSON.parse(activeForm.curriculum);
+          } catch (error) {
+            toast.error("Curriculum must be valid JSON.");
+            return;
+          }
+        }
+
+        const payload = {
+          ...activeForm,
+          cover_url: activeForm.cover_url || null,
+          apply_link: activeForm.apply_link || null,
+          learning_outcomes: parseLines(activeForm.learning_outcomes),
+          requirements: parseLines(activeForm.requirements),
+          curriculum,
+          pdf_url: activeForm.pdf_url || null,
+        };
         if (editId) {
-          update.mutate({ id: editId, ...edit });
+          update.mutate({ id: editId, ...payload });
           setEditId(null);
-        } else create.mutate(form);
+        } else create.mutate(payload);
       }}
       submitLabel={editId ? "Save changes" : "Create program"}
       list={
@@ -129,7 +183,27 @@ export function ProgramsTab() {
               <RowActions
                 onEdit={() => {
                   setEditId(p.id as string);
-                  setEdit(p as typeof form);
+                  setEdit({
+                    title: p.title as string,
+                    slug: p.slug as string,
+                    summary: (p.summary as string) ?? "",
+                    description: (p.description as string) ?? "",
+                    duration: (p.duration as string) ?? "",
+                    level: (p.level as string) ?? "Foundation",
+                    mode: (p.mode as string) ?? "Online",
+                    certification: (p.certification as string) ?? "",
+                    price_ksh: (p.price_ksh as number) ?? 0,
+                    cover_url: (p.cover_url as string) ?? "",
+                    apply_link: (p.apply_link as string) ?? "",
+                    learning_outcomes: Array.isArray(p.learning_outcomes)
+                      ? (p.learning_outcomes as string[]).join("\n")
+                      : "",
+                    requirements: Array.isArray(p.requirements)
+                      ? (p.requirements as string[]).join("\n")
+                      : "",
+                    curriculum: p.curriculum ? JSON.stringify(p.curriculum, null, 2) : "",
+                    pdf_url: (p.pdf_url as string) ?? "",
+                  });
                 }}
                 onDelete={() => remove.mutate(p.id as string)}
               />
@@ -144,7 +218,7 @@ export function ProgramsTab() {
 // ─── News ───────────────────────────────────────────────────────────────────
 export function NewsTab() {
   const { data, isLoading, create, update, remove } = useCrud(["adm-news"], "news");
-  const [form, setForm] = useState({ title: "", slug: "", excerpt: "", body: "" });
+  const [form, setForm] = useState({ title: "", slug: "", excerpt: "", body: "", cover_url: "" });
   const [editId, setEditId] = useState<string | null>(null);
   const [edit, setEdit] = useState(form);
 
@@ -157,6 +231,7 @@ export function NewsTab() {
             ["title", "text"],
             ["slug", "text"],
             ["excerpt", "textarea"],
+            ["cover_url", "text"],
             ["body", "textarea"],
           ]}
           values={editId ? edit : form}
@@ -186,6 +261,7 @@ export function NewsTab() {
                     title: n.title as string,
                     slug: n.slug as string,
                     excerpt: (n.excerpt as string) ?? "",
+                    cover_url: (n.cover_url as string) ?? "",
                     body: (n.body as string) ?? "",
                   });
                 }}
@@ -207,6 +283,7 @@ export function EventsTab() {
   const [form, setForm] = useState({
     title: "",
     description: "",
+    cover_url: "",
     location: "",
     starts_at: "",
     ends_at: "",
@@ -230,6 +307,12 @@ export function EventsTab() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             className={inp}
             rows={3}
+          />
+          <input
+            placeholder="Cover image URL"
+            value={form.cover_url}
+            onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
+            className={inp}
           />
           <input
             placeholder="Location"
@@ -257,11 +340,12 @@ export function EventsTab() {
         create.mutate({
           title: form.title,
           description: form.description || null,
+          cover_url: form.cover_url || null,
           location: form.location || null,
           starts_at: new Date(form.starts_at).toISOString(),
           ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
         });
-        setForm({ title: "", description: "", location: "", starts_at: "", ends_at: "" });
+        setForm({ title: "", description: "", cover_url: "", location: "", starts_at: "", ends_at: "" });
       }}
       submitLabel="Create event"
       list={
@@ -298,6 +382,7 @@ export function ResearchTab() {
     abstract: "",
     authors: "",
     url: "",
+    cover_url: "",
   });
   const [editId, setEditId] = useState<string | null>(null);
   const [edit, setEdit] = useState(form);
@@ -313,6 +398,7 @@ export function ResearchTab() {
             ["area", "text"],
             ["authors", "text"],
             ["url", "text"],
+            ["cover_url", "text"],
             ["abstract", "textarea"],
           ]}
           values={editId ? edit : form}
@@ -329,6 +415,7 @@ export function ResearchTab() {
           abstract: form.abstract || null,
           authors: form.authors || null,
           url: form.url || null,
+          cover_url: form.cover_url || null,
           published_date: new Date().toISOString().slice(0, 10),
         };
         if (editId) {
@@ -353,6 +440,7 @@ export function ResearchTab() {
                     abstract: (a.abstract as string) ?? "",
                     authors: (a.authors as string) ?? "",
                     url: (a.url as string) ?? "",
+                    cover_url: (a.cover_url as string) ?? "",
                   });
                 }}
                 onDelete={() => remove.mutate(a.id as string)}
@@ -367,11 +455,10 @@ export function ResearchTab() {
 
 // ─── Resources ──────────────────────────────────────────────────────────────
 export function ResourcesTab() {
-  const { data, isLoading, create, update, remove } = useCrud(
-    ["adm-resources"],
-    "resources",
-    "*,programs(title)",
-  );
+  const qc = useQueryClient();
+  const { data, isLoading } = useCrud([
+    "adm-resources",
+  ], "resources", "*,programs(title)");
   const { data: programs } = useQuery({
     queryKey: ["adm-programs-list"],
     queryFn: async () =>
@@ -384,6 +471,39 @@ export function ResourcesTab() {
     url: "",
     description: "",
     is_public: false,
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  type ResourceCreateInput = {
+    title: string;
+    program_id: string | null;
+    kind: "document" | "video" | "link" | "slides";
+    url: string | null;
+    description: string | null;
+    is_public: boolean;
+    file_name?: string;
+    content_type?: string;
+    file_data?: string;
+  };
+
+  const createResource = useMutation({
+    mutationFn: async (payload: ResourceCreateInput) => {
+      await adminCreateResource({ data: payload });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-resources"] });
+      toast.success("Created");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const deleteResource = useMutation({
+    mutationFn: async (resourceId: string) => {
+      await adminDeleteResource({ data: { resourceId } });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-resources"] });
+      toast.success("Deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   return (
@@ -412,18 +532,43 @@ export function ResourcesTab() {
           </select>
           <select
             value={form.kind}
-            onChange={(e) => setForm({ ...form, kind: e.target.value })}
+            onChange={(e) => {
+              setForm({ ...form, kind: e.target.value, url: "" });
+              setSelectedFile(null);
+            }}
             className={inp}
           >
             {["document", "video", "link", "slides"].map((k) => (
               <option key={k}>{k}</option>
             ))}
           </select>
-          <input
-            placeholder="URL"
-            value={form.url}
-            onChange={(e) => setForm({ ...form, url: e.target.value })}
+          {form.kind === "document" ? (
+            <>
+              <label className="text-sm text-muted-foreground">Upload document</label>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,.txt"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+                className={inp}
+              />
+              {selectedFile && (
+                <div className="text-sm text-muted-foreground">Selected: {selectedFile.name}</div>
+              )}
+            </>
+          ) : (
+            <input
+              placeholder="Resource link"
+              value={form.url}
+              onChange={(e) => setForm({ ...form, url: e.target.value })}
+              className={inp}
+            />
+          )}
+          <textarea
+            placeholder="Description"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
             className={inp}
+            rows={3}
           />
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -435,16 +580,30 @@ export function ResourcesTab() {
           </label>
         </>
       }
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        create.mutate({
+
+        if (form.kind === "document" && !selectedFile) {
+          toast.error("Please upload a document file.");
+          return;
+        }
+
+        const payload: ResourceCreateInput = {
           title: form.title,
           program_id: form.program_id || null,
-          kind: form.kind,
-          url: form.url || null,
+          kind: form.kind as ResourceCreateInput["kind"],
+          url: form.kind === "document" ? null : form.url || null,
           description: form.description || null,
           is_public: form.is_public,
-        });
+        };
+
+        if (form.kind === "document" && selectedFile) {
+          payload.file_data = await readFileAsDataUrl(selectedFile);
+          payload.file_name = selectedFile.name;
+          payload.content_type = selectedFile.type || "application/octet-stream";
+        }
+
+        createResource.mutate(payload);
         setForm({
           title: "",
           program_id: "",
@@ -453,6 +612,7 @@ export function ResourcesTab() {
           description: "",
           is_public: false,
         });
+        setSelectedFile(null);
       }}
       submitLabel="Add resource"
       list={
@@ -463,9 +623,11 @@ export function ResourcesTab() {
             <ListRow
               key={r.id as string}
               title={r.title as string}
-              sub={`${(r.programs as { title: string } | null)?.title ?? "General"} · ${r.kind}`}
+              sub={`${(r.programs as { title: string } | null)?.title ?? "General"} · ${r.kind}${
+                r.kind === "document" ? ` · ${(r.file_name as string) ?? "Uploaded document"}` : ""
+              }`}
             >
-              <RowActions onDelete={() => remove.mutate(r.id as string)} />
+              <RowActions onDelete={() => deleteResource.mutate(r.id as string)} />
             </ListRow>
           ))
         )
@@ -808,16 +970,23 @@ export function EnrollmentsTab() {
       status,
     }: {
       id: string;
-      progress: number;
+      progress?: number;
       status: string;
     }) => {
+      const payload: {
+        progress?: number;
+        status: string;
+        completed_at: string | null;
+      } = {
+        status,
+        completed_at: status === "completed" ? new Date().toISOString() : null,
+      };
+      if (typeof progress === "number") payload.progress = progress;
+      if (status === "completed" && typeof progress !== "number") payload.progress = 100;
+
       const { error } = await supabase
         .from("course_enrollments")
-        .update({
-          progress,
-          status,
-          completed_at: status === "completed" ? new Date().toISOString() : null,
-        })
+        .update(payload as { progress?: number; status: string; completed_at: string | null })
         .eq("id", id);
       if (error) throw error;
     },
@@ -846,11 +1015,25 @@ export function EnrollmentsTab() {
               User {e.user_id.slice(0, 8)}… · {e.progress}% · {e.status}
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
+            {e.status !== "approved" && (
+              <ActionBtn
+                label="Approve"
+                variant="success"
+                onClick={() => update.mutate({ id: e.id, status: "approved" })}
+              />
+            )}
+            {e.status !== "rejected" && (
+              <ActionBtn
+                label="Reject"
+                variant="danger"
+                onClick={() => update.mutate({ id: e.id, status: "rejected" })}
+              />
+            )}
             <ActionBtn
               label="Complete"
-              variant="success"
               onClick={() => update.mutate({ id: e.id, progress: 100, status: "completed" })}
+              variant="success"
             />
             <ActionBtn label="Delete" variant="danger" onClick={() => del.mutate(e.id)} />
           </div>

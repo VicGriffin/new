@@ -44,6 +44,18 @@ export const adminCreateUser = createServerFn({ method: "POST" })
     await supabaseAdmin
       .from("user_roles")
       .upsert({ user_id: userId, role: data.role }, { onConflict: "user_id,role" });
+    // record audit log (best-effort)
+    try {
+      await supabaseAdmin.rpc("insert_audit_log", {
+        _actor_id: context.userId,
+        _action: "create_user",
+        _table_name: "auth.users",
+        _row_id: userId,
+        _changes: JSON.stringify({ email: data.email, full_name: data.full_name, role: data.role }),
+      });
+    } catch (e) {
+      console.error("Failed to write audit log:", e);
+    }
     return { id: userId, email: data.email };
   });
 
@@ -55,6 +67,17 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     await assertAdmin(context.userId, supabaseAdmin);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw error;
+    try {
+      await supabaseAdmin.rpc("insert_audit_log", {
+        _actor_id: context.userId,
+        _action: "delete_user",
+        _table_name: "auth.users",
+        _row_id: data.userId,
+        _changes: null,
+      });
+    } catch (e) {
+      console.error("Failed to write audit log:", e);
+    }
     return { ok: true };
   });
 
@@ -75,6 +98,17 @@ export const adminSetUserRoles = createServerFn({ method: "POST" })
         .from("user_roles")
         .insert(data.roles.map((role) => ({ user_id: data.userId, role })));
       if (error) throw error;
+    }
+    try {
+      await supabaseAdmin.rpc("insert_audit_log", {
+        _actor_id: context.userId,
+        _action: "set_user_roles",
+        _table_name: "user_roles",
+        _row_id: data.userId,
+        _changes: JSON.stringify({ roles: data.roles }),
+      });
+    } catch (e) {
+      console.error("Failed to write audit log:", e);
     }
     return { ok: true };
   });

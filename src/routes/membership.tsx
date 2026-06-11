@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/site/layout";
 import { imageUrl } from "@/lib/utils";
-import { GraduationCap, Stethoscope, Building2, Briefcase, Check, ArrowRight } from "lucide-react";
+import { GraduationCap, Stethoscope, Building2, Check, ArrowRight } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,37 +27,30 @@ export const Route = createFileRoute("/membership")({
 const tiers = [
   {
     icon: GraduationCap,
-    t: "Students",
+    t: "Student",
     price: "Free",
     desc: "Open to pharmacy and health science students.",
     features: ["Community access", "Webinar discounts", "Career resources"],
   },
   {
     icon: Stethoscope,
-    t: "Healthcare Professionals",
-    price: "$80 / yr",
-    desc: "Pharmacists, clinicians, physicians, nurses.",
+    t: "Affiliate",
+    price: "KSH 10,400 / yr",
+    desc: "Healthcare professionals, pharmacists, clinicians.",
     features: ["Full community access", "CPD discounts", "Research library", "Member badge"],
     featured: true,
   },
   {
     icon: Building2,
-    t: "Institutions",
-    price: "$1,200 / yr",
-    desc: "Hospitals, schools, regulators.",
+    t: "Corporate",
+    price: "KSH 156,000 / yr",
+    desc: "Hospitals, schools, regulators, NGOs.",
     features: ["Up to 25 seats", "Institutional dashboard", "Co-branded training", "Annual report"],
-  },
-  {
-    icon: Briefcase,
-    t: "Corporate Partners",
-    price: "Custom",
-    desc: "Industry, NGOs, donors.",
-    features: ["Sponsorship visibility", "Joint research opportunities", "Custom training tracks"],
   },
 ];
 
 function Membership() {
-  const [tier, setTier] = useState("Healthcare Professionals");
+  const [tier, setTier] = useState("Affiliate");
   const [f, setF] = useState({
     full_name: "",
     email: "",
@@ -114,7 +107,7 @@ function Membership() {
 
       {/* Tiers */}
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-20">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {tiers.map((t) => (
             <div
               key={t.t}
