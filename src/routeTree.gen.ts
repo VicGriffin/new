@@ -14,12 +14,14 @@ import { Route as ProgramsRouteImport } from './routes/programs'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NewsRouteImport } from './routes/news'
 import { Route as MembershipRouteImport } from './routes/membership'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ResetPasswordTokenRouteImport } from './routes/reset-password.$token'
 import { Route as ProgramsSlugRouteImport } from './routes/programs.$slug'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -52,6 +54,11 @@ const MembershipRoute = MembershipRouteImport.update({
   path: '/membership',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
@@ -79,6 +86,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordTokenRoute = ResetPasswordTokenRouteImport.update({
+  id: '/reset-password/$token',
+  path: '/reset-password/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProgramsSlugRoute = ProgramsSlugRouteImport.update({
@@ -119,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/events': typeof EventsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/membership': typeof MembershipRoute
   '/news': typeof NewsRouteWithChildren
   '/privacy': typeof PrivacyRoute
@@ -129,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/news/$slug': typeof NewsSlugRoute
   '/programs/$slug': typeof ProgramsSlugRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/portal/learn/$slug': typeof AuthenticatedPortalLearnSlugRoute
 }
 export interface FileRoutesByTo {
@@ -137,6 +151,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/events': typeof EventsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/membership': typeof MembershipRoute
   '/news': typeof NewsRouteWithChildren
   '/privacy': typeof PrivacyRoute
@@ -147,6 +162,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/news/$slug': typeof NewsSlugRoute
   '/programs/$slug': typeof ProgramsSlugRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/portal/learn/$slug': typeof AuthenticatedPortalLearnSlugRoute
 }
 export interface FileRoutesById {
@@ -157,6 +173,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/events': typeof EventsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/membership': typeof MembershipRoute
   '/news': typeof NewsRouteWithChildren
   '/privacy': typeof PrivacyRoute
@@ -167,6 +184,7 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/news/$slug': typeof NewsSlugRoute
   '/programs/$slug': typeof ProgramsSlugRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/_authenticated/portal/learn/$slug': typeof AuthenticatedPortalLearnSlugRoute
 }
 export interface FileRouteTypes {
@@ -177,6 +195,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/events'
+    | '/forgot-password'
     | '/membership'
     | '/news'
     | '/privacy'
@@ -187,6 +206,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/news/$slug'
     | '/programs/$slug'
+    | '/reset-password/$token'
     | '/portal/learn/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -195,6 +215,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/events'
+    | '/forgot-password'
     | '/membership'
     | '/news'
     | '/privacy'
@@ -205,6 +226,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/news/$slug'
     | '/programs/$slug'
+    | '/reset-password/$token'
     | '/portal/learn/$slug'
   id:
     | '__root__'
@@ -214,6 +236,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/events'
+    | '/forgot-password'
     | '/membership'
     | '/news'
     | '/privacy'
@@ -224,6 +247,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/news/$slug'
     | '/programs/$slug'
+    | '/reset-password/$token'
     | '/_authenticated/portal/learn/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -234,12 +258,14 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   EventsRoute: typeof EventsRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   MembershipRoute: typeof MembershipRoute
   NewsRoute: typeof NewsRouteWithChildren
   PrivacyRoute: typeof PrivacyRoute
   ProgramsRoute: typeof ProgramsRouteWithChildren
   ResearchRoute: typeof ResearchRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  ResetPasswordTokenRoute: typeof ResetPasswordTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -277,6 +303,13 @@ declare module '@tanstack/react-router' {
       path: '/membership'
       fullPath: '/membership'
       preLoaderRoute: typeof MembershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -319,6 +352,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password/$token': {
+      id: '/reset-password/$token'
+      path: '/reset-password/$token'
+      fullPath: '/reset-password/$token'
+      preLoaderRoute: typeof ResetPasswordTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/programs/$slug': {
@@ -419,12 +459,14 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   EventsRoute: EventsRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   MembershipRoute: MembershipRoute,
   NewsRoute: NewsRouteWithChildren,
   PrivacyRoute: PrivacyRoute,
   ProgramsRoute: ProgramsRouteWithChildren,
   ResearchRoute: ResearchRoute,
   AdminLoginRoute: AdminLoginRoute,
+  ResetPasswordTokenRoute: ResetPasswordTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

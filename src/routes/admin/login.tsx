@@ -27,17 +27,23 @@ function AdminLogin() {
     });
   }, [nav]);
 
+  function getLoginErrorMessage(error: unknown) {
+    const message = error instanceof Error ? error.message : "Login failed";
+    if (/invalid login|invalid.*credentials|email not confirmed/i.test(message)) {
+      return "Incorrect admin email or password. Please check your details and try again.";
+    }
+    if (/rate limit/i.test(message)) {
+      return "Too many login attempts. Wait about an hour, then try again.";
+    }
+    return message;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        if (error.message.toLowerCase().includes("invalid login")) {
-          throw new Error(
-            "Admin account not provisioned yet. Add SUPABASE_DB_PASSWORD or SUPABASE_SERVICE_ROLE_KEY to .env, then run: npm run setup:admin",
-          );
-        }
         throw error;
       }
       if (!data.user) throw new Error("Sign in failed");
@@ -52,7 +58,7 @@ function AdminLogin() {
       toast.success("Welcome back, Administrator");
       nav({ to: "/admin", replace: true });
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Login failed");
+      toast.error(getLoginErrorMessage(err));
     } finally {
       setLoading(false);
     }
