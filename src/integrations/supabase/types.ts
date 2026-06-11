@@ -52,6 +52,9 @@ export type Database = {
           completed_at: string | null;
           enrolled_at: string;
           id: string;
+          last_accessed_module: string | null;
+          last_accessed_topic: string | null;
+          completed_topics: Json;
           program_id: string;
           progress: number;
           status: string;
@@ -61,6 +64,9 @@ export type Database = {
           completed_at?: string | null;
           enrolled_at?: string;
           id?: string;
+          last_accessed_module?: string | null;
+          last_accessed_topic?: string | null;
+          completed_topics?: Json;
           program_id: string;
           progress?: number;
           status?: string;
@@ -70,6 +76,9 @@ export type Database = {
           completed_at?: string | null;
           enrolled_at?: string;
           id?: string;
+          last_accessed_module?: string | null;
+          last_accessed_topic?: string | null;
+          completed_topics?: Json;
           program_id?: string;
           progress?: number;
           status?: string;
@@ -220,6 +229,50 @@ export type Database = {
         };
         Relationships: [];
       };
+      payments: {
+        Row: {
+          id: string;
+          enrollment_id: string;
+          amount: number;
+          currency: string;
+          status: string;
+          transaction_reference: string | null;
+          payment_method: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          enrollment_id: string;
+          amount?: number;
+          currency?: string;
+          status?: string;
+          transaction_reference?: string | null;
+          payment_method?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          enrollment_id?: string;
+          amount?: number;
+          currency?: string;
+          status?: string;
+          transaction_reference?: string | null;
+          payment_method?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "payments_enrollment_id_fkey";
+            columns: ["enrollment_id"];
+            isOneToOne: false;
+            referencedRelation: "course_enrollments";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       notifications: {
         Row: {
           body: string | null;
@@ -289,6 +342,7 @@ export type Database = {
           full_name: string | null;
           id: string;
           profession: string | null;
+          status: string;
           updated_at: string;
         };
         Insert: {
@@ -299,6 +353,7 @@ export type Database = {
           full_name?: string | null;
           id: string;
           profession?: string | null;
+          status?: string;
           updated_at?: string;
         };
         Update: {
@@ -309,6 +364,7 @@ export type Database = {
           full_name?: string | null;
           id?: string;
           profession?: string | null;
+          status?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -450,6 +506,7 @@ export type Database = {
           slug: string;
           title: string;
           url: string | null;
+          pdf_path: string | null;
         };
         Insert: {
           abstract?: string | null;
@@ -462,6 +519,7 @@ export type Database = {
           slug: string;
           title: string;
           url?: string | null;
+          pdf_path?: string | null;
         };
         Update: {
           abstract?: string | null;
@@ -474,6 +532,7 @@ export type Database = {
           slug?: string;
           title?: string;
           url?: string | null;
+          pdf_path?: string | null;
         };
         Relationships: [];
       };

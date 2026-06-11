@@ -4,6 +4,7 @@ import { PageShell } from "@/components/site/layout";
 import { imageUrl } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Microscope, BookOpen, Users, ArrowRight, FileText, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/research")({
   head: () => ({
@@ -66,6 +67,23 @@ function Research() {
     ...a,
     count: articles?.filter((art) => art.area === a.t).length ?? 0,
   }));
+
+  const handleViewPDF = async (pdfPath: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please sign in to view research PDFs.");
+        return;
+      }
+      const { data, error } = await supabase.storage
+        .from("research_files")
+        .createSignedUrl(pdfPath, 120);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate PDF view link");
+    }
+  };
 
   return (
     <PageShell>
@@ -202,6 +220,13 @@ function Research() {
                   >
                     <ExternalLink className="size-4" /> View
                   </a>
+                ) : p.pdf_path ? (
+                  <button
+                    onClick={() => handleViewPDF(p.pdf_path!)}
+                    className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-medical hover:underline self-center border-none bg-transparent cursor-pointer"
+                  >
+                    <ExternalLink className="size-4" /> View PDF
+                  </button>
                 ) : (
                   <span className="hidden md:inline-flex items-center gap-1.5 text-sm text-muted-foreground self-center">
                     <FileText className="size-4" /> Abstract

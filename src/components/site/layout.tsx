@@ -1,25 +1,32 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Menu, X, ShieldCheck, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AppRole, getEffectiveRole, isAdminRole, isPortalRole } from "@/lib/auth/roles";
+import {
+  AppRole,
+  AppStatus,
+  getEffectiveRole,
+  getUserStatus,
+  isAdminRole,
+  isApprovedStatus,
+  isPortalRole,
+} from "@/lib/auth/roles";
 
-const nav = [
+interface NavItem {
+  label: string;
+  to: string;
+  dropdown?: boolean;
+}
+
+const nav: readonly NavItem[] = [
   { label: "About", to: "/about" },
   { label: "Programs", to: "/programs", dropdown: true },
   { label: "Research", to: "/research" },
   { label: "News", to: "/news" },
   { label: "E-Learning", to: "/portal" },
   { label: "Contact", to: "/contact" },
-] as const;
-
-const programsDropdown = [
-  { label: "MTM Courses", to: "/programs?category=mtm" },
-  { label: "Professional Development Courses", to: "/programs?category=professional" },
-  { label: "Certificate Courses", to: "/programs?category=certificate" },
-  { label: "Short Courses", to: "/programs?category=short" },
-  { label: "Diploma Courses", to: "/programs?category=diploma" },
-] as const;
+];
 
 export function Logo({ light = false }: { light?: boolean }) {
   return (
@@ -41,36 +48,74 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [role, setRole] = useState<AppRole | undefined>(undefined);
+  const [status, setStatus] = useState<AppStatus | undefined>(undefined);
+  const [authResolved, setAuthResolved] = useState(false);
   const [hasSession, setHasSession] = useState(false);
 
+  const { data: categories } = useQuery({
+    queryKey: ["program-categories-public"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("program_categories")
+        .select("id,name,slug")
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const programsDropdown =
+    categories?.map((c: { name: string; slug: string }) => ({
+      label: c.name,
+      search: { category: c.slug },
+    })) ?? [];
+
   useEffect(() => {
-    async function syncAuth(session: { user: { id: string } } | null) {
+    let unsubscribe: (() => void) | undefined;
+    async function syncAuth(session: any) {
       if (!session) {
         setRole(undefined);
+        setStatus(undefined);
         setHasSession(false);
+        setAuthResolved(true);
         return;
       }
       try {
+        const [resolvedRole, resolvedStatus] = await Promise.all([
+          getEffectiveRole(session.user.id),
+          getUserStatus(session.user.id),
+        ]);
+        setRole(resolvedRole);
+        setStatus(resolvedStatus);
         setHasSession(true);
-        setRole(await getEffectiveRole(session.user.id));
       } catch (error) {
-        console.error("[Header] Failed to resolve user role:", error);
+        console.error("[Header] Failed to resolve user role/status:", error);
         setRole(undefined);
+        setStatus(undefined);
+        setHasSession(false);
+      } finally {
+        setAuthResolved(true);
       }
     }
 
     supabase.auth
       .getSession()
-      .then(({ data }) => syncAuth(data.session))
-      .catch((error) => {
+      .then(({ data }: any) => {
+        syncAuth(data.session);
+      })
+      .catch((error: any) => {
         console.error("[Header] Supabase getSession failed:", error);
         setRole(undefined);
+        setStatus(undefined);
         setHasSession(false);
+        setAuthResolved(true);
       });
 
-    let unsubscribe: (() => void) | undefined;
     try {
-      const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => syncAuth(s));
+      const { data: sub } = supabase.auth.onAuthStateChange((_e: any, s: any) => {
+        syncAuth(s);
+      });
       unsubscribe = () => sub.subscription.unsubscribe();
     } catch (error) {
       console.error("[Header] Supabase auth state listener failed:", error);
@@ -80,10 +125,14 @@ export function Header() {
   }, []);
 
   const showAdminNav = isAdminRole(role);
-  const showPortalNav = isPortalRole(role);
+  const showPortalNav = isApprovedStatus(status) && isPortalRole(role);
   const adminLink = showAdminNav ? "/admin" : "/admin/login";
-  const isGuest = !hasSession;
+  const isGuest = authResolved ? !hasSession || (!showPortalNav && !showAdminNav) : true;
   const visibleNav = showAdminNav ? nav.filter((item) => item.to !== "/portal") : nav;
+
+  if (!authResolved) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/85 backdrop-blur-xl">
@@ -172,8 +221,9 @@ export function Header() {
                   <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 min-w-56">
                     {programsDropdown.map((item) => (
                       <Link
-                        key={item.to}
-                        to={item.to}
+                        key={item.label}
+                        to="/programs"
+                        search={item.search}
                         onClick={() => setOpenDropdown(null)}
                         className="block px-4 py-2.5 text-sm text-foreground/80 hover:text-medical hover:bg-soft transition first:rounded-t-md last:rounded-b-md"
                       >
@@ -224,8 +274,9 @@ export function Header() {
                       <div className="ml-2 bg-soft/50 rounded-md mt-1">
                         {programsDropdown.map((item) => (
                           <Link
-                            key={item.to}
-                            to={item.to}
+                            key={item.label}
+                            to="/programs"
+                            search={item.search}
                             onClick={() => {
                               setOpenDropdown(null);
                               setOpen(false);
@@ -305,8 +356,12 @@ export function Footer() {
         <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-sm mb-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.28em] text-emerald-brand">Ready to transform MTM in your organisation?</p>
-              <h3 className="mt-3 text-2xl font-bold text-white">Let's build stronger medication therapy systems together.</h3>
+              <p className="text-sm uppercase tracking-[0.28em] text-emerald-brand">
+                Ready to transform MTM in your organisation?
+              </p>
+              <h3 className="mt-3 text-2xl font-bold text-white">
+                Let's build stronger medication therapy systems together.
+              </h3>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -333,8 +388,18 @@ export function Footer() {
               certification, and research across Africa.
             </p>
             <div className="mt-6 space-y-3 text-sm text-white/70">
-              <div>Contact: <Link to="/contact" className="text-white hover:text-emerald-brand">contact@amtmti.africa</Link></div>
-              <div>Phone: <a href="tel:+234800000000" className="text-white hover:text-emerald-brand">+234 800 000 000</a></div>
+              <div>
+                Contact:{" "}
+                <Link to="/contact" className="text-white hover:text-emerald-brand">
+                  contact@amtmti.africa
+                </Link>
+              </div>
+              <div>
+                Phone:{" "}
+                <a href="tel:+234800000000" className="text-white hover:text-emerald-brand">
+                  +234 800 000 000
+                </a>
+              </div>
               <div>Office: Lagos, Nigeria</div>
             </div>
           </div>

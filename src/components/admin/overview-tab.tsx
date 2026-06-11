@@ -73,21 +73,21 @@ export function OverviewTab({ onNavigate }: { onNavigate: (tab: string) => void 
           .limit(5),
       ]);
       const items: { type: string; label: string; at: string }[] = [];
-      apps.data?.forEach((a) =>
+      apps.data?.forEach((a: any) =>
         items.push({
           type: "Application",
           label: `${a.full_name} — ${a.tier}`,
           at: a.created_at,
         }),
       );
-      msgs.data?.forEach((m) =>
+      msgs.data?.forEach((m: any) =>
         items.push({
           type: "Message",
           label: `${m.name}: ${m.subject ?? "(no subject)"}`,
           at: m.created_at,
         }),
       );
-      enrolls.data?.forEach((e) =>
+      enrolls.data?.forEach((e: any) =>
         items.push({
           type: "Enrollment",
           label: (e.programs as { title: string } | null)?.title ?? "Program",

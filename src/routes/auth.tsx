@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { PageShell } from "@/components/site/layout";
 import { imageUrl } from "@/lib/utils";
-import { getEffectiveRole } from "@/lib/auth/roles";
+import { getEffectiveRole, getUserStatus } from "@/lib/auth/roles";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -29,10 +29,13 @@ function AuthPage() {
     async function checkSession() {
       const { data } = await supabase.auth.getSession();
       if (!data.session?.user) return;
-      const role = await getEffectiveRole(data.session.user.id);
+      const [role, status] = await Promise.all([
+        getEffectiveRole(data.session.user.id),
+        getUserStatus(data.session.user.id),
+      ]);
       if (role === "admin") {
         nav({ to: "/admin", replace: true });
-      } else if (role === "student" || role === "member" || role === "instructor") {
+      } else if (status === "approved") {
         nav({ to: "/portal", replace: true });
       }
     }
@@ -66,9 +69,21 @@ function AuthPage() {
         const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         if (data?.user) {
-          const role = await getEffectiveRole(data.user.id);
+          const [role, status] = await Promise.all([
+            getEffectiveRole(data.user.id),
+            getUserStatus(data.user.id),
+          ]);
           if (role === "admin") {
             nav({ to: "/admin", replace: true });
+          } else if (status !== "approved") {
+            await supabase.auth.signOut();
+            if (status === "pending") {
+              toast.error("Your account is pending approval. Please wait for an admin to approve it.");
+            } else if (status === "rejected") {
+              toast.error("Your account has been rejected. Contact support for help.");
+            } else {
+              toast.error("Your account is not yet approved.");
+            }
           } else {
             nav({ to: "/portal", replace: true });
           }

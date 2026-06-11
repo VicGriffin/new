@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { PageShell } from "@/components/site/layout";
 import { imageUrl } from "@/lib/utils";
@@ -13,7 +13,16 @@ import {
   GraduationCap as GradIcon,
 } from "lucide-react";
 
+interface ProgramsSearch {
+  category?: string;
+}
+
 export const Route = createFileRoute("/programs")({
+  validateSearch: (search: Record<string, unknown>): ProgramsSearch => {
+    return {
+      category: search.category as string | undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Programs — AMTMTI" },
@@ -34,17 +43,11 @@ export const Route = createFileRoute("/programs")({
   component: Programs,
 });
 
-const LEVEL_FILTERS = [
-  "All",
-  "Certificate",
-  "Diploma",
-  "Postgraduate",
-  "Professional CPD",
-] as const;
-
 function Programs() {
   const [search, setSearch] = useState("");
-  const [levelFilter, setLevelFilter] = useState<string>("All");
+  const { category } = Route.useSearch();
+  const navigate = useNavigate({ from: "/programs" });
+  const activeCategory = category ?? "All";
 
   const {
     data: programs,
@@ -56,7 +59,7 @@ function Programs() {
       const { data, error } = await supabase
         .from("programs")
         .select(
-          "id,title,slug,summary,description,duration,level,certification,price_ksh,program_categories(name)",
+          "id,title,slug,summary,description,duration,level,certification,price_ksh,program_categories(name,slug)",
         )
         .eq("is_published", true)
         .order("created_at");
@@ -65,24 +68,33 @@ function Programs() {
     },
   });
 
+  const { data: categories } = useQuery({
+    queryKey: ["program-categories-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("program_categories")
+        .select("id,name,slug")
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (programs ?? []).filter((p) => {
-      const matchLevel =
-        levelFilter === "All" ||
-        (p.level?.toLowerCase().includes(levelFilter.toLowerCase()) ?? false);
+    return (programs ?? []).filter((p: any) => {
+      const matchCategory =
+        activeCategory === "All" ||
+        p.program_categories?.slug === activeCategory;
       const matchSearch =
         !q ||
         p.title.toLowerCase().includes(q) ||
         (p.summary?.toLowerCase().includes(q) ?? false) ||
         (p.description?.toLowerCase().includes(q) ?? false) ||
-        ((p as { program_categories?: { name: string } | null }).program_categories?.name
-          ?.toLowerCase()
-          .includes(q) ??
-          false);
-      return matchLevel && matchSearch;
+        (p.program_categories?.name?.toLowerCase().includes(q) ?? false);
+      return matchCategory && matchSearch;
     });
-  }, [programs, search, levelFilter]);
+  }, [programs, search, activeCategory]);
 
   return (
     <PageShell>
@@ -130,17 +142,27 @@ function Programs() {
             <span className="text-muted-foreground font-medium">({filtered.length})</span>
           </h2>
           <div className="flex flex-wrap gap-2">
-            {LEVEL_FILTERS.map((f) => (
+            <button
+              onClick={() => navigate({ search: {} })}
+              className={`rounded-full px-4 py-1.5 text-sm border transition ${
+                activeCategory === "All"
+                  ? "bg-navy text-white border-navy"
+                  : "border-border text-foreground/75 hover:border-medical hover:text-medical"
+              }`}
+            >
+              All
+            </button>
+            {categories?.map((c: any) => (
               <button
-                key={f}
-                onClick={() => setLevelFilter(f)}
+                key={c.id}
+                onClick={() => navigate({ search: { category: c.slug } })}
                 className={`rounded-full px-4 py-1.5 text-sm border transition ${
-                  levelFilter === f
+                  activeCategory === c.slug
                     ? "bg-navy text-white border-navy"
                     : "border-border text-foreground/75 hover:border-medical hover:text-medical"
                 }`}
               >
-                {f}
+                {c.name}
               </button>
             ))}
           </div>
@@ -161,9 +183,8 @@ function Programs() {
         )}
 
         <div className="mt-10 space-y-6">
-          {filtered.map((p) => {
-            const category = (p as { program_categories?: { name: string } | null })
-              .program_categories;
+          {filtered.map((p: any) => {
+            const categoryObj = p.program_categories;
             return (
               <article
                 key={p.id}
@@ -176,7 +197,7 @@ function Programs() {
                       {p.level ?? "Program"}
                     </p>
                     <p className="mt-1 text-lg font-bold leading-tight">{p.title}</p>
-                    {category?.name && <p className="mt-1 text-xs opacity-75">{category.name}</p>}
+                    {categoryObj?.name && <p className="mt-1 text-xs opacity-75">{categoryObj.name}</p>}
                   </div>
                 </div>
                 <div className="lg:col-span-9 p-6 lg:p-8">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { adminCreateUser, adminDeleteUser, adminSetUserRoles } from "@/lib/api/admin.functions";
+import { adminCreateUser, adminDeleteUser, adminSetUserRoles, adminSetUserStatus } from "@/lib/api/admin.functions";
 import { ALL_ROLES, type AppRole } from "@/lib/auth/roles";
 import { toast } from "sonner";
 import { inp, EmptyState } from "./shared";
@@ -27,12 +27,12 @@ export function UsersTab() {
       if (profiles.error) throw profiles.error;
       if (roles.error) throw roles.error;
       const roleMap = new Map<string, AppRole[]>();
-      roles.data?.forEach((r) => {
+      roles.data?.forEach((r: any) => {
         const list = roleMap.get(r.user_id) ?? [];
         list.push(r.role as AppRole);
         roleMap.set(r.user_id, list);
       });
-      return (profiles.data ?? []).map((p) => ({
+      return (profiles.data ?? []).map((p: any) => ({
         ...p,
         roles: roleMap.get(p.id) ?? [],
       }));
@@ -55,6 +55,17 @@ export function UsersTab() {
     onSuccess: () => {
       toast.success("Roles updated");
       setEditingId(null);
+      qc.invalidateQueries({ queryKey: ["adm-users"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
+      await adminSetUserStatus({ data: { userId, status: status as any } });
+    },
+    onSuccess: () => {
+      toast.success("User approval status updated");
       qc.invalidateQueries({ queryKey: ["adm-users"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -131,17 +142,30 @@ export function UsersTab() {
 
       <div className="lg:col-span-2 space-y-3">
         {isLoading && <EmptyState message="Loading users…" />}
-        {users?.map((u) => (
+        {users?.map((u: any) => (
           <div key={u.id} className="rounded-lg border border-border bg-card p-4">
             <div className="flex flex-wrap justify-between gap-3">
               <div>
-                <div className="font-semibold text-navy">{u.full_name ?? "—"}</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div className="font-semibold text-navy">{u.full_name ?? "—"}</div>
+                  <span
+                    className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded ${
+                      u.status === "approved"
+                        ? "bg-emerald-brand/15 text-emerald-brand"
+                        : u.status === "pending"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {u.status || "pending"}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
                   {u.profession ?? "—"} · {u.country ?? "—"} ·{" "}
                   {new Date(u.created_at).toLocaleDateString()}
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {u.roles.map((r) => (
+                  {u.roles.map((r: string) => (
                     <span
                       key={r}
                       className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-medical/10 text-medical"
@@ -151,7 +175,25 @@ export function UsersTab() {
                   ))}
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 items-center">
+                {u.status !== "approved" && (
+                  <button
+                    type="button"
+                    onClick={() => updateStatus.mutate({ userId: u.id, status: "approved" })}
+                    className="text-xs px-2 py-1 rounded bg-emerald-brand/15 text-emerald-brand hover:bg-emerald-brand/20 font-semibold"
+                  >
+                    Approve
+                  </button>
+                )}
+                {u.status === "approved" && (
+                  <button
+                    type="button"
+                    onClick={() => updateStatus.mutate({ userId: u.id, status: "suspended" })}
+                    className="text-xs px-2 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200 font-semibold"
+                  >
+                    Suspend
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {

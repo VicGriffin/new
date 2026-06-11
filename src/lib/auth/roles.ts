@@ -1,8 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type AppRole = "admin" | "instructor" | "student" | "member";
-
 export const ALL_ROLES: AppRole[] = ["admin", "instructor", "student", "member"];
+
+export const USER_STATUSES = ["pending", "approved", "rejected", "suspended"] as const;
+export type AppStatus = (typeof USER_STATUSES)[number];
 
 /** Roles that may access the admin dashboard */
 export const ADMIN_ROLES: AppRole[] = ["admin"];
@@ -10,7 +12,13 @@ export const ADMIN_ROLES: AppRole[] = ["admin"];
 export async function getUserRoles(userId: string): Promise<AppRole[]> {
   const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   if (error) throw error;
-  return (data ?? []).map((r) => r.role as AppRole);
+  return (data ?? []).map((r: { role: AppRole }) => r.role);
+}
+
+export async function getUserStatus(userId: string): Promise<AppStatus> {
+  const { data, error } = await supabase.from("profiles").select("status").eq("id", userId).maybeSingle();
+  if (error) throw error;
+  return ((data?.status ?? "approved") as AppStatus);
 }
 
 export async function hasRole(userId: string, role: AppRole): Promise<boolean> {
@@ -35,6 +43,10 @@ export async function getEffectiveRole(userId: string): Promise<EffectiveAppRole
 
 export function isAdminRole(role?: AppRole): boolean {
   return role === "admin";
+}
+
+export function isApprovedStatus(status?: AppStatus): boolean {
+  return status === "approved";
 }
 
 export function isPortalRole(role?: AppRole): boolean {

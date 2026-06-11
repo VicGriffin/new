@@ -2,7 +2,12 @@ import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-ro
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/site/layout";
-import { getResourceDownloadUrl } from "@/lib/api/resource.functions";
+import { getResourceDownloadUrl, adminDeleteResource } from "@/lib/api/resource.functions";
+import {
+  createEnrollment,
+  submitPayment as submitPaymentServer,
+  updateProgress,
+} from "@/lib/api/enrollment.functions";
 import { useState } from "react";
 import {
   BookOpen,
@@ -14,6 +19,10 @@ import {
   Library,
   User,
   ExternalLink,
+  Lock,
+  ArrowRight,
+  ShieldCheck,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +48,20 @@ export const Route = createFileRoute("/_authenticated/portal")({
       throw redirect({ to: "/auth" });
     }
 
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("status")
+      .eq("id", u.user.id)
+      .maybeSingle();
+
+    const status = profile?.status ?? "pending";
+    if (status !== "approved") {
+      throw redirect({
+        to: "/auth",
+        search: { reason: status === "suspended" || status === "rejected" ? status : "pending" },
+      });
+    }
+
     return { user: u.user };
   },
   component: Portal,
@@ -54,6 +77,11 @@ function Portal() {
     profession: "",
     bio: "",
   });
+
+  // Payment mock form state
+  const [payingEnrollmentId, setPayingEnrollmentId] = useState<string | null>(null);
+  const [paymentRef, setPaymentRef] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("M-Pesa");
 
   const { data: user } = useQuery({
     queryKey: ["user"],
@@ -83,6 +111,7 @@ function Portal() {
           .order("created_at")
       ).data ?? [],
   });
+
   const { data: enrollments } = useQuery({
     queryKey: ["enrollments", user?.id],
     enabled: !!user?.id,
@@ -90,10 +119,11 @@ function Portal() {
       (
         await supabase
           .from("course_enrollments")
-          .select("*,programs(title,slug,duration,certification)")
+          .select("*,programs(title,slug,duration,certification,price_ksh)")
           .eq("user_id", user!.id)
       ).data ?? [],
   });
+
   const { data: notifications } = useQuery({
     queryKey: ["notifications", user?.id],
     enabled: !!user?.id,
@@ -107,6 +137,7 @@ function Portal() {
           .limit(8)
       ).data ?? [],
   });
+
   const enrolledProgramIds = (enrollments ?? []).map((e: { program_id: string }) => e.program_id);
   const { data: resources } = useQuery({
     queryKey: ["resources", enrolledProgramIds],
@@ -123,29 +154,36 @@ function Portal() {
 
   const enroll = useMutation({
     mutationFn: async (programId: string) => {
-      const { error } = await supabase
-        .from("course_enrollments")
-        .insert({ user_id: user!.id, program_id: programId });
-      if (error) throw error;
+      await createEnrollment({ data: { programId } });
     },
     onSuccess: () => {
-      toast.success("Enrolled — find it under My Programs");
+      toast.success("Enrollment initiated — please complete the payment step.");
       qc.invalidateQueries({ queryKey: ["enrollments"] });
     },
     onError: (e: Error) => toast.error(e.message ?? "Could not enroll"),
   });
 
-  const updateProgress = useMutation({
-    mutationFn: async ({ id, progress }: { id: string; progress: number }) => {
-      const status = progress >= 100 ? "completed" : "active";
-      const completed_at = progress >= 100 ? new Date().toISOString() : null;
-      const { error } = await supabase
-        .from("course_enrollments")
-        .update({ progress, status, completed_at })
-        .eq("id", id);
-      if (error) throw error;
+  const submitPaymentMut = useMutation({
+    mutationFn: async ({
+      enrollmentId,
+      amount,
+      reference,
+      method,
+    }: {
+      enrollmentId: string;
+      amount: number;
+      reference: string;
+      method: string;
+    }) => {
+      await submitPaymentServer({ data: { enrollmentId, amount, reference, method } });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["enrollments"] }),
+    onSuccess: () => {
+      toast.success("Payment submitted successfully! Pending final admin activation.");
+      setPayingEnrollmentId(null);
+      setPaymentRef("");
+      qc.invalidateQueries({ queryKey: ["enrollments"] });
+    },
+    onError: (e: Error) => toast.error(e.message ?? "Could not submit payment"),
   });
 
   const markRead = useMutation({
@@ -188,6 +226,7 @@ function Portal() {
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
+    localStorage.clear();
     await supabase.auth.signOut();
     nav({ to: "/auth", replace: true });
   }
@@ -244,7 +283,7 @@ function Portal() {
         <Stat
           icon={Bell}
           label="Notifications"
-          value={(notifications?.filter((n) => !n.is_read).length ?? 0).toString()}
+          value={(notifications?.filter((n: any) => !n.is_read).length ?? 0).toString()}
         />
       </section>
 
@@ -258,55 +297,185 @@ function Portal() {
                   No enrollments yet. Browse programs below.
                 </div>
               )}
-              {enrollments?.map((e) => (
-                <div key={e.id} className="rounded-xl border border-border bg-card p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="font-semibold text-navy">{e.programs?.title}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        {e.programs?.duration} · {e.programs?.certification}
+              {enrollments?.map((e: any) => {
+                const programPrice = e.programs?.price_ksh ?? 0;
+                const isPendingPayment = e.status === "pending_payment";
+                const isPaymentApproved = e.status === "payment_approved";
+                const isActive = e.status === "active";
+                const isCompleted = e.status === "completed";
+
+                return (
+                  <div key={e.id} className="rounded-xl border border-border bg-card p-5 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <div className="font-semibold text-navy">{e.programs?.title}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {e.programs?.duration} · {e.programs?.certification}
+                        </div>
                       </div>
+                      <span
+                        className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${
+                          isActive
+                            ? "bg-emerald-brand/15 text-emerald-brand"
+                            : isCompleted
+                              ? "bg-blue-100 text-blue-800"
+                              : isPaymentApproved
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {e.status === "pending_payment"
+                          ? "Pending Payment"
+                          : e.status === "payment_approved"
+                            ? "Payment Approved (Pending Activation)"
+                            : e.status === "active"
+                              ? "Active Enrollment"
+                              : e.status}
+                      </span>
                     </div>
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${e.status === "completed" ? "bg-emerald-brand/15 text-emerald-brand" : "bg-medical/10 text-medical"}`}
-                    >
-                      {e.status}
-                    </span>
+
+                    {isPendingPayment && (
+                      <div className="p-4 bg-red-50 border border-red-100 rounded-lg space-y-3">
+                        <div className="flex gap-2 items-start">
+                          <Lock className="size-4 text-red-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-semibold text-red-800">Payment Required</p>
+                            <p className="text-xs text-red-700">
+                              Course material is locked. Please pay KSH{" "}
+                              {programPrice.toLocaleString()} to unlock.
+                            </p>
+                          </div>
+                        </div>
+
+                        {payingEnrollmentId === e.id ? (
+                          <form
+                            onSubmit={(evt) => {
+                              evt.preventDefault();
+                              if (!paymentRef.trim()) {
+                                toast.error("Please enter transaction reference");
+                                return;
+                              }
+                              submitPaymentMut.mutate({
+                                enrollmentId: e.id,
+                                amount: programPrice,
+                                reference: paymentRef,
+                                method: paymentMethod,
+                              });
+                            }}
+                            className="mt-3 pt-3 border-t border-red-200/50 space-y-2"
+                          >
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-[10px] uppercase font-bold text-navy">
+                                  Method
+                                </label>
+                                <select
+                                  value={paymentMethod}
+                                  onChange={(evt) => setPaymentMethod(evt.target.value)}
+                                  className="w-full mt-1 rounded border border-border bg-background p-1.5 text-xs focus:ring-1 focus:ring-medical outline-none"
+                                >
+                                  <option value="M-Pesa">M-Pesa</option>
+                                  <option value="Credit Card">Credit Card</option>
+                                  <option value="Bank Transfer">Bank Transfer</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="text-[10px] uppercase font-bold text-navy">
+                                  Reference
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g. QWB89JK21"
+                                  value={paymentRef}
+                                  onChange={(evt) => setPaymentRef(evt.target.value)}
+                                  className="w-full mt-1 rounded border border-border bg-background p-1.5 text-xs focus:ring-1 focus:ring-medical outline-none"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                              <button
+                                type="submit"
+                                disabled={submitPaymentMut.isPending}
+                                className="flex-1 text-xs py-1.5 rounded bg-medical text-white font-semibold hover:bg-medical/90"
+                              >
+                                Submit Payment
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPayingEnrollmentId(null)}
+                                className="px-3 py-1.5 text-xs rounded border border-border hover:bg-muted"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setPayingEnrollmentId(e.id);
+                              setPaymentMethod("M-Pesa");
+                              setPaymentRef("");
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded bg-medical text-white px-4 py-2 text-xs font-semibold hover:bg-medical/90 transition"
+                          >
+                            <CreditCard className="size-3.5" /> Pay Now
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {isPaymentApproved && (
+                      <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
+                        <div className="flex gap-2">
+                          <Clock className="size-4 text-amber-700 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-semibold text-amber-800">
+                              Pending Activation
+                            </p>
+                            <p className="text-xs text-amber-700">
+                              Your mock payment has been submitted. Course materials will unlock
+                              once an administrator approves your enrollment.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {(isActive || isCompleted) && (
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+                            <span>Progress</span>
+                            <span>{e.progress}%</span>
+                          </div>
+                          <div className="h-2 rounded bg-muted overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-medical to-emerald-brand"
+                              style={{ width: `${e.progress}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Link
+                            to="/portal/learn/$slug"
+                            params={{ slug: e.programs?.slug }}
+                            className="inline-flex items-center gap-1.5 rounded bg-medical text-white px-4 py-2 text-xs font-semibold hover:bg-medical/90"
+                          >
+                            Study Course <ArrowRight className="size-3.5" />
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-4">
-                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                      <span>Progress</span>
-                      <span>{e.progress}%</span>
-                    </div>
-                    <div className="h-2 rounded bg-muted overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-medical to-emerald-brand"
-                        style={{ width: `${e.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                  {e.status !== "completed" && (
-                    <div className="mt-4 flex gap-2">
-                      {[25, 50, 75, 100].map((p) => (
-                        <button
-                          key={p}
-                          onClick={() => updateProgress.mutate({ id: e.id, progress: p })}
-                          className="text-xs px-2.5 py-1 rounded border border-border hover:bg-muted"
-                        >
-                          Mark {p}%
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           <div>
             <h2 className="text-2xl font-bold text-navy">Browse Programs</h2>
             <div className="mt-5 grid sm:grid-cols-2 gap-4">
-              {programs?.map((p) => {
+              {programs?.map((p: any) => {
                 const isEnrolled = enrolledIds.has(p.id);
                 return (
                   <div
@@ -355,8 +524,8 @@ function Portal() {
             {editingProfile ? (
               <form
                 className="mt-4 space-y-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
+                onSubmit={(evt) => {
+                  evt.preventDefault();
                   saveProfile.mutate();
                 }}
               >
@@ -365,7 +534,7 @@ function Portal() {
                     key={k}
                     placeholder={k.replace("_", " ")}
                     value={profileForm[k]}
-                    onChange={(e) => setProfileForm({ ...profileForm, [k]: e.target.value })}
+                    onChange={(evt) => setProfileForm({ ...profileForm, [k]: evt.target.value })}
                     className="w-full rounded-md border border-input px-3 py-2 text-sm"
                   />
                 ))}
@@ -373,7 +542,7 @@ function Portal() {
                   placeholder="Bio"
                   rows={3}
                   value={profileForm.bio}
-                  onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                  onChange={(evt) => setProfileForm({ ...profileForm, bio: evt.target.value })}
                   className="w-full rounded-md border border-input px-3 py-2 text-sm resize-none"
                 />
                 <div className="flex gap-2">
@@ -425,7 +594,7 @@ function Portal() {
               {!notifications?.length && (
                 <li className="text-muted-foreground text-xs">You're all caught up.</li>
               )}
-              {notifications?.map((n) => (
+              {notifications?.map((n: any) => (
                 <li
                   key={n.id}
                   className={`rounded-md p-3 border ${n.is_read ? "bg-muted/40 border-border" : "bg-medical/5 border-medical/20"}`}
@@ -457,7 +626,7 @@ function Portal() {
               </p>
             ) : (
               <ul className="mt-4 space-y-2 text-sm">
-                {resources.map((r) => (
+                {resources.map((r: any) => (
                   <li key={r.id} className="rounded-md border border-border p-3">
                     <div className="font-medium text-navy">{r.title}</div>
                     <div className="text-xs text-muted-foreground">

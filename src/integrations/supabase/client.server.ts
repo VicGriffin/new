@@ -2,7 +2,7 @@
 // Server-side Supabase client with service role key - bypasses RLS.
 // Use this for admin operations in server functions and server routes only.
 // For user-authenticated queries (with RLS), use the auth middleware instead.
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
 
 export type SupabaseServerEnv = {
@@ -10,10 +10,10 @@ export type SupabaseServerEnv = {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 };
 
-function createSupabaseAdminStub(message: string) {
+function createSupabaseAdminStub(message: string): SupabaseClient<Database> {
   const error = new Error(message);
-  const createProxy = (path: string[] = []) => {
-    const stub = (..._args: unknown[]) => {
+  const createProxy = (path: string[] = []): any => {
+    const stub = (..._args: unknown[]): any => {
       if (path[path.length - 1] === "select" || path[path.length - 1] === "insert" || path[path.length - 1] === "update" || path[path.length - 1] === "delete" || path[path.length - 1] === "upsert" || path[path.length - 1] === "rpc" || path[path.length - 1] === "maybeSingle" || path[path.length - 1] === "single") {
         return Promise.reject(error);
       }
@@ -34,7 +34,7 @@ function createSupabaseAdminStub(message: string) {
   return createProxy();
 }
 
-export function createSupabaseAdminClient(env?: SupabaseServerEnv) {
+export function createSupabaseAdminClient(env?: SupabaseServerEnv): SupabaseClient<Database> {
   const SUPABASE_URL = env?.SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = env?.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 

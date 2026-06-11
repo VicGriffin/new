@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createSupabaseAdminClient } from "@/integrations/supabase/client.server";
 
 const roleSchema = z.enum(["admin", "instructor", "student", "member"]);
+const statusSchema = z.enum(["pending", "approved", "rejected", "suspended"]);
 
 async function assertAdmin(userId: string, supabaseAdmin: ReturnType<typeof createSupabaseAdminClient>) {
   const { data, error } = await supabaseAdmin
@@ -110,5 +111,38 @@ export const adminSetUserRoles = createServerFn({ method: "POST" })
     } catch (e) {
       console.error("Failed to write audit log:", e);
     }
+    return { ok: true };
+  });
+
+export const adminSetUserStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    z.object({
+      userId: z.string().uuid(),
+      status: statusSchema,
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const supabaseAdmin = createSupabaseAdminClient();
+    await assertAdmin(context.userId, supabaseAdmin);
+
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ status: data.status })
+      .eq("id", data.userId);
+    if (error) throw error;
+
+    try {
+      await supabaseAdmin.rpc("insert_audit_log", {
+        _actor_id: context.userId,
+        _action: "set_user_status",
+        _table_name: "profiles",
+        _row_id: data.userId,
+        _changes: JSON.stringify({ status: data.status }),
+      });
+    } catch (e) {
+      console.error("Failed to write audit log:", e);
+    }
+
     return { ok: true };
   });

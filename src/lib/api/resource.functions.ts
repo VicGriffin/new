@@ -166,13 +166,15 @@ export const getResourceDownloadUrl = createServerFn({ method: "POST" })
 
       const { data: enrollment, error: enrollmentError } = await supabaseAdmin
         .from("course_enrollments")
-        .select("id")
+        .select("id,status")
         .eq("user_id", context.userId)
         .eq("program_id", resource.program_id)
         .maybeSingle();
 
       if (enrollmentError) throw enrollmentError;
-      if (!enrollment) throw new Error("Forbidden: resource access denied");
+      if (!enrollment || !["approved", "completed"].includes(enrollment.status)) {
+        throw new Error("Forbidden: resource access denied");
+      }
     }
 
     if (resource.storage_path) {

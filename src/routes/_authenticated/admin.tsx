@@ -2,7 +2,7 @@ import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-ro
 import { PageShell } from "@/components/site/layout";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { isAdmin } from "@/lib/auth/roles";
+import { isAdmin, getUserStatus } from "@/lib/auth/roles";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard,
@@ -40,7 +40,13 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/admin/login" });
-    if (!(await isAdmin(u.user.id))) throw redirect({ to: "/portal" });
+    const adminOk = await isAdmin(u.user.id);
+    if (!adminOk) throw redirect({ to: "/portal" });
+    const status = await getUserStatus(u.user.id);
+    if (status === "suspended" || status === "rejected") {
+      await supabase.auth.signOut();
+      throw redirect({ to: "/auth", search: { reason: status } });
+    }
     return { user: u.user };
   },
   component: Admin,
@@ -83,6 +89,16 @@ function Admin() {
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
+    try {
+      localStorage.clear();
+    } catch {
+      /* ignore */
+    }
+    try {
+      sessionStorage.clear();
+    } catch {
+      /* ignore */
+    }
     await supabase.auth.signOut();
     nav({ to: "/admin/login", replace: true });
   }

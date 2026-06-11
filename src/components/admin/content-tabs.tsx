@@ -3,6 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, TablesUpdate } from "@/integrations/supabase/types";
 import { adminCreateResource, adminDeleteResource } from "@/lib/api/resource.functions";
+import {
+  adminApproveEnrollment,
+  adminRejectEnrollment,
+  adminCompleteEnrollment,
+  adminDeleteEnrollment,
+} from "@/lib/api/enrollment.functions";
 import { toast } from "sonner";
 import { inp, RowActions, EmptyState, ActionBtn } from "./shared";
 
@@ -91,9 +97,17 @@ export function ProgramsTab() {
     "programs",
     "*,program_categories(name)",
   );
+
+  const { data: categories } = useQuery({
+    queryKey: ["adm-categories-list"],
+    queryFn: async () =>
+      (await supabase.from("program_categories").select("id, name").order("name")).data ?? [],
+  });
+
   const [form, setForm] = useState({
     title: "",
     slug: "",
+    category_id: "",
     summary: "",
     description: "",
     duration: "",
@@ -113,30 +127,164 @@ export function ProgramsTab() {
 
   return (
     <CrudLayout
-      title="New program"
+      title={editId ? "Edit program" : "New program"}
       form={
-        <FormFields
-          fields={[
-            ["title", "text"],
-            ["slug", "text"],
-            ["summary", "text"],
-            ["description", "textarea"],
-            ["duration", "text"],
-            ["mode", "text"],
-            ["certification", "text"],
-            ["price_ksh", "number"],
-            ["cover_url", "text"],
-            ["apply_link", "text"],
-            ["learning_outcomes", "textarea"],
-            ["requirements", "textarea"],
-            ["curriculum", "textarea"],
-            ["pdf_url", "text"],
-          ]}
-          values={editId ? edit : form}
-          onChange={(k, v) =>
-            editId ? setEdit({ ...edit, [k]: v }) : setForm({ ...form, [k]: v })
-          }
-        />
+        <>
+          <input
+            required
+            placeholder="Title"
+            value={editId ? edit.title : form.title}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, title: e.target.value })
+                : setForm({ ...form, title: e.target.value })
+            }
+            className={inp}
+          />
+          <input
+            required
+            placeholder="Slug"
+            value={editId ? edit.slug : form.slug}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, slug: e.target.value })
+                : setForm({ ...form, slug: e.target.value })
+            }
+            className={inp}
+          />
+          <select
+            value={editId ? edit.category_id : form.category_id}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, category_id: e.target.value })
+                : setForm({ ...form, category_id: e.target.value })
+            }
+            className={inp}
+          >
+            <option value="">Select Category</option>
+            {categories?.map((c: any) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <input
+            placeholder="Duration"
+            value={editId ? edit.duration : form.duration}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, duration: e.target.value })
+                : setForm({ ...form, duration: e.target.value })
+            }
+            className={inp}
+          />
+          <input
+            placeholder="Level (e.g. Diploma, CPD)"
+            value={editId ? edit.level : form.level}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, level: e.target.value })
+                : setForm({ ...form, level: e.target.value })
+            }
+            className={inp}
+          />
+          <input
+            placeholder="Mode (e.g. Online, Hybrid)"
+            value={editId ? edit.mode : form.mode}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, mode: e.target.value })
+                : setForm({ ...form, mode: e.target.value })
+            }
+            className={inp}
+          />
+          <input
+            placeholder="Certification"
+            value={editId ? edit.certification : form.certification}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, certification: e.target.value })
+                : setForm({ ...form, certification: e.target.value })
+            }
+            className={inp}
+          />
+          <input
+            type="number"
+            placeholder="Price (KSH)"
+            value={editId ? edit.price_ksh : form.price_ksh}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, price_ksh: Number(e.target.value) })
+                : setForm({ ...form, price_ksh: Number(e.target.value) })
+            }
+            className={inp}
+          />
+          <input
+            placeholder="Cover URL"
+            value={editId ? edit.cover_url : form.cover_url}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, cover_url: e.target.value })
+                : setForm({ ...form, cover_url: e.target.value })
+            }
+            className={inp}
+          />
+          <textarea
+            placeholder="Summary"
+            value={editId ? edit.summary : form.summary}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, summary: e.target.value })
+                : setForm({ ...form, summary: e.target.value })
+            }
+            className={inp}
+            rows={2}
+          />
+          <textarea
+            placeholder="Description"
+            value={editId ? edit.description : form.description}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, description: e.target.value })
+                : setForm({ ...form, description: e.target.value })
+            }
+            className={inp}
+            rows={3}
+          />
+          <textarea
+            placeholder="Learning Outcomes (one per line)"
+            value={editId ? edit.learning_outcomes : form.learning_outcomes}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, learning_outcomes: e.target.value })
+                : setForm({ ...form, learning_outcomes: e.target.value })
+            }
+            className={inp}
+            rows={2}
+          />
+          <textarea
+            placeholder="Requirements (one per line)"
+            value={editId ? edit.requirements : form.requirements}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, requirements: e.target.value })
+                : setForm({ ...form, requirements: e.target.value })
+            }
+            className={inp}
+            rows={2}
+          />
+          <textarea
+            placeholder="Curriculum JSON"
+            value={editId ? edit.curriculum : form.curriculum}
+            onChange={(e) =>
+              editId
+                ? setEdit({ ...edit, curriculum: e.target.value })
+                : setForm({ ...form, curriculum: e.target.value })
+            }
+            className={inp}
+            rows={3}
+          />
+        </>
       }
       onSubmit={(e) => {
         e.preventDefault();
@@ -152,7 +300,16 @@ export function ProgramsTab() {
         }
 
         const payload = {
-          ...activeForm,
+          title: activeForm.title,
+          slug: activeForm.slug,
+          category_id: activeForm.category_id || null,
+          summary: activeForm.summary || null,
+          description: activeForm.description || null,
+          duration: activeForm.duration || null,
+          level: activeForm.level || null,
+          mode: activeForm.mode || null,
+          certification: activeForm.certification || null,
+          price_ksh: Number(activeForm.price_ksh) || 0,
           cover_url: activeForm.cover_url || null,
           apply_link: activeForm.apply_link || null,
           learning_outcomes: parseLines(activeForm.learning_outcomes),
@@ -186,6 +343,7 @@ export function ProgramsTab() {
                   setEdit({
                     title: p.title as string,
                     slug: p.slug as string,
+                    category_id: (p.category_id as string) ?? "",
                     summary: (p.summary as string) ?? "",
                     description: (p.description as string) ?? "",
                     duration: (p.duration as string) ?? "",
@@ -345,7 +503,14 @@ export function EventsTab() {
           starts_at: new Date(form.starts_at).toISOString(),
           ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
         });
-        setForm({ title: "", description: "", cover_url: "", location: "", starts_at: "", ends_at: "" });
+        setForm({
+          title: "",
+          description: "",
+          cover_url: "",
+          location: "",
+          starts_at: "",
+          ends_at: "",
+        });
       }}
       submitLabel="Create event"
       list={
@@ -369,82 +534,159 @@ export function EventsTab() {
 
 // ─── Research ───────────────────────────────────────────────────────────────
 export function ResearchTab() {
-  const { data, isLoading, create, update, remove } = useCrud(
-    ["adm-research"],
-    "research_articles",
-    "*",
-    { column: "published_date" },
-  );
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["adm-research"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("research_articles")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const [form, setForm] = useState({
     title: "",
     slug: "",
     area: "",
     abstract: "",
     authors: "",
-    url: "",
-    cover_url: "",
   });
-  const [editId, setEditId] = useState<string | null>(null);
-  const [edit, setEdit] = useState(form);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const create = useMutation({
+    mutationFn: async (row: any) => {
+      const { error } = await supabase.from("research_articles").insert(row);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-research"] });
+      toast.success("Created");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("research_articles").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["adm-research"] });
+      toast.success("Deleted");
+    },
+  });
+
+  const generatePDFUrl = async (pdfPath: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("research_files")
+        .createSignedUrl(pdfPath, 120);
+      if (error) throw error;
+      window.open(data.signedUrl, "_blank");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate file preview link");
+    }
+  };
 
   return (
     <CrudLayout
-      title={editId ? "Edit article" : "New article"}
+      title="New research article"
       form={
-        <FormFields
-          fields={[
-            ["title", "text"],
-            ["slug", "text"],
-            ["area", "text"],
-            ["authors", "text"],
-            ["url", "text"],
-            ["cover_url", "text"],
-            ["abstract", "textarea"],
-          ]}
-          values={editId ? edit : form}
-          onChange={(k, v) =>
-            editId ? setEdit({ ...edit, [k]: v }) : setForm({ ...form, [k]: v })
-          }
-        />
+        <>
+          <input
+            required
+            placeholder="Title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            className={inp}
+          />
+          <input
+            required
+            placeholder="Slug"
+            value={form.slug}
+            onChange={(e) => setForm({ ...form, slug: e.target.value })}
+            className={inp}
+          />
+          <input
+            placeholder="Research Area"
+            value={form.area}
+            onChange={(e) => setForm({ ...form, area: e.target.value })}
+            className={inp}
+          />
+          <input
+            placeholder="Authors"
+            value={form.authors}
+            onChange={(e) => setForm({ ...form, authors: e.target.value })}
+            className={inp}
+          />
+          <textarea
+            placeholder="Abstract"
+            value={form.abstract}
+            onChange={(e) => setForm({ ...form, abstract: e.target.value })}
+            className={inp}
+            rows={3}
+          />
+          <label className="text-xs font-semibold text-navy block mt-1">PDF File upload</label>
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+            className={inp}
+          />
+        </>
       }
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        const payload = {
-          ...form,
-          area: form.area || null,
-          abstract: form.abstract || null,
-          authors: form.authors || null,
-          url: form.url || null,
-          cover_url: form.cover_url || null,
-          published_date: new Date().toISOString().slice(0, 10),
-        };
-        if (editId) {
-          update.mutate({ id: editId, ...edit });
-          setEditId(null);
-        } else create.mutate(payload);
+        try {
+          let pdf_path = null;
+          if (selectedFile) {
+            const fileExt = selectedFile.name.split(".").pop();
+            const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+            const { error: uploadError } = await supabase.storage
+              .from("research_files")
+              .upload(fileName, selectedFile);
+            if (uploadError) throw uploadError;
+            pdf_path = fileName;
+          }
+
+          create.mutate({
+            title: form.title,
+            slug: form.slug,
+            area: form.area || null,
+            authors: form.authors || null,
+            abstract: form.abstract || null,
+            pdf_path,
+            published_date: new Date().toISOString().slice(0, 10),
+            is_published: true,
+          });
+
+          setForm({ title: "", slug: "", area: "", abstract: "", authors: "" });
+          setSelectedFile(null);
+        } catch (err: any) {
+          toast.error(err.message || "Failed to upload file");
+        }
       }}
-      submitLabel={editId ? "Save" : "Publish"}
+      submitLabel="Publish research"
       list={
         isLoading ? (
           <EmptyState message="Loading…" />
         ) : (
-          data?.map((a: Record<string, unknown>) => (
-            <ListRow key={a.id as string} title={a.title as string} sub={a.area as string}>
-              <RowActions
-                onEdit={() => {
-                  setEditId(a.id as string);
-                  setEdit({
-                    title: a.title as string,
-                    slug: a.slug as string,
-                    area: (a.area as string) ?? "",
-                    abstract: (a.abstract as string) ?? "",
-                    authors: (a.authors as string) ?? "",
-                    url: (a.url as string) ?? "",
-                    cover_url: (a.cover_url as string) ?? "",
-                  });
-                }}
-                onDelete={() => remove.mutate(a.id as string)}
-              />
+          data?.map((a: any) => (
+            <ListRow key={a.id} title={a.title} sub={a.area ?? ""}>
+              <div className="flex gap-2">
+                {a.pdf_path && (
+                  <button
+                    onClick={() => generatePDFUrl(a.pdf_path)}
+                    className="text-xs px-2.5 py-1.5 rounded bg-medical/15 text-medical hover:bg-medical/20 font-semibold"
+                  >
+                    View PDF
+                  </button>
+                )}
+                <RowActions onDelete={() => remove.mutate(a.id)} />
+              </div>
             </ListRow>
           ))
         )
@@ -456,9 +698,7 @@ export function ResearchTab() {
 // ─── Resources ──────────────────────────────────────────────────────────────
 export function ResourcesTab() {
   const qc = useQueryClient();
-  const { data, isLoading } = useCrud([
-    "adm-resources",
-  ], "resources", "*,programs(title)");
+  const { data, isLoading } = useCrud(["adm-resources"], "resources", "*,programs(title)");
   const { data: programs } = useQuery({
     queryKey: ["adm-programs-list"],
     queryFn: async () =>
@@ -524,7 +764,7 @@ export function ResourcesTab() {
             className={inp}
           >
             <option value="">General</option>
-            {programs?.map((p) => (
+            {programs?.map((p: any) => (
               <option key={p.id} value={p.id}>
                 {p.title}
               </option>
@@ -822,7 +1062,7 @@ export function ApplicationsTab() {
           </tr>
         </thead>
         <tbody>
-          {data?.map((a) => (
+          {data?.map((a: any) => (
             <tr key={a.id} className="border-t border-border">
               <td className="p-3">{a.full_name}</td>
               <td>{a.email}</td>
@@ -885,7 +1125,7 @@ export function ContactsTab() {
 
   return (
     <div className="space-y-3">
-      {data?.map((c) => (
+      {data?.map((c: any) => (
         <div
           key={c.id}
           className={`rounded-xl border p-5 ${c.is_archived ? "opacity-60 border-border bg-muted/30" : c.is_read ? "border-border bg-card" : "border-medical/30 bg-medical/5"}`}
@@ -953,93 +1193,119 @@ export function ContactsTab() {
 // ─── Enrollments ──────────────────────────────────────────────────────────────
 export function EnrollmentsTab() {
   const qc = useQueryClient();
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["adm-enrollments"],
-    queryFn: async () =>
-      (
-        await supabase
-          .from("course_enrollments")
-          .select("*, programs(title)")
-          .order("enrolled_at", { ascending: false })
-      ).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("course_enrollments")
+        .select("*, programs(title), profiles(full_name), payments(*)")
+        .order("enrolled_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
   });
-  const update = useMutation({
+
+  const updateStatus = useMutation({
     mutationFn: async ({
       id,
-      progress,
       status,
     }: {
       id: string;
-      progress?: number;
-      status: string;
+      status: "active" | "rejected" | "completed";
     }) => {
-      const payload: {
-        progress?: number;
-        status: string;
-        completed_at: string | null;
-      } = {
-        status,
-        completed_at: status === "completed" ? new Date().toISOString() : null,
-      };
-      if (typeof progress === "number") payload.progress = progress;
-      if (status === "completed" && typeof progress !== "number") payload.progress = 100;
-
-      const { error } = await supabase
-        .from("course_enrollments")
-        .update(payload as { progress?: number; status: string; completed_at: string | null })
-        .eq("id", id);
-      if (error) throw error;
+      if (status === "active") {
+        await adminApproveEnrollment({ data: { enrollmentId: id } });
+      } else if (status === "rejected") {
+        await adminRejectEnrollment({ data: { enrollmentId: id } });
+      } else if (status === "completed") {
+        await adminCompleteEnrollment({ data: { enrollmentId: id } });
+      }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["adm-enrollments"] }),
+    onSuccess: () => {
+      toast.success("Enrollment status updated successfully!");
+      qc.invalidateQueries({ queryKey: ["adm-enrollments"] });
+    },
+    onError: (e: Error) => toast.error(e.message ?? "Could not update status"),
   });
+
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("course_enrollments").delete().eq("id", id);
-      if (error) throw error;
+      await adminDeleteEnrollment({ data: { enrollmentId: id } });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["adm-enrollments"] }),
+    onSuccess: () => {
+      toast.success("Enrollment deleted successfully!");
+      qc.invalidateQueries({ queryKey: ["adm-enrollments"] });
+    },
   });
 
   return (
-    <div className="space-y-2">
-      {data?.map((e) => (
-        <div
-          key={e.id}
-          className="rounded-lg border border-border bg-card p-4 flex flex-wrap justify-between gap-3"
-        >
-          <div>
-            <div className="font-semibold text-navy">
-              {(e.programs as { title: string } | null)?.title}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              User {e.user_id.slice(0, 8)}… · {e.progress}% · {e.status}
+    <div className="space-y-3">
+      {isLoading && <EmptyState message="Loading enrollments…" />}
+      {data?.map((e: any) => {
+        const linkedPayment = e.payments?.[0];
+        return (
+          <div key={e.id} className="rounded-lg border border-border bg-card p-5 space-y-4">
+            <div className="flex flex-wrap justify-between items-start gap-3">
+              <div>
+                <div className="font-semibold text-navy">
+                  {e.programs?.title || "Unknown Program"}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  Student:{" "}
+                  <span className="font-medium text-navy">
+                    {e.profiles?.full_name || "Guest User"}
+                  </span>{" "}
+                  · Progress: {e.progress}% · Status: {e.status}
+                </div>
+                {linkedPayment && (
+                  <div className="mt-2 text-xs bg-muted px-2.5 py-1.5 rounded inline-flex flex-col gap-0.5">
+                    <span className="font-semibold text-navy">Payment Details:</span>
+                    <span>Method: {linkedPayment.payment_method}</span>
+                    <span>Reference: {linkedPayment.transaction_reference}</span>
+                    <span>Amount: KSH {Number(linkedPayment.amount).toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {e.status !== "active" && (
+                  <button
+                    onClick={() => updateStatus.mutate({ id: e.id, status: "active" })}
+                    className="text-xs px-2.5 py-1.5 rounded bg-emerald-brand text-navy font-semibold hover:opacity-95"
+                  >
+                    Approve / Activate
+                  </button>
+                )}
+                {e.status !== "rejected" && (
+                  <button
+                    onClick={() => updateStatus.mutate({ id: e.id, status: "rejected" })}
+                    className="text-xs px-2.5 py-1.5 rounded border border-red-200 text-red-700 hover:bg-red-50 font-semibold"
+                  >
+                    Reject
+                  </button>
+                )}
+                {e.status !== "completed" && (
+                  <button
+                    onClick={() => updateStatus.mutate({ id: e.id, status: "completed" })}
+                    className="text-xs px-2.5 py-1.5 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold"
+                  >
+                    Complete
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    if (!confirm("Are you sure you want to delete this enrollment?")) return;
+                    del.mutate(e.id);
+                  }}
+                  className="text-xs px-2.5 py-1.5 rounded border border-destructive/20 text-destructive hover:bg-destructive/5 font-semibold"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-1">
-            {e.status !== "approved" && (
-              <ActionBtn
-                label="Approve"
-                variant="success"
-                onClick={() => update.mutate({ id: e.id, status: "approved" })}
-              />
-            )}
-            {e.status !== "rejected" && (
-              <ActionBtn
-                label="Reject"
-                variant="danger"
-                onClick={() => update.mutate({ id: e.id, status: "rejected" })}
-              />
-            )}
-            <ActionBtn
-              label="Complete"
-              onClick={() => update.mutate({ id: e.id, progress: 100, status: "completed" })}
-              variant="success"
-            />
-            <ActionBtn label="Delete" variant="danger" onClick={() => del.mutate(e.id)} />
-          </div>
-        </div>
-      ))}
-      {!data?.length && <EmptyState message="No enrollments." />}
+        );
+      })}
+      {!isLoading && !data?.length && <EmptyState message="No enrollments found." />}
     </div>
   );
 }
