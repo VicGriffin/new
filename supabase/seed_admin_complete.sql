@@ -1,7 +1,14 @@
--- Run once in Supabase Dashboard → SQL Editor (project ocmdizojulrfpnvgdile)
--- Enables scripts/ensure-dev-admin.mjs and fixes admin@amtmti.org access.
+-- Production-safe first-admin provisioning SQL.
+-- This file intentionally contains no credentials. scripts/provision-admin-db.mjs
+-- injects ADMIN_EMAIL, ADMIN_PASSWORD, and ADMIN_DISPLAY_NAME as transaction-local
+-- PostgreSQL settings before executing it.
+--
+-- Manual SQL Editor usage (replace placeholders before running):
+--   SELECT set_config('app.admin_email', '<ADMIN_EMAIL>', false);
+--   SELECT set_config('app.admin_password', '<ADMIN_PASSWORD>', false);
+--   SELECT set_config('app.admin_display_name', '<ADMIN_DISPLAY_NAME>', false);
+--   \i supabase/seed_admin_complete.sql -- psql only; paste the remainder in Dashboard SQL Editor.
 
--- Bootstrap helpers (safe to re-run)
 CREATE OR REPLACE FUNCTION public.has_any_admin()
 RETURNS BOOLEAN
 LANGUAGE SQL
@@ -37,115 +44,53 @@ $$;
 REVOKE ALL ON FUNCTION public.bootstrap_first_admin() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.bootstrap_first_admin() TO authenticated;
 
-CREATE OR REPLACE FUNCTION public.claim_seed_admin()
-RETURNS VOID
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  user_email TEXT;
-BEGIN
-  IF auth.uid() IS NULL THEN
-    RAISE EXCEPTION 'Not authenticated';
-  END IF;
-
-  SELECT email INTO user_email FROM auth.users WHERE id = auth.uid();
-  IF user_email IS NULL OR lower(user_email) <> lower('admin@amtmti.org') THEN
-    RAISE EXCEPTION 'Seed admin claim is only for admin@amtmti.org';
-  END IF;
-
-  INSERT INTO public.user_roles (user_id, role)
-  VALUES (auth.uid(), 'admin')
-  ON CONFLICT (user_id, role) DO NOTHING;
-
-  UPDATE public.profiles
-  SET
-    full_name = COALESCE(NULLIF(full_name, ''), 'AMTMTI Administrator'),
-    profession = COALESCE(NULLIF(profession, ''), 'Administrator'),
-    country = COALESCE(NULLIF(country, ''), 'Kenya')
-  WHERE id = auth.uid();
-END;
-$$;
-
-REVOKE ALL ON FUNCTION public.claim_seed_admin() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.claim_seed_admin() TO authenticated;
-
-CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS TRIGGER
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE
-  default_role public.app_role;
-BEGIN
-  INSERT INTO public.profiles (id, full_name, avatar_url)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
-    NEW.raw_user_meta_data->>'avatar_url'
-  );
-
-  IF lower(NEW.email) = lower('admin@amtmti.org') THEN
-    default_role := 'admin';
-  ELSE
-    default_role := 'student';
-  END IF;
-
-  INSERT INTO public.user_roles (user_id, role) VALUES (NEW.id, default_role);
-  RETURN NEW;
-END;
-$$;
-
--- Create auth user if missing (bypasses client weak-password checks)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DO $$
 DECLARE
   v_user_id UUID;
-  v_encrypted_pw TEXT := crypt('Admin@123456', gen_salt('bf'));
+  v_admin_email TEXT := lower(nullif(current_setting('app.admin_email', true), ''));
+  v_admin_password TEXT := nullif(current_setting('app.admin_password', true), '');
+  v_display_name TEXT := coalesce(nullif(current_setting('app.admin_display_name', true), ''), 'AMTMTI Administrator');
+  v_encrypted_pw TEXT;
 BEGIN
-  SELECT id INTO v_user_id FROM auth.users WHERE lower(email) = lower('admin@amtmti.org');
+  IF v_admin_email IS NULL OR v_admin_password IS NULL THEN
+    RAISE EXCEPTION 'app.admin_email and app.admin_password settings are required';
+  END IF;
+  IF length(v_admin_password) < 12 THEN
+    RAISE EXCEPTION 'Admin password must be at least 12 characters';
+  END IF;
+
+  v_encrypted_pw := crypt(v_admin_password, gen_salt('bf'));
+  SELECT id INTO v_user_id FROM auth.users WHERE lower(email) = v_admin_email;
 
   IF v_user_id IS NULL THEN
     v_user_id := gen_random_uuid();
 
     INSERT INTO auth.users (
-      id,
-      instance_id,
-      aud,
-      role,
-      email,
-      encrypted_password,
-      email_confirmed_at,
-      raw_app_meta_data,
-      raw_user_meta_data,
-      created_at,
-      updated_at
+      id, instance_id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at
     )
     VALUES (
       v_user_id,
       '00000000-0000-0000-0000-000000000000',
       'authenticated',
       'authenticated',
-      'admin@amtmti.org',
+      v_admin_email,
       v_encrypted_pw,
       NOW(),
       '{"provider":"email","providers":["email"]}',
-      '{"full_name":"AMTMTI Administrator"}',
+      jsonb_build_object('full_name', v_display_name),
       NOW(),
       NOW()
     );
 
     INSERT INTO auth.identities (
-      user_id,
-      identity_data,
-      provider,
-      provider_id,
-      last_sign_in_at,
-      created_at,
-      updated_at
+      user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at
     )
     VALUES (
       v_user_id,
-      format('{"sub":"%s","email":"admin@amtmti.org"}', v_user_id)::jsonb,
+      jsonb_build_object('sub', v_user_id::text, 'email', v_admin_email),
       'email',
       v_user_id::text,
       NOW(),
@@ -157,16 +102,18 @@ BEGIN
     SET
       encrypted_password = v_encrypted_pw,
       email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
+      raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('full_name', v_display_name),
       updated_at = NOW()
     WHERE id = v_user_id;
   END IF;
 
-  INSERT INTO public.profiles (id, full_name, profession, country)
-  VALUES (v_user_id, 'AMTMTI Administrator', 'Administrator', 'Kenya')
+  INSERT INTO public.profiles (id, full_name, profession, country, status)
+  VALUES (v_user_id, v_display_name, 'Administrator', 'Kenya', 'approved')
   ON CONFLICT (id) DO UPDATE SET
     full_name = EXCLUDED.full_name,
-    profession = EXCLUDED.profession,
-    country = EXCLUDED.country;
+    profession = COALESCE(public.profiles.profession, EXCLUDED.profession),
+    country = COALESCE(public.profiles.country, EXCLUDED.country),
+    status = 'approved';
 
   INSERT INTO public.user_roles (user_id, role)
   VALUES (v_user_id, 'admin')

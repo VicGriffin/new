@@ -125,16 +125,18 @@ function RootComponent() {
   const router = useRouter();
   useEffect(() => {
     let mounted = true;
+    let unsubscribe: (() => void) | undefined;
+
     import("@/integrations/supabase/client")
       .then(({ supabase }) => {
         if (!mounted) return;
         try {
-          const { data: sub } = supabase.auth.onAuthStateChange((event: any) => {
+          const { data: sub } = supabase.auth.onAuthStateChange((event) => {
             if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
             router.invalidate();
             if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
           });
-          return () => sub.subscription.unsubscribe();
+          unsubscribe = () => sub.subscription.unsubscribe();
         } catch (error) {
           console.error("[Root] Supabase auth state listener failed:", error);
         }
@@ -144,6 +146,7 @@ function RootComponent() {
       });
     return () => {
       mounted = false;
+      unsubscribe?.();
     };
   }, [router, queryClient]);
 

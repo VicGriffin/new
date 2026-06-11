@@ -12,8 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "src/server" },
   },
-  // Configure Nitro for Netlify deployment
+  // Configure Nitro for Vercel production deployment.
   nitro: {
-    preset: "netlify",
+    preset: "vercel",
   },
 });

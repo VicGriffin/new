@@ -1,5 +1,5 @@
 /**
- * Provisions admin@amtmti.org by running seed SQL directly against Postgres.
+ * Provisions ADMIN_EMAIL by running credential-free seed SQL directly against Postgres.
  * Requires SUPABASE_DB_PASSWORD in .env (from Supabase Dashboard → Settings → Database).
  *
  * Usage: node --env-file=.env scripts/provision-admin-db.mjs
@@ -14,9 +14,11 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const PROJECT_REF =
   process.env.SUPABASE_PROJECT_ID ||
   process.env.VITE_SUPABASE_PROJECT_ID ||
-  deriveProjectRefFromUrl(SUPABASE_URL) ||
-  "ocmdizojulrfpnvgdile";
+  deriveProjectRefFromUrl(SUPABASE_URL);
 const DB_PASSWORD = process.env.SUPABASE_DB_PASSWORD;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME?.trim() || "AMTMTI Administrator";
 
 function deriveProjectRefFromUrl(url) {
   if (!url) return undefined;
@@ -30,16 +32,28 @@ function deriveProjectRefFromUrl(url) {
   }
 }
 
-if (!DB_PASSWORD) {
+if (!PROJECT_REF) {
   console.error(
-    "[provision-admin-db] Missing SUPABASE_DB_PASSWORD.\n" +
+    "[provision-admin-db] Missing Supabase project ref. Set SUPABASE_URL or SUPABASE_PROJECT_ID.",
+  );
+  process.exit(1);
+}
+
+if (!DB_PASSWORD || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.error(
+    "[provision-admin-db] Missing SUPABASE_DB_PASSWORD, ADMIN_EMAIL, or ADMIN_PASSWORD.\n" +
       "  1. Open https://supabase.com/dashboard/project/" +
       PROJECT_REF +
       "/settings/database\n" +
       "  2. Copy the database password (or reset it)\n" +
-      "  3. Add to .env: SUPABASE_DB_PASSWORD=your-password\n" +
+      "  3. Add to .env: SUPABASE_DB_PASSWORD=your-password plus ADMIN_EMAIL and ADMIN_PASSWORD\n" +
       "  4. Re-run: npm run setup:admin",
   );
+  process.exit(1);
+}
+
+if (ADMIN_PASSWORD.length < 12) {
+  console.error("[provision-admin-db] ADMIN_PASSWORD must be at least 12 characters.");
   process.exit(1);
 }
 
@@ -87,11 +101,21 @@ async function main() {
   }
 
   try {
+    await client.query("BEGIN");
+    await client.query("SELECT set_config($1, $2, true)", ["app.admin_email", ADMIN_EMAIL]);
+    await client.query("SELECT set_config($1, $2, true)", ["app.admin_password", ADMIN_PASSWORD]);
+    await client.query("SELECT set_config($1, $2, true)", [
+      "app.admin_display_name",
+      ADMIN_DISPLAY_NAME,
+    ]);
     await client.query(sql);
+    await client.query("COMMIT");
     console.log("[provision-admin-db] Admin provisioned successfully.");
-    console.log("  Email   : admin@amtmti.org");
-    console.log("  Password: Admin@123456");
+    console.log(`  Email   : ${ADMIN_EMAIL}`);
     console.log("  Login   : http://localhost:8080/admin/login");
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw error;
   } finally {
     await client.end();
   }

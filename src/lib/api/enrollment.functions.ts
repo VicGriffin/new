@@ -96,7 +96,7 @@ export const submitPayment = createServerFn({ method: "POST" })
       enrollment_id: data.enrollmentId,
       amount: data.amount,
       currency: "KSH",
-      status: "approved",
+      status: "pending",
       transaction_reference: data.reference,
       payment_method: data.method,
     });

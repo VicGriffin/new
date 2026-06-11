@@ -22,7 +22,7 @@ function run(script, extraArgs = []) {
 const hasServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
 const hasDbPassword = !!process.env.SUPABASE_DB_PASSWORD;
 
-console.log("[setup:admin] Provisioning admin@amtmti.org …\n");
+console.log(`[setup:admin] Provisioning ${process.env.ADMIN_EMAIL || "ADMIN_EMAIL from .env"} …\n`);
 
 const softFail = process.argv.includes("--soft");
 

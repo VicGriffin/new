@@ -9,12 +9,13 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "start": "node server.js",
-    "lint": "eslint .",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"scripts/**/*.mjs\" vite.config.ts eslint.config.js",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "seed:admin": "node --env-file=.env scripts/seed-admin.mjs",
     "setup:admin": "node --env-file=.env scripts/setup-admin.mjs",
-    "storage:create-resource-bucket": "node --env-file=.env scripts/create-resource-storage-bucket.mjs"
+    "storage:create-resource-bucket": "node --env-file=.env scripts/create-resource-storage-bucket.mjs",
+    "test": "node scripts/audit-production-readiness.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -38,5 +38,5 @@ GRANT EXECUTE ON FUNCTION public.bootstrap_first_admin() TO authenticated;
 
 -- Optional: grant admin to a user created in Authentication → Users
 -- INSERT INTO public.user_roles (user_id, role)
--- SELECT id, 'admin'::public.app_role FROM auth.users WHERE email = 'admin@amtmti.org'
+-- SELECT id, 'admin'::public.app_role FROM auth.users WHERE email = '<ADMIN_EMAIL>'
 -- ON CONFLICT (user_id, role) DO NOTHING;
