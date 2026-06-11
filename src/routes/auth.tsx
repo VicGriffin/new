@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { Eye, EyeOff } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { PageShell } from "@/components/site/layout";
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-type AuthMode = "signin" | "signup";
+type AuthMode = "signin" | "signup" | "reset" | "updatePassword";
 
 type SignupForm = {
   firstName: string;
@@ -62,11 +62,30 @@ const COUNTRIES = [
 
 function AuthPage() {
   const nav = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup" | "reset" | "updatePassword">("signin");
+  const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [signupForm, setSignupForm] = useState<SignupForm>(initialSignupForm);
+  const [touched, setTouched] = useState({
+    loginEmail: false,
+    loginPassword: false,
+    firstName: false,
+    lastName: false,
+    email: false,
+    password: false,
+    confirmPassword: false,
+    phone: false,
+    company: false,
+    jobTitle: false,
+    country: false,
+    termsAccepted: false,
+  });
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -87,9 +106,10 @@ function AuthPage() {
       } else if (status === "approved") {
         nav({ to: "/portal", replace: true });
       }
-    },
-    [nav],
-  );
+    }
+
+    checkSession();
+  }, [nav]);
 
   useEffect(() => {
     async function checkSession() {
@@ -135,7 +155,7 @@ function AuthPage() {
     );
   }
 
-  async function handleLogin(e: React.FormEvent) {
+    async function handleEmail(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setAuthError(null);
@@ -236,7 +256,26 @@ function AuthPage() {
     if (r.error) toast.error(r.error.message ?? "Google sign-in failed");
   }
 
-  const signupErrors = getSignupValidationErrors();
+  const signupErrors = {
+    firstName:
+      touched.firstName && !signupForm.firstName.trim() ? "First name is required." : undefined,
+    lastName:
+      touched.lastName && !signupForm.lastName.trim() ? "Last name is required." : undefined,
+    email:
+      touched.email && !isValidEmail(signupForm.email) ? "Enter a valid email." : undefined,
+    password:
+      touched.password && signupForm.password.length < 8
+        ? "Password must be at least 8 characters."
+        : undefined,
+    confirmPassword:
+      touched.confirmPassword && signupForm.confirmPassword !== signupForm.password
+        ? "Passwords must match."
+        : undefined,
+  };
+
+  function updateSignupField<Key extends keyof SignupForm>(field: Key, value: SignupForm[Key]) {
+    setSignupForm((current) => ({ ...current, [field]: value }));
+  }
 
   return (
     <PageShell>
@@ -351,25 +390,21 @@ function AuthPage() {
               </div>
             )}
 
-            <form onSubmit={handleEmail} className="space-y-4">
+            <form onSubmit={handleEmail} className="space-y-4" noValidate>
               {mode === "signup" && (
                 <Input
-                  label="Email address"
-                  type="email"
-                  value={loginEmail}
-                  onChange={setLoginEmail}
+                  label="Full name"
+                  value={signupForm.firstName}
+                  onChange={(value) => updateSignupField("firstName", value)}
                   required
-                  maxLength={200}
-                  autoComplete="email"
-                  error={
-                    touched.loginEmail && !isValidEmail(loginEmail)
-                      ? "Enter a valid email."
-                      : undefined
-                  }
-                  onBlur={() => setTouched((current) => ({ ...current, loginEmail: true }))}
+                  maxLength={80}
+                  autoComplete="name"
+                  error={touched.firstName ? signupErrors.firstName : undefined}
+                  onBlur={() => setTouched((current) => ({ ...current, firstName: true }))}
                 />
               )}
-              {mode !== "updatePassword" && (
+
+              {(mode === "signin" || mode === "signup" || mode === "reset") && (
                 <Input
                   label="Email"
                   type="email"
@@ -378,22 +413,46 @@ function AuthPage() {
                   required
                   maxLength={200}
                   autoComplete="email"
+                  error={touched.email && !isValidEmail(email) ? "Enter a valid email." : undefined}
+                  onBlur={() => setTouched((current) => ({ ...current, email: true }))}
                 />
               )}
+
               {mode !== "reset" && (
-                <Input
-                  label="Password"
-                  value={loginPassword}
-                  onChange={setLoginPassword}
+                <PasswordInput
+                  label={mode === "updatePassword" ? "New password" : "Password"}
+                  value={password}
+                  onChange={setPassword}
                   visible={showLoginPassword}
                   onToggleVisible={() => setShowLoginPassword((current) => !current)}
-                  autoComplete="current-password"
+                  autoComplete={mode === "signup" || mode === "updatePassword" ? "new-password" : "current-password"}
                   error={
-                    touched.loginPassword && !loginPassword ? "Password is required." : undefined
+                    touched.password && password.length < 8
+                      ? "Password must be at least 8 characters."
+                      : undefined
                   }
-                  onBlur={() => setTouched((current) => ({ ...current, loginPassword: true }))}
+                  onBlur={() => setTouched((current) => ({ ...current, password: true }))}
                 />
+              )}
 
+              {mode === "signup" && (
+                <PasswordInput
+                  label="Confirm password"
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  visible={showLoginPassword}
+                  onToggleVisible={() => setShowLoginPassword((current) => !current)}
+                  autoComplete="new-password"
+                  error={
+                    touched.confirmPassword && confirmPassword !== password
+                      ? "Passwords must match."
+                      : undefined
+                  }
+                  onBlur={() => setTouched((current) => ({ ...current, confirmPassword: true }))}
+                />
+              )}
+
+              {mode === "signin" && (
                 <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                   <label className="inline-flex items-center gap-2 text-muted-foreground">
                     <input
@@ -408,67 +467,8 @@ function AuthPage() {
                     Forgot password?
                   </Link>
                 </div>
+              )}
 
-                <button
-                  disabled={loading}
-                  className="w-full rounded-md bg-medical text-white py-2.5 font-semibold hover:bg-medical/90 transition disabled:opacity-60"
-                >
-                  {loading ? "Signing in…" : "Sign in"}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleSignup} className="space-y-4" noValidate>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="First name"
-                    value={signupForm.firstName}
-                    onChange={(v) => updateSignupField("firstName", v)}
-                    required
-                    maxLength={80}
-                    autoComplete="given-name"
-                    error={touched.firstName ? signupErrors.firstName : undefined}
-                    onBlur={() => setTouched((current) => ({ ...current, firstName: true }))}
-                  />
-                  <Input
-                    label="Last name"
-                    value={signupForm.lastName}
-                    onChange={(v) => updateSignupField("lastName", v)}
-                    required
-                    maxLength={80}
-                    autoComplete="family-name"
-                    error={touched.lastName ? signupErrors.lastName : undefined}
-                    onBlur={() => setTouched((current) => ({ ...current, lastName: true }))}
-                  />
-                </div>
-                <Input
-                  label="Email address"
-                  type="email"
-                  value={signupForm.email}
-                  onChange={(v) => updateSignupField("email", v)}
-                  required
-                  minLength={8}
-                  maxLength={72}
-                  autoComplete={
-                    mode === "updatePassword"
-                      ? "new-password"
-                      : mode === "signup"
-                        ? "new-password"
-                        : "current-password"
-                  }
-                />
-              )}
-              {mode === "updatePassword" && (
-                <Input
-                  label="Confirm new password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={setConfirmPassword}
-                  required
-                  minLength={8}
-                  maxLength={72}
-                  autoComplete="new-password"
-                />
-              )}
               <button
                 disabled={loading}
                 className="w-full rounded-md bg-medical text-white py-2.5 font-semibold hover:bg-medical/90 transition disabled:opacity-60"

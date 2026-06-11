@@ -54,15 +54,29 @@ function mergeVercelEnv(env: unknown) {
   }
 }
 
-// h3 swallows in-handler throws into a normal 500 Response with body
-// {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
+// h3 sometimes serializes thrown HTTPError values into a JSON 500 response.
+// Example shapes vary (older h3 versions output {"unhandled":true,"message":"HTTPError"}).
+// Try/catch inside handlers won't catch those; detect the pattern and render
+// the friendly HTML error page instead of returning the raw JSON to users.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
   if (response.status < 500) return response;
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) return response;
 
   const body = await response.clone().text();
-  if (!body.includes('"unhandled":true') || !body.includes('"message":"HTTPError"')) {
+  let parsed: any = null;
+  try {
+    parsed = JSON.parse(body);
+  } catch (e) {
+    return response;
+  }
+
+  const unhandled = parsed?.unhandled === true || parsed?.unhandled === "true";
+  const nameIsHttpError = parsed?.name === "HTTPError" || (typeof parsed?.name === "string" && parsed.name.includes("HTTPError"));
+  const messageIsHttpError = parsed?.message === "HTTPError" || (typeof parsed?.message === "string" && parsed.message.includes("HTTPError"));
+  const errorNameIsHttpError = parsed?.error?.name === "HTTPError";
+
+  if (!unhandled || !(nameIsHttpError || messageIsHttpError || errorNameIsHttpError)) {
     return response;
   }
 
