@@ -62,26 +62,26 @@ const COUNTRIES = [
 
 function AuthPage() {
   const nav = useNavigate();
-  const [mode, setMode] = useState<AuthMode>("signin");
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(true);
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [showSignupPassword, setShowSignupPassword] = useState(false);
-  const [showSignupConfirmPassword, setShowSignupConfirmPassword] = useState(false);
-  const [signupForm, setSignupForm] = useState<SignupForm>(initialSignupForm);
+  const [mode, setMode] = useState<"signin" | "signup" | "reset" | "updatePassword">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const signupPasswordScore = useMemo(
-    () => getPasswordStrength(signupForm.password),
-    [signupForm.password],
-  );
-
-  const routeAuthenticatedUser = useCallback(
-    async (userId: string) => {
-      const [role, status] = await Promise.all([getEffectiveRole(userId), getUserStatus(userId)]);
+  useEffect(() => {
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.user) return;
+      if (isPasswordRecoveryUrl()) {
+        setMode("updatePassword");
+        return;
+      }
+      const [role, status] = await Promise.all([
+        getEffectiveRole(data.session.user.id),
+        getUserStatus(data.session.user.id),
+      ]);
       if (role === "admin") {
         nav({ to: "/admin", replace: true });
       } else if (status === "approved") {
@@ -97,8 +97,25 @@ function AuthPage() {
       if (!data.session?.user) return;
       await routeAuthenticatedUser(data.session.user.id);
     }
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setMode("updatePassword");
+        setAuthError(null);
+      }
+    });
+
     checkSession();
-  }, [routeAuthenticatedUser]);
+
+    return () => listener.subscription.unsubscribe();
+  }, [nav]);
+
+  function isPasswordRecoveryUrl() {
+    if (typeof window === "undefined") return false;
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    return searchParams.get("type") === "recovery" || hashParams.get("type") === "recovery";
+  }
 
   function normalizeAuthError(error: unknown) {
     const message = error instanceof Error ? error.message : "Authentication failed";
@@ -106,7 +123,7 @@ function AuthPage() {
       return "Incorrect email or password. Please check your details and try again.";
     }
     if (/rate limit/i.test(message)) {
-      return "Too many auth requests were sent recently. Wait about an hour, then try again.";
+      return "Too many auth emails sent recently. Wait about an hour, then try again.";
     }
     return message;
   }
@@ -118,140 +135,90 @@ function AuthPage() {
     );
   }
 
-  function updateSignupField<K extends keyof SignupForm>(key: K, value: SignupForm[K]) {
-    setSignupForm((current) => ({ ...current, [key]: value }));
-  }
-
-  function getSignupValidationErrors() {
-    const errors: Partial<Record<keyof SignupForm, string>> = {};
-    if (!signupForm.firstName.trim()) errors.firstName = "First name is required.";
-    if (!signupForm.lastName.trim()) errors.lastName = "Last name is required.";
-    if (!isValidEmail(signupForm.email)) errors.email = "Enter a valid email address.";
-    if (signupPasswordScore.score < 4) errors.password = "Password must meet all requirements.";
-    if (signupForm.password !== signupForm.confirmPassword) {
-      errors.confirmPassword = "Passwords do not match.";
-    }
-    if (signupForm.phone && !/^\+?[0-9 ().-]{7,20}$/.test(signupForm.phone.trim())) {
-      errors.phone = "Enter a valid phone number.";
-    }
-    if (!signupForm.termsAccepted) {
-      errors.termsAccepted = "You must accept the terms and conditions.";
-    }
-    return errors;
-  }
-
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setAuthError(null);
     try {
-      if (!isValidEmail(loginEmail)) throw new Error("Enter a valid email address.");
-      if (!loginPassword) throw new Error("Password is required.");
-
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("amtmti_remember_session", rememberMe ? "true" : "false");
-      }
-
-      const { error, data } = await supabase.auth.signInWithPassword({
-        email: loginEmail.trim().toLowerCase(),
-        password: loginPassword,
-      });
-      if (error) throw error;
-      if (!data?.user) throw new Error("Login failed. Please try again.");
-
-      const [role, status] = await Promise.all([
-        getEffectiveRole(data.user.id),
-        getUserStatus(data.user.id),
-      ]);
-      if (role === "admin") {
-        toast.success("Welcome back, Administrator");
-        nav({ to: "/admin", replace: true });
-      } else if (status !== "approved") {
+      if (mode === "updatePassword") {
+        if (password !== confirmPassword) {
+          const message = "Passwords do not match.";
+          setAuthError(message);
+          toast.error(message);
+          return;
+        }
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        toast.success("Password updated. Please sign in with your new password.");
         await supabase.auth.signOut();
-        const message =
-          status === "pending"
-            ? "Your account is pending approval. Please wait for an admin to approve it."
-            : status === "rejected"
-              ? "Your account has been rejected. Contact support for help."
-              : "Your account is not yet approved.";
-        setAuthError(message);
-        toast.error(message);
-      } else {
-        toast.success("Signed in successfully.");
-        nav({ to: "/portal", replace: true });
-      }
-    } catch (err: unknown) {
-      const message = normalizeAuthError(err);
-      setAuthError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSignup(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setAuthError(null);
-    setTouched({
-      firstName: true,
-      lastName: true,
-      email: true,
-      password: true,
-      confirmPassword: true,
-      phone: true,
-      termsAccepted: true,
-    });
-
-    try {
-      const validationErrors = getSignupValidationErrors();
-      if (Object.keys(validationErrors).length > 0) {
-        throw new Error("Please fix the highlighted fields before creating your account.");
-      }
-
-      const email = signupForm.email.trim().toLowerCase();
-      const { available } = await isEmailAvailable({ data: { email } });
-      if (!available) {
-        const message =
-          "An account with this email already exists. Please sign in or reset your password.";
-        setAuthError(message);
-        toast.error(message);
-        return;
-      }
-
-      const fullName = `${signupForm.firstName.trim()} ${signupForm.lastName.trim()}`.trim();
-      const { error } = await supabase.auth.signUp({
-        email,
-        password: signupForm.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/portal`,
-          data: {
-            full_name: fullName,
-            first_name: signupForm.firstName.trim(),
-            last_name: signupForm.lastName.trim(),
-            phone: signupForm.phone.trim() || null,
-            company: signupForm.company.trim() || null,
-            job_title: signupForm.jobTitle.trim() || null,
-            country: signupForm.country || null,
-            marketing_consent: signupForm.marketingConsent,
-          },
-        },
-      });
-      if (error) {
-        if (isExistingAccountError(error)) {
+        setPassword("");
+        setConfirmPassword("");
+        setMode("signin");
+        if (typeof window !== "undefined") window.history.replaceState({}, document.title, "/auth");
+      } else if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth?type=recovery`,
+        });
+        if (error) throw error;
+        toast.success("Password reset link sent — check your email.");
+        setEmail("");
+        setMode("signin");
+      } else if (mode === "signup") {
+        const { available } = await isEmailAvailable({ data: { email } });
+        if (!available) {
           const message =
             "An account with this email already exists. Please sign in or reset your password.";
           setAuthError(message);
           toast.error(message);
           return;
         }
-        throw error;
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/portal`,
+            data: { full_name: fullName },
+          },
+        });
+        if (error) {
+          if (isExistingAccountError(error)) {
+            const message =
+              "An account with this email already exists. Please sign in or reset your password.";
+            setAuthError(message);
+            toast.error(message);
+            return;
+          }
+          throw error;
+        }
+        toast.success("Account created. Check your email to confirm, then sign in.");
+        setMode("signin");
+      } else {
+        const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        if (data?.user) {
+          const [role, status] = await Promise.all([
+            getEffectiveRole(data.user.id),
+            getUserStatus(data.user.id),
+          ]);
+          if (role === "admin") {
+            nav({ to: "/admin", replace: true });
+          } else if (status !== "approved") {
+            await supabase.auth.signOut();
+            const message =
+              status === "pending"
+                ? "Your account is pending approval. Please wait for an admin to approve it."
+                : status === "rejected"
+                  ? "Your account has been rejected. Contact support for help."
+                  : "Your account is not yet approved.";
+            setAuthError(message);
+            toast.error(message);
+          } else {
+            nav({ to: "/portal", replace: true });
+          }
+        } else {
+          nav({ to: "/portal", replace: true });
+        }
       }
-
-      toast.success("Account created. Check your email to confirm, then sign in.");
-      setSignupForm(initialSignupForm);
-      setTouched({});
-      setMode("signin");
     } catch (err: unknown) {
       const message = normalizeAuthError(err);
       setAuthError(message);
@@ -308,59 +275,72 @@ function AuthPage() {
         </div>
 
         <div className="flex items-center justify-center p-6 lg:p-12 bg-soft">
-          <div className="w-full max-w-xl rounded-2xl bg-card border border-border p-6 shadow-xl sm:p-8">
-            <div className="flex gap-2 mb-6">
-              {(["signin", "signup"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => {
-                    setAuthError(null);
-                    setTouched({});
-                    setMode(m);
-                  }}
-                  className={`flex-1 py-2 rounded-md text-sm font-semibold transition ${mode === m ? "bg-medical text-white" : "bg-muted text-foreground/70"}`}
-                >
-                  {m === "signin" ? "Sign in" : "Create account"}
-                </button>
-              ))}
-            </div>
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border p-8 shadow-xl">
+            {mode !== "reset" && mode !== "updatePassword" && (
+              <div className="flex gap-2 mb-6">
+                {(["signin", "signup"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => {
+                      setAuthError(null);
+                      setPassword("");
+                      setConfirmPassword("");
+                      setMode(m);
+                    }}
+                    className={`flex-1 py-2 rounded-md text-sm font-semibold transition ${mode === m ? "bg-medical text-white" : "bg-muted text-foreground/70"}`}
+                  >
+                    {m === "signin" ? "Sign in" : "Create account"}
+                  </button>
+                ))}
+              </div>
+            )}
+            {mode === "reset" && (
+              <h2 className="mb-6 text-lg font-bold text-navy">Reset your password</h2>
+            )}
+            {mode === "updatePassword" && (
+              <div className="mb-6">
+                <h2 className="text-lg font-bold text-navy">Create a new password</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Enter and confirm your new AMTMTI password.
+                </p>
+              </div>
+            )}
 
-            <button
-              type="button"
-              onClick={handleGoogle}
-              className="w-full flex items-center justify-center gap-3 rounded-md border border-border bg-background py-2.5 text-sm font-semibold hover:bg-muted transition"
-            >
-              <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-                <path
-                  fill="#FFC107"
-                  d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"
-                />
-                <path
-                  fill="#FF3D00"
-                  d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3 0 5.7 1.1 7.8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"
-                />
-                <path
-                  fill="#4CAF50"
-                  d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.5 26.8 36.5 24 36.5c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"
-                />
-                <path
-                  fill="#1976D2"
-                  d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C41.5 35.2 44 30 44 24c0-1.3-.1-2.3-.4-3.5z"
-                />
-              </svg>
-              Continue with Google
-            </button>
-            <p className="mt-2 text-center text-[11px] text-muted-foreground">
-              Microsoft sign-in can be enabled when the provider is configured in Supabase.
-            </p>
+            {mode !== "reset" && mode !== "updatePassword" && (
+              <button
+                onClick={handleGoogle}
+                className="w-full flex items-center justify-center gap-3 rounded-md border border-border bg-background py-2.5 text-sm font-semibold hover:bg-muted transition"
+              >
+                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
+                  <path
+                    fill="#FFC107"
+                    d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"
+                  />
+                  <path
+                    fill="#FF3D00"
+                    d="M6.3 14.7l6.6 4.8C14.6 16 18.9 13 24 13c3 0 5.7 1.1 7.8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"
+                  />
+                  <path
+                    fill="#4CAF50"
+                    d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.3 35.5 26.8 36.5 24 36.5c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"
+                  />
+                  <path
+                    fill="#1976D2"
+                    d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4 5.6l6.2 5.2C41.5 35.2 44 30 44 24c0-1.3-.1-2.3-.4-3.5z"
+                  />
+                </svg>
+                Continue with Google
+              </button>
+            )}
 
-            <div className="relative my-6 text-center">
-              <span className="bg-card px-3 text-xs text-muted-foreground relative z-10">
-                or email
-              </span>
-              <div className="absolute inset-x-0 top-1/2 h-px bg-border -z-0" />
-            </div>
+            {mode !== "reset" && mode !== "updatePassword" && (
+              <div className="relative my-6 text-center">
+                <span className="bg-card px-3 text-xs text-muted-foreground relative z-10">
+                  or email
+                </span>
+                <div className="absolute inset-x-0 top-1/2 h-px bg-border -z-0" />
+              </div>
+            )}
 
             {authError && (
               <div
@@ -371,8 +351,8 @@ function AuthPage() {
               </div>
             )}
 
-            {mode === "signin" ? (
-              <form onSubmit={handleLogin} className="space-y-4" noValidate>
+            <form onSubmit={handleEmail} className="space-y-4">
+              {mode === "signup" && (
                 <Input
                   label="Email address"
                   type="email"
@@ -388,7 +368,20 @@ function AuthPage() {
                   }
                   onBlur={() => setTouched((current) => ({ ...current, loginEmail: true }))}
                 />
-                <PasswordInput
+              )}
+              {mode !== "updatePassword" && (
+                <Input
+                  label="Email"
+                  type="email"
+                  value={email}
+                  onChange={setEmail}
+                  required
+                  maxLength={200}
+                  autoComplete="email"
+                />
+              )}
+              {mode !== "reset" && (
+                <Input
                   label="Password"
                   value={loginPassword}
                   onChange={setLoginPassword}
@@ -453,110 +446,72 @@ function AuthPage() {
                   value={signupForm.email}
                   onChange={(v) => updateSignupField("email", v)}
                   required
-                  maxLength={200}
-                  autoComplete="email"
-                  error={touched.email ? signupErrors.email : undefined}
-                  onBlur={() => setTouched((current) => ({ ...current, email: true }))}
+                  minLength={8}
+                  maxLength={72}
+                  autoComplete={
+                    mode === "updatePassword"
+                      ? "new-password"
+                      : mode === "signup"
+                        ? "new-password"
+                        : "current-password"
+                  }
                 />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <PasswordInput
-                    label="Password"
-                    value={signupForm.password}
-                    onChange={(v) => updateSignupField("password", v)}
-                    visible={showSignupPassword}
-                    onToggleVisible={() => setShowSignupPassword((current) => !current)}
-                    autoComplete="new-password"
-                    error={touched.password ? signupErrors.password : undefined}
-                    onBlur={() => setTouched((current) => ({ ...current, password: true }))}
-                  />
-                  <PasswordInput
-                    label="Confirm password"
-                    value={signupForm.confirmPassword}
-                    onChange={(v) => updateSignupField("confirmPassword", v)}
-                    visible={showSignupConfirmPassword}
-                    onToggleVisible={() => setShowSignupConfirmPassword((current) => !current)}
-                    autoComplete="new-password"
-                    error={touched.confirmPassword ? signupErrors.confirmPassword : undefined}
-                    onBlur={() => setTouched((current) => ({ ...current, confirmPassword: true }))}
-                  />
-                </div>
-                <PasswordRequirements
-                  password={signupForm.password}
-                  strength={signupPasswordScore}
+              )}
+              {mode === "updatePassword" && (
+                <Input
+                  label="Confirm new password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  required
+                  minLength={8}
+                  maxLength={72}
+                  autoComplete="new-password"
                 />
+              )}
+              <button
+                disabled={loading}
+                className="w-full rounded-md bg-medical text-white py-2.5 font-semibold hover:bg-medical/90 transition disabled:opacity-60"
+              >
+                {loading
+                  ? "Please wait…"
+                  : mode === "signin"
+                    ? "Sign in"
+                    : mode === "signup"
+                      ? "Create account"
+                      : mode === "updatePassword"
+                        ? "Update password"
+                        : "Send reset link"}
+              </button>
+            </form>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="Phone number"
-                    type="tel"
-                    value={signupForm.phone}
-                    onChange={(v) => updateSignupField("phone", v)}
-                    maxLength={30}
-                    autoComplete="tel"
-                    error={touched.phone ? signupErrors.phone : undefined}
-                    onBlur={() => setTouched((current) => ({ ...current, phone: true }))}
-                  />
-                  <SelectInput
-                    label="Country"
-                    value={signupForm.country}
-                    onChange={(v) => updateSignupField("country", v)}
-                    options={COUNTRIES}
-                  />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="Company name"
-                    value={signupForm.company}
-                    onChange={(v) => updateSignupField("company", v)}
-                    maxLength={120}
-                    autoComplete="organization"
-                  />
-                  <Input
-                    label="Job title"
-                    value={signupForm.jobTitle}
-                    onChange={(v) => updateSignupField("jobTitle", v)}
-                    maxLength={120}
-                    autoComplete="organization-title"
-                  />
-                </div>
-
-                <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3 text-sm">
-                  <label className="flex gap-2">
-                    <input
-                      type="checkbox"
-                      checked={signupForm.termsAccepted}
-                      onChange={(e) => updateSignupField("termsAccepted", e.target.checked)}
-                      onBlur={() => setTouched((current) => ({ ...current, termsAccepted: true }))}
-                      className="mt-0.5 size-4 rounded border-input accent-medical"
-                      required
-                    />
-                    <span>
-                      I agree to the AMTMTI terms and conditions and privacy policy.
-                      {touched.termsAccepted && signupErrors.termsAccepted && (
-                        <span className="mt-1 block text-xs text-destructive">
-                          {signupErrors.termsAccepted}
-                        </span>
-                      )}
-                    </span>
-                  </label>
-                  <label className="flex gap-2 text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={signupForm.marketingConsent}
-                      onChange={(e) => updateSignupField("marketingConsent", e.target.checked)}
-                      className="mt-0.5 size-4 rounded border-input accent-medical"
-                    />
-                    Send me AMTMTI updates, resources, and training opportunities.
-                  </label>
-                </div>
-
-                <button
-                  disabled={loading}
-                  className="w-full rounded-md bg-medical text-white py-2.5 font-semibold hover:bg-medical/90 transition disabled:opacity-60"
-                >
-                  {loading ? "Creating account…" : "Create account"}
-                </button>
-              </form>
+            {mode === "signin" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthError(null);
+                  setPassword("");
+                  setConfirmPassword("");
+                  setMode("reset");
+                }}
+                className="mt-3 w-full text-xs text-medical hover:underline"
+              >
+                Forgot password?
+              </button>
+            )}
+            {(mode === "reset" || mode === "updatePassword") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthError(null);
+                  setPassword("");
+                  setConfirmPassword("");
+                  setMode("signin");
+                }}
+                className="mt-3 w-full text-xs text-muted-foreground hover:text-medical"
+              >
+                ← Back to sign in
+              </button>
             )}
 
             <p className="mt-6 text-xs text-center text-muted-foreground">
@@ -628,8 +583,6 @@ function Input({
   minLength,
   maxLength,
   autoComplete,
-  error,
-  onBlur,
 }: {
   label: string;
   type?: string;
@@ -639,8 +592,6 @@ function Input({
   minLength?: number;
   maxLength?: number;
   autoComplete?: string;
-  error?: string;
-  onBlur?: () => void;
 }) {
   return (
     <label className="block">
@@ -656,7 +607,6 @@ function Input({
         minLength={minLength}
         maxLength={maxLength}
         autoComplete={autoComplete}
-        aria-invalid={Boolean(error)}
         className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
       />
       {error && <span className="mt-1 block text-xs text-destructive">{error}</span>}
