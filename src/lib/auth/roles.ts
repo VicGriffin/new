@@ -17,7 +17,13 @@ export async function getUserRoles(userId: string): Promise<AppRole[]> {
 
 export async function getUserStatus(userId: string): Promise<AppStatus> {
   const { data, error } = await supabase.from("profiles").select("status").eq("id", userId).maybeSingle();
-  if (error) throw error;
+  if (error) {
+    if ((error as any)?.code === "42703") {
+      console.warn("[Auth] profiles.status missing, defaulting user status to approved.", error);
+      return "approved";
+    }
+    throw error;
+  }
   return ((data?.status ?? "approved") as AppStatus);
 }
 

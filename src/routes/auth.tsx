@@ -5,6 +5,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { PageShell } from "@/components/site/layout";
 import { imageUrl } from "@/lib/utils";
 import { getEffectiveRole, getUserStatus } from "@/lib/auth/roles";
+import { isEmailAvailable } from "@/lib/api/auth.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -42,6 +43,11 @@ function AuthPage() {
     checkSession();
   }, [nav]);
 
+  function isExistingAccountError(error: unknown) {
+    if (!(error instanceof Error)) return false;
+    return /already registered|already exists|duplicate|already a user|user already exists/i.test(error.message);
+  }
+
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -54,6 +60,11 @@ function AuthPage() {
         toast.success("Password reset link sent — check your email.");
         setMode("signin");
       } else if (mode === "signup") {
+        const { available } = await isEmailAvailable({ data: { email } });
+        if (!available) {
+          toast.error("An account with this email already exists. Please sign in or reset your password.");
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -62,7 +73,13 @@ function AuthPage() {
             data: { full_name: fullName },
           },
         });
-        if (error) throw error;
+        if (error) {
+          if (isExistingAccountError(error)) {
+            toast.error("An account with this email already exists. Please sign in or reset your password.");
+            return;
+          }
+          throw error;
+        }
         toast.success("Account created. Check your email to confirm, then sign in.");
         setMode("signin");
       } else {

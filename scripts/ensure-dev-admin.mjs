@@ -1,6 +1,6 @@
 /**
  * Ensures the development admin account exists and has the admin role.
- * Uses only the publishable key (no service role required).
+ * Uses only the anon key (no service role required).
  *
  * 1. Sign in or sign up admin@amtmti.org
  * 2. Call claim_seed_admin() RPC to grant admin role (idempotent)
@@ -11,18 +11,17 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const PUBLISHABLE_KEY =
-  process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@amtmti.org").toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123456";
 const ADMIN_DISPLAY_NAME = process.env.ADMIN_DISPLAY_NAME || "AMTMTI Administrator";
 
-if (!SUPABASE_URL || !PUBLISHABLE_KEY) {
+if (!SUPABASE_URL || !ANON_KEY) {
   console.warn("[ensure-dev-admin] Skipped — missing SUPABASE_URL or anon key (VITE_SUPABASE_ANON_KEY / SUPABASE_ANON_KEY).");
   process.exit(0);
 }
 
-const supabase = createClient(SUPABASE_URL, PUBLISHABLE_KEY, {
+const supabase = createClient(SUPABASE_URL, ANON_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
