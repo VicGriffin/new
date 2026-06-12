@@ -70,16 +70,10 @@ function AuthPage() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [touched, setTouched] = useState({
-    firstName: false,
-    lastName: false,
+    fullName: false,
     email: false,
     password: false,
     confirmPassword: false,
-    phone: false,
-    company: false,
-    jobTitle: false,
-    country: false,
-    termsAccepted: false,
   });
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -178,6 +172,41 @@ function AuthPage() {
         setEmail("");
         setMode("signin");
       } else if (mode === "signup") {
+        setTouched({
+          fullName: true,
+          email: true,
+          password: true,
+          confirmPassword: true,
+        });
+
+        if (!fullName.trim()) {
+          const message = "Full name is required.";
+          setAuthError(message);
+          toast.error(message);
+          return;
+        }
+
+        if (!isValidEmail(email)) {
+          const message = "Enter a valid email.";
+          setAuthError(message);
+          toast.error(message);
+          return;
+        }
+
+        if (password.length < 8) {
+          const message = "Password must be at least 8 characters.";
+          setAuthError(message);
+          toast.error(message);
+          return;
+        }
+
+        if (confirmPassword !== password) {
+          const message = "Passwords must match.";
+          setAuthError(message);
+          toast.error(message);
+          return;
+        }
+
         const { available } = await isEmailAvailable({ data: { email } });
         if (!available) {
           const message =
@@ -260,7 +289,7 @@ function AuthPage() {
   }
 
   const signupErrors = {
-    firstName: touched.firstName && !fullName.trim() ? "Full name is required." : undefined,
+    fullName: touched.fullName && !fullName.trim() ? "Full name is required." : undefined,
     email: touched.email && !isValidEmail(email) ? "Enter a valid email." : undefined,
     password: touched.password && password.length < 8 ? "Password must be at least 8 characters." : undefined,
     confirmPassword: touched.confirmPassword && confirmPassword !== password ? "Passwords must match." : undefined,
@@ -389,8 +418,9 @@ function AuthPage() {
                     required
                     maxLength={80}
                     autoComplete="name"
+                    onBlur={() => setTouched((current) => ({ ...current, fullName: true }))}
                   />
-                  {touched.firstName && !fullName.trim() && (
+                  {touched.fullName && !fullName.trim() && (
                     <p className="text-xs text-destructive">Full name is required.</p>
                   )}
                 </>
@@ -406,6 +436,7 @@ function AuthPage() {
                     required
                     maxLength={200}
                     autoComplete="email"
+                    onBlur={() => setTouched((current) => ({ ...current, email: true }))}
                   />
                   {touched.email && !isValidEmail(email) && (
                     <p className="text-xs text-destructive">Enter a valid email.</p>
@@ -582,6 +613,7 @@ function Input({
   minLength,
   maxLength,
   autoComplete,
+  onBlur,
 }: {
   label: string;
   type?: string;
@@ -591,6 +623,7 @@ function Input({
   minLength?: number;
   maxLength?: number;
   autoComplete?: string;
+  onBlur?: () => void;
 }) {
   return (
     <label className="block">
@@ -601,7 +634,7 @@ function Input({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={() => {}}
+        onBlur={onBlur}
         required={required}
         minLength={minLength}
         maxLength={maxLength}
