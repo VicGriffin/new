@@ -27,6 +27,7 @@ import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedPaymentEnrollmentIdRouteImport } from './routes/_authenticated/payment.$enrollmentId'
 import { Route as AuthenticatedPortalLearnSlugRouteImport } from './routes/_authenticated/portal.learn.$slug'
 
 const ResearchRoute = ResearchRouteImport.update({
@@ -118,6 +119,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPaymentEnrollmentIdRoute =
+  AuthenticatedPaymentEnrollmentIdRouteImport.update({
+    id: '/payment/$enrollmentId',
+    path: '/payment/$enrollmentId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPortalLearnSlugRoute =
   AuthenticatedPortalLearnSlugRouteImport.update({
     id: '/learn/$slug',
@@ -143,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/news/$slug': typeof NewsSlugRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/reset-password/$token': typeof ResetPasswordTokenRoute
+  '/payment/$enrollmentId': typeof AuthenticatedPaymentEnrollmentIdRoute
   '/portal/learn/$slug': typeof AuthenticatedPortalLearnSlugRoute
 }
 export interface FileRoutesByTo {
@@ -163,6 +171,7 @@ export interface FileRoutesByTo {
   '/news/$slug': typeof NewsSlugRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/reset-password/$token': typeof ResetPasswordTokenRoute
+  '/payment/$enrollmentId': typeof AuthenticatedPaymentEnrollmentIdRoute
   '/portal/learn/$slug': typeof AuthenticatedPortalLearnSlugRoute
 }
 export interface FileRoutesById {
@@ -185,6 +194,7 @@ export interface FileRoutesById {
   '/news/$slug': typeof NewsSlugRoute
   '/programs/$slug': typeof ProgramsSlugRoute
   '/reset-password/$token': typeof ResetPasswordTokenRoute
+  '/_authenticated/payment/$enrollmentId': typeof AuthenticatedPaymentEnrollmentIdRoute
   '/_authenticated/portal/learn/$slug': typeof AuthenticatedPortalLearnSlugRoute
 }
 export interface FileRouteTypes {
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/programs/$slug'
     | '/reset-password/$token'
+    | '/payment/$enrollmentId'
     | '/portal/learn/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/programs/$slug'
     | '/reset-password/$token'
+    | '/payment/$enrollmentId'
     | '/portal/learn/$slug'
   id:
     | '__root__'
@@ -248,6 +260,7 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/programs/$slug'
     | '/reset-password/$token'
+    | '/_authenticated/payment/$enrollmentId'
     | '/_authenticated/portal/learn/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -396,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/payment/$enrollmentId': {
+      id: '/_authenticated/payment/$enrollmentId'
+      path: '/payment/$enrollmentId'
+      fullPath: '/payment/$enrollmentId'
+      preLoaderRoute: typeof AuthenticatedPaymentEnrollmentIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/portal/learn/$slug': {
       id: '/_authenticated/portal/learn/$slug'
       path: '/learn/$slug'
@@ -420,11 +440,13 @@ const AuthenticatedPortalRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRouteWithChildren
+  AuthenticatedPaymentEnrollmentIdRoute: typeof AuthenticatedPaymentEnrollmentIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedPortalRoute: AuthenticatedPortalRouteWithChildren,
+  AuthenticatedPaymentEnrollmentIdRoute: AuthenticatedPaymentEnrollmentIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
