@@ -67,14 +67,9 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [signupForm, setSignupForm] = useState<SignupForm>(initialSignupForm);
   const [touched, setTouched] = useState({
-    loginEmail: false,
-    loginPassword: false,
     firstName: false,
     lastName: false,
     email: false,
@@ -112,12 +107,6 @@ function AuthPage() {
   }, [nav]);
 
   useEffect(() => {
-    async function checkSession() {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.user) return;
-      await routeAuthenticatedUser(data.session.user.id);
-    }
-
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setMode("updatePassword");
@@ -125,10 +114,8 @@ function AuthPage() {
       }
     });
 
-    checkSession();
-
     return () => listener.subscription.unsubscribe();
-  }, [nav]);
+  }, []);
 
   function isPasswordRecoveryUrl() {
     if (typeof window === "undefined") return false;
@@ -197,7 +184,7 @@ function AuthPage() {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/portal`,
-            data: { full_name: fullName },
+            data: { full_name: fullName || email.split("@")[0] },
           },
         });
         if (error) {
@@ -257,25 +244,11 @@ function AuthPage() {
   }
 
   const signupErrors = {
-    firstName:
-      touched.firstName && !signupForm.firstName.trim() ? "First name is required." : undefined,
-    lastName:
-      touched.lastName && !signupForm.lastName.trim() ? "Last name is required." : undefined,
-    email:
-      touched.email && !isValidEmail(signupForm.email) ? "Enter a valid email." : undefined,
-    password:
-      touched.password && signupForm.password.length < 8
-        ? "Password must be at least 8 characters."
-        : undefined,
-    confirmPassword:
-      touched.confirmPassword && signupForm.confirmPassword !== signupForm.password
-        ? "Passwords must match."
-        : undefined,
+    firstName: touched.firstName && !fullName.trim() ? "Full name is required." : undefined,
+    email: touched.email && !isValidEmail(email) ? "Enter a valid email." : undefined,
+    password: touched.password && password.length < 8 ? "Password must be at least 8 characters." : undefined,
+    confirmPassword: touched.confirmPassword && confirmPassword !== password ? "Passwords must match." : undefined,
   };
-
-  function updateSignupField<Key extends keyof SignupForm>(field: Key, value: SignupForm[Key]) {
-    setSignupForm((current) => ({ ...current, [field]: value }));
-  }
 
   return (
     <PageShell>
@@ -392,64 +365,74 @@ function AuthPage() {
 
             <form onSubmit={handleEmail} className="space-y-4" noValidate>
               {mode === "signup" && (
-                <Input
-                  label="Full name"
-                  value={signupForm.firstName}
-                  onChange={(value) => updateSignupField("firstName", value)}
-                  required
-                  maxLength={80}
-                  autoComplete="name"
-                  error={touched.firstName ? signupErrors.firstName : undefined}
-                  onBlur={() => setTouched((current) => ({ ...current, firstName: true }))}
-                />
+                <>
+                  <Input
+                    label="Full name"
+                    value={fullName}
+                    onChange={setFullName}
+                    required
+                    maxLength={80}
+                    autoComplete="name"
+                  />
+                  {touched.firstName && !fullName.trim() && (
+                    <p className="text-xs text-destructive">Full name is required.</p>
+                  )}
+                </>
               )}
 
               {(mode === "signin" || mode === "signup" || mode === "reset") && (
-                <Input
-                  label="Email"
-                  type="email"
-                  value={email}
-                  onChange={setEmail}
-                  required
-                  maxLength={200}
-                  autoComplete="email"
-                  error={touched.email && !isValidEmail(email) ? "Enter a valid email." : undefined}
-                  onBlur={() => setTouched((current) => ({ ...current, email: true }))}
-                />
+                <>
+                  <Input
+                    label="Email"
+                    type="email"
+                    value={email}
+                    onChange={setEmail}
+                    required
+                    maxLength={200}
+                    autoComplete="email"
+                  />
+                  {touched.email && !isValidEmail(email) && (
+                    <p className="text-xs text-destructive">Enter a valid email.</p>
+                  )}
+                </>
               )}
 
               {mode !== "reset" && (
-                <PasswordInput
-                  label={mode === "updatePassword" ? "New password" : "Password"}
-                  value={password}
-                  onChange={setPassword}
-                  visible={showLoginPassword}
-                  onToggleVisible={() => setShowLoginPassword((current) => !current)}
-                  autoComplete={mode === "signup" || mode === "updatePassword" ? "new-password" : "current-password"}
-                  error={
-                    touched.password && password.length < 8
-                      ? "Password must be at least 8 characters."
-                      : undefined
-                  }
-                  onBlur={() => setTouched((current) => ({ ...current, password: true }))}
-                />
+                <>
+                  <PasswordInput
+                    label={mode === "updatePassword" ? "New password" : "Password"}
+                    value={password}
+                    onChange={setPassword}
+                    visible={showLoginPassword}
+                    onToggleVisible={() => setShowLoginPassword((current) => !current)}
+                    autoComplete={mode === "signup" || mode === "updatePassword" ? "new-password" : "current-password"}
+                    error={
+                      touched.password && password.length < 8
+                        ? "Password must be at least 8 characters."
+                        : undefined
+                    }
+                    onBlur={() => setTouched((current) => ({ ...current, password: true }))}
+                  />
+                </>
               )}
 
               {mode === "signup" && (
-                <PasswordInput
-                  label="Confirm password"
-                  value={confirmPassword}
-                  onChange={setConfirmPassword}
-                  visible={showLoginPassword}
-                  onToggleVisible={() => setShowLoginPassword((current) => !current)}
-                  autoComplete="new-password"
-                  error={
-                    touched.confirmPassword && confirmPassword !== password
-                      ? "Passwords must match."
-                      : undefined
-                  }
-                  onBlur={() => setTouched((current) => ({ ...current, confirmPassword: true }))}
-                />
+                <>
+                  <PasswordInput
+                    label="Confirm password"
+                    value={confirmPassword}
+                    onChange={setConfirmPassword}
+                    visible={showLoginPassword}
+                    onToggleVisible={() => setShowLoginPassword((current) => !current)}
+                    autoComplete="new-password"
+                    error={
+                      touched.confirmPassword && confirmPassword !== password
+                        ? "Passwords must match."
+                        : undefined
+                    }
+                    onBlur={() => setTouched((current) => ({ ...current, confirmPassword: true }))}
+                  />
+                </>
               )}
 
               {mode === "signin" && (
@@ -602,14 +585,14 @@ function Input({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
+        onBlur={() => {}}
         required={required}
         minLength={minLength}
         maxLength={maxLength}
         autoComplete={autoComplete}
         className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
       />
-      {error && <span className="mt-1 block text-xs text-destructive">{error}</span>}
+      {/* Input component intentionally minimal; callers render errors separately when needed */}
     </label>
   );
 }
