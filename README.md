@@ -124,58 +124,97 @@ pharmacy-site-clone/
 
 ### Prerequisites
 
-- Node.js 24.x
-- npm
-- Supabase project
+- Node.js 24.x (recommended)
+- npm (or compatible package manager)
+- A Supabase project (for auth, database, and storage)
 
-### Setup
+### Quick start (local development)
+
+1. Install dependencies
 
 ```bash
 cd pharmacy-site-clone
 npm install
+```
+
+2. Configure environment
+
+```bash
 cp .env.example .env
-# Fill in Supabase environment values
+# Edit .env and fill in your Supabase project values and any secrets
+```
+
+3. Run the development server
+
+```bash
 npm run dev
 ```
 
-### Build and preview
+Open http://localhost:5173 (or the port printed by Vite) to view the site.
 
-```bash
-npm run typecheck
-npm run lint
-npm run build
-npm run preview
-```
+### Common scripts
 
-`npm run build` emits Nitro's Vercel Build Output API bundle under `.vercel/output`.
-Use `npm run preview` after a build to serve that same Vercel/Nitro output locally; do not use `vite preview` for this TanStack Start SSR build because it looks for a `dist/server/server.js` file that the Vercel preset does not emit.
+- `npm run dev` — start Vite + SSR dev server
+- `npm run build` — produce the SSR build (Vercel/Nitro output)
+- `npm run preview` — serve the built output locally
+- `npm run typecheck` — run `tsc --noEmit` to validate TypeScript
+- `npm run lint` — run project linters
+- `npm run test` — run unit/integration tests (if present)
 
-### Vercel deployment notes
+Note: `npm run build` emits the Vercel/Nitro build output under `.vercel/output`. Use `npm run preview` to serve that same output locally; do not rely on `vite preview` for SSR output produced by the Vercel preset.
 
-- Keep the project on Node.js 24.x (the version is pinned in `package.json`).
-- The Vercel build command should be `npm run build`.
-- Configure these environment variables in Vercel for Production, Preview, and Development as needed: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
-- Do not commit `.vercel/output`; it is generated during each Vercel build.
+### Deployment notes
+
+- Vercel is the recommended host for the SSR build output. Keep Node version pinned to 24.x in your Vercel project settings.
+- Set these environment variables in your deployment platform (Production and Preview):
+	- `VITE_SUPABASE_URL`
+	- `VITE_SUPABASE_ANON_KEY`
+	- `SUPABASE_URL`
+	- `SUPABASE_ANON_KEY`
+	- `SUPABASE_SERVICE_ROLE_KEY`
+- Do not commit `.vercel/output`; it is generated during build.
 
 ## Environment variables
 
-Copy `.env.example` to `.env` and configure:
+Copy `.env.example` to `.env` and set the following values:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `SUPABASE_DB_PASSWORD` (optional)
-- `ADMIN_EMAIL` / `ADMIN_PASSWORD` (optional)
+- `SUPABASE_SERVICE_ROLE_KEY` (used by server-side scripts)
+- `SUPABASE_DB_PASSWORD` (optional, for CLI/DB provisioning)
+- `ADMIN_EMAIL` / `ADMIN_PASSWORD` (optional, used by provisioning scripts)
 
-## Notes
+## Database & Supabase
+
+- This project stores schema and RLS migrations under `supabase/migrations/`.
+- To apply migrations locally or in CI, use the Supabase CLI configured with `supabase/config.toml`.
+
+Example: applying migrations with the Supabase CLI
+
+```bash
+supabase db push --project-ref <your-project-ref>
+```
+
+Important migration notes:
+
+- The project uses a `payments` table and `course_enrollments` with status enums. If you see errors around missing statuses (for example `pending_payment_review`), ensure you have applied the latest migration files in `supabase/migrations/`.
+- If `profiles.status` is missing, apply `supabase/migrations/20260612000000_core_features.sql`.
+
+## Project notes
 
 - `src/routes/` holds page routes.
 - `src/components/` holds UI and layout components.
 - `src/integrations/supabase/` holds Supabase clients and auth helpers.
-- `supabase/migrations/` holds the database schema and RLS rules.
-- `src/lib/api/` holds server functions.
-- `src/lib/auth/roles.ts` handles role and status checks.
+- `supabase/migrations/` holds database schema and RLS rules.
+- `src/lib/api/` holds server functions used by the frontend and admin console.
+- `src/lib/auth/roles.ts` contains role and status helper functions.
 
-If `profiles.status` is missing, apply `supabase/migrations/20260612000000_core_features.sql` to add the column.
+## Contributing
+
+- Run `npm run typecheck` and `npm run lint` before opening a PR.
+- Keep migrations additive and sequenced; do not modify already-published migration files for existing environments.
+- Use the `scripts/` utilities (`seed-admin.mjs`, `setup-admin.mjs`, etc.) for local provisioning and seeding.
+
+If you need help setting up Supabase locally or applying migrations, tell me which environment (local/CI/Vercel) you want to configure and I can provide step-by-step commands.

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
+﻿import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/site/layout";
@@ -9,6 +9,14 @@ import {
   submitPayment as submitPaymentServer,
   updateProgress,
 } from "@/lib/api/enrollment.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useMemo, useState } from "react";
 import {
   BookOpen,
@@ -68,7 +76,7 @@ const browseProgramCategories = [
 ];
 
 export const Route = createFileRoute("/_authenticated/portal")({
-  head: () => ({ meta: [{ title: "E-Learning Portal — AMTMTI" }] }),
+  head: () => ({ meta: [{ title: "E-Learning Portal â€” AMTMTI" }] }),
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
@@ -132,6 +140,7 @@ function Portal() {
       return "overview";
     }
   });
+  const [enrollmentStatusFilter, setEnrollmentStatusFilter] = useState<"all" | "active" | "pending" | "completed">("all");
   const nav = useNavigate();
   const qc = useQueryClient();
   const [editingProfile, setEditingProfile] = useState(false);
@@ -145,7 +154,14 @@ function Portal() {
   // Payment mock form state
   const [payingEnrollmentId, setPayingEnrollmentId] = useState<string | null>(null);
   const [paymentRef, setPaymentRef] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("M-Pesa");
+  const [paymentMethod, setPaymentMethod] = useState<"M-Pesa" | "Bank Transfer" | "PayPal">("M-Pesa");
+  const [bankTransferConfirmed, setBankTransferConfirmed] = useState(false);
+  const [bankAccountHolder, setBankAccountHolder] = useState("");
+  const [bankPaymentDate, setBankPaymentDate] = useState("");
+  const [paymentConfirmationChecked, setPaymentConfirmationChecked] = useState(false);
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [selectedProgramForCheckout, setSelectedProgramForCheckout] = useState<any | null>(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ["user"],
@@ -225,15 +241,35 @@ function Portal() {
       ).data ?? [],
   });
 
-  const enroll = useMutation({
-    mutationFn: async (programId: string) => {
-      await createEnrollment({ data: { programId } });
+  const generatedPaymentReference = useMemo(() => {
+    if (!selectedProgramForCheckout || !user?.id) return "";
+    return `REF-${selectedProgramForCheckout.id.slice(0, 8).toUpperCase()}-${user.id.slice(0, 8).toUpperCase()}`;
+  }, [selectedProgramForCheckout, user]);
+
+  const checkout = useMutation({
+    mutationFn: async ({
+      programId,
+      amount,
+      reference,
+      method,
+    }: {
+      programId: string;
+      amount: number;
+      reference: string;
+      method: "M-Pesa" | "Bank Transfer" | "PayPal";
+    }) => {
+      const { enrollmentId } = await createEnrollment({ data: { programId } });
+      await submitPaymentServer({ data: { enrollmentId, amount, reference, method } });
+      return enrollmentId;
     },
     onSuccess: () => {
-      toast.success("Enrollment initiated — please complete the payment step.");
+      toast.success("Payment submitted and is awaiting verification.");
       qc.invalidateQueries({ queryKey: ["enrollments"] });
+      setCheckoutSuccess(true);
+      setPaymentRef("");
+      setPaymentConfirmationChecked(false);
     },
-    onError: (e: Error) => toast.error(e.message ?? "Could not enroll"),
+    onError: (e: Error) => toast.error(e.message ?? "Could not complete checkout"),
   });
 
   const submitPaymentMut = useMutation({
@@ -246,7 +282,7 @@ function Portal() {
       enrollmentId: string;
       amount: number;
       reference: string;
-      method: string;
+      method: "M-Pesa" | "Bank Transfer" | "PayPal";
     }) => {
       await submitPaymentServer({ data: { enrollmentId, amount, reference, method } });
     },
@@ -322,10 +358,62 @@ function Portal() {
     (e: { status: string }) => e.status === "active",
   ).length;
   const pending = (enrollments ?? []).filter(
-    (e: { status: string }) => e.status === "pending_payment" || e.status === "payment_approved" || e.status === "pending"
+    (e: { status: string }) =>
+      e.status === "pending_payment" ||
+      e.status === "payment_approved" ||
+      e.status === "pending_payment_review",
   ).length;
   const total = enrollments?.length ?? 0;
   const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "User";
+
+  // Filtered enrollments based on status filter
+  const filteredEnrollments = useMemo(() => {
+    if (!enrollments) return [];
+    switch (enrollmentStatusFilter) {
+      case "active":
+        return enrollments.filter((e: any) => e.status === "active");
+      case "pending":
+        return enrollments.filter((e: any) => 
+          e.status === "pending_payment" || e.status === "payment_approved" || e.status === "pending_payment_review"
+        );
+      case "completed":
+        return enrollments.filter((e: any) => e.status === "completed");
+      case "all":
+      default:
+        return enrollments;
+    }
+  }, [enrollments, enrollmentStatusFilter]);
+
+  // Resources filtering for Course Resources page
+  const activeCompletedEnrollments = useMemo(() => {
+    return (enrollments ?? []).filter((e: any) => e.status === "active" || e.status === "completed");
+  }, [enrollments]);
+
+  const groupedResources = useMemo(() => {
+    if (!resources || !enrollments) return new Map();
+    
+    const groups = new Map<string, { programId: string; programTitle: string; resources: any[] }>();
+    
+    // Only include resources from active/completed enrollments
+    const activeCompletedProgramIds = new Set(activeCompletedEnrollments.map((e: any) => e.program_id));
+    
+    resources.forEach((resource: any) => {
+      if (activeCompletedProgramIds.has(resource.program_id)) {
+        const key = resource.program_id;
+        if (!groups.has(key)) {
+          const enrollment = enrollments.find((e: any) => e.program_id === resource.program_id);
+          groups.set(key, {
+            programId: resource.program_id,
+            programTitle: resource.programs?.title || "Unknown Program",
+            resources: [],
+          });
+        }
+        groups.get(key)!.resources.push(resource);
+      }
+    });
+    
+    return groups;
+  }, [resources, enrollments, activeCompletedEnrollments]);
 
   return (
     <PageShell>
@@ -379,13 +467,14 @@ function Portal() {
           </div>
           {/* removed hero + active summary section - consolidated into My Programs */}
 
+          {selectedMenu === "overview" && (
           <section className="mx-auto max-w-7xl px-5 lg:px-8 pb-16 space-y-10 lg:grid lg:grid-cols-[2.3fr_1fr] lg:items-start lg:gap-8">
             <div className="space-y-8">
               <div className="rounded-3xl border border-border bg-white p-6 shadow-sm">
                 <div className="max-w-3xl space-y-3">
                   <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">Welcome back</p>
                   <h1 className="text-3xl font-semibold tracking-tight text-navy sm:text-4xl">
-                    Welcome back, {displayName} <span className="inline-block">👋</span>
+                    Welcome back, {displayName} <span className="inline-block">ðŸ‘‹</span>
                   </h1>
                   <p className="text-sm text-foreground/80 sm:text-base">
                     Here&apos;s an overview of your learning journey.
@@ -446,7 +535,7 @@ function Portal() {
                           <div>
                             <div className="font-semibold text-navy">{e.programs?.title}</div>
                             <div className="text-xs text-muted-foreground mt-0.5">
-                              {e.programs?.duration} · {e.programs?.certification}
+                              {e.programs?.duration} Â· {e.programs?.certification}
                             </div>
                           </div>
                           <span
@@ -506,7 +595,7 @@ function Portal() {
                                     </label>
                                     <select
                                       value={paymentMethod}
-                                      onChange={(evt) => setPaymentMethod(evt.target.value)}
+                                      onChange={(evt) => setPaymentMethod(evt.target.value as "M-Pesa" | "Bank Transfer" | "PayPal")}
                                       className="w-full mt-1 rounded border border-border bg-background p-1.5 text-xs focus:ring-1 focus:ring-medical outline-none"
                                     >
                                       <option value="M-Pesa">M-Pesa</option>
@@ -656,14 +745,21 @@ function Portal() {
                         <h3 className="mt-3 font-bold text-navy">{p.title}</h3>
                         <p className="mt-1 text-sm text-foreground/70 flex-1">{p.summary}</p>
                         <div className="mt-3 text-xs text-muted-foreground">
-                          {p.duration} · {p.level} · KSH {(p.price_ksh as number)?.toLocaleString()}
+                          {p.duration} Â· {p.level} Â· KSH {(p.price_ksh as number)?.toLocaleString()}
                         </div>
                         <button
-                          disabled={isEnrolled || enroll.isPending}
-                          onClick={() => enroll.mutate(p.id)}
+                          disabled={isEnrolled || checkout.isPending}
+                          onClick={() => {
+                            if (!isEnrolled) {
+                              setSelectedProgramForCheckout(p);
+                              setPaymentMethod("M-Pesa");
+                              setPaymentRef("");
+                              setIsCheckoutOpen(true);
+                            }
+                          }}
                           className="mt-4 rounded-md bg-medical text-white px-4 py-2 text-sm font-semibold hover:bg-medical/90 disabled:opacity-60"
                         >
-                          {isEnrolled ? "Enrolled" : "Enroll"}
+                          {isEnrolled ? "Enrolled" : "Enroll & Pay"}
                         </button>
                       </div>
                     );
@@ -734,15 +830,15 @@ function Portal() {
                   <dl className="mt-4 space-y-2 text-sm">
                     <div>
                       <dt className="text-xs text-muted-foreground">Name</dt>
-                      <dd className="font-medium text-navy">{profile?.full_name || "—"}</dd>
+                      <dd className="font-medium text-navy">{profile?.full_name || "â€”"}</dd>
                     </div>
                     <div>
                       <dt className="text-xs text-muted-foreground">Profession</dt>
-                      <dd>{profile?.profession || "—"}</dd>
+                      <dd>{profile?.profession || "â€”"}</dd>
                     </div>
                     <div>
                       <dt className="text-xs text-muted-foreground">Country</dt>
-                      <dd>{profile?.country || "—"}</dd>
+                      <dd>{profile?.country || "â€”"}</dd>
                     </div>
                     {profile?.bio && (
                       <div>
@@ -798,7 +894,7 @@ function Portal() {
                       <li key={r.id} className="rounded-md border border-border p-3">
                         <div className="font-medium text-navy">{r.title}</div>
                         <div className="text-xs text-muted-foreground">
-                          {r.programs?.title} · {r.kind}
+                          {r.programs?.title} Â· {r.kind}
                         </div>
                         <button
                           type="button"
@@ -814,6 +910,628 @@ function Portal() {
               </div>
             </aside>
           </section>
+          )}
+
+          {/* MY ENROLLMENTS SECTION */}
+          {selectedMenu === "enrollments" && (
+          <section className="mx-auto max-w-7xl px-5 lg:px-8 pb-16">
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight text-navy sm:text-4xl">
+                  My Enrollments
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Track your progress across all enrolled programs.
+                </p>
+              </div>
+
+              {/* Enrollment Status Tabs */}
+              <div className="flex flex-wrap gap-2 border-b border-border pb-4">
+                {[
+                  { key: "all" as const, label: "All", count: total },
+                  { key: "active" as const, label: "Active", count: active },
+                  { key: "pending" as const, label: "Pending", count: pending },
+                  { key: "completed" as const, label: "Completed", count: completed },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setEnrollmentStatusFilter(tab.key)}
+                    className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
+                      enrollmentStatusFilter === tab.key
+                        ? "border-medical text-medical"
+                        : "border-transparent text-muted-foreground hover:text-navy"
+                    }`}
+                  >
+                    {tab.label} <span className="ml-2 text-xs font-bold">({tab.count})</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Enrollment Cards */}
+              <div className="space-y-4">
+                {filteredEnrollments.length === 0 ? (
+                  <div className="rounded-3xl border border-dashed border-border p-12 text-center">
+                    <h3 className="text-xl font-semibold text-navy">No enrollments found</h3>
+                    <p className="mt-2 text-sm text-muted-foreground mb-6">
+                      You haven't enrolled in any programs yet.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setSelectedMenu("overview");
+                        try {
+                          localStorage.setItem("portal.menu.selected", "overview");
+                        } catch (e) {}
+                      }}
+                      className="inline-flex items-center gap-2 rounded-md bg-medical text-white px-6 py-2.5 text-sm font-semibold hover:bg-medical/90"
+                    >
+                      Browse Programs
+                    </button>
+                  </div>
+                ) : (
+                  filteredEnrollments.map((e: any) => {
+                    const programPrice = e.programs?.price_ksh ?? 0;
+                    const isPendingPayment = e.status === "pending_payment";
+                    const isPaymentApproved = e.status === "payment_approved";
+                    const isActive = e.status === "active";
+                    const isCompleted = e.status === "completed";
+
+                    return (
+                      <div key={e.id} className="rounded-3xl border border-border bg-white p-5 shadow-sm space-y-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <div className="font-semibold text-navy">{e.programs?.title}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {e.programs?.duration} Â· {e.programs?.certification}
+                            </div>
+                          </div>
+                          <span
+                            className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${
+                              isActive
+                                ? "bg-emerald-brand/15 text-emerald-brand"
+                                : isCompleted
+                                  ? "bg-blue-100 text-blue-800"
+                                  : isPaymentApproved
+                                    ? "bg-amber-100 text-amber-800"
+                                    : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {e.status === "pending_payment"
+                              ? "Pending Payment"
+                              : e.status === "payment_approved"
+                                ? "Payment Approved (Pending Activation)"
+                                : e.status === "active"
+                                  ? "Active Enrollment"
+                                  : e.status}
+                          </span>
+                        </div>
+
+                        {isPendingPayment && (
+                          <div className="p-4 bg-red-50 border border-red-100 rounded-lg space-y-3">
+                            <div className="flex gap-2 items-start">
+                              <Lock className="size-4 text-red-600 shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-xs font-semibold text-red-800">Payment Required</p>
+                                <p className="text-xs text-red-700">
+                                  Course material is locked. Please pay KSH {programPrice.toLocaleString()} to unlock.
+                                </p>
+                              </div>
+                            </div>
+
+                            {payingEnrollmentId === e.id ? (
+                              <form
+                                onSubmit={(evt) => {
+                                  evt.preventDefault();
+                                  if (!paymentRef.trim()) {
+                                    toast.error("Please enter transaction reference");
+                                    return;
+                                  }
+                                  submitPaymentMut.mutate({
+                                    enrollmentId: e.id,
+                                    amount: programPrice,
+                                    reference: paymentRef,
+                                    method: paymentMethod,
+                                  });
+                                }}
+                                className="mt-3 pt-3 border-t border-red-200/50 space-y-2"
+                              >
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="text-[10px] uppercase font-bold text-navy">
+                                      Method
+                                    </label>
+                                    <select
+                                      value={paymentMethod}
+                                      onChange={(evt) => setPaymentMethod(evt.target.value as "M-Pesa" | "Bank Transfer" | "PayPal")}
+                                      className="w-full mt-1 rounded border border-border bg-background p-1.5 text-xs focus:ring-1 focus:ring-medical outline-none"
+                                    >
+                                      <option value="M-Pesa">M-Pesa</option>
+                                      <option value="Credit Card">Credit Card</option>
+                                      <option value="Bank Transfer">Bank Transfer</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] uppercase font-bold text-navy">
+                                      Reference
+                                    </label>
+                                    <input
+                                      type="text"
+                                      placeholder="e.g. QWB89JK21"
+                                      value={paymentRef}
+                                      onChange={(evt) => setPaymentRef(evt.target.value)}
+                                      className="w-full mt-1 rounded border border-border bg-background p-1.5 text-xs focus:ring-1 focus:ring-medical outline-none"
+                                    />
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 pt-2">
+                                  <button
+                                    type="submit"
+                                    disabled={submitPaymentMut.isPending}
+                                    className="flex-1 text-xs py-1.5 rounded bg-medical text-white font-semibold hover:bg-medical/90"
+                                  >
+                                    Submit Payment
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPayingEnrollmentId(null)}
+                                    className="px-3 py-1.5 text-xs rounded border border-border hover:bg-muted"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setPayingEnrollmentId(e.id);
+                                  setPaymentMethod("M-Pesa");
+                                  setPaymentRef("");
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded bg-medical text-white px-4 py-2 text-xs font-semibold hover:bg-medical/90 transition"
+                              >
+                                <CreditCard className="size-3.5" /> Pay Now
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {isPaymentApproved && (
+                          <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
+                            <div className="flex gap-2">
+                              <Clock className="size-4 text-amber-700 shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-xs font-semibold text-amber-800">
+                                  Pending Activation
+                                </p>
+                                <p className="text-xs text-amber-700">
+                                  Your mock payment has been submitted. Course materials will unlock once an administrator approves your enrollment.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {(isActive || isCompleted) && (
+                          <div className="space-y-3">
+                            <div>
+                              <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+                                <span>Progress</span>
+                                <span>{e.progress}%</span>
+                              </div>
+                              <div className="h-2 rounded bg-muted overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-medical to-emerald-brand"
+                                  style={{ width: `${e.progress}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Link
+                                to="/portal/learn/$slug"
+                                params={{ slug: e.programs?.slug }}
+                                className="inline-flex items-center gap-1.5 rounded bg-medical text-white px-4 py-2 text-xs font-semibold hover:bg-medical/90"
+                              >
+                                Study Course <ArrowRight className="size-3.5" />
+                              </Link>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </section>
+          )}
+
+          <Dialog open={isCheckoutOpen} onOpenChange={(open) => {
+            setIsCheckoutOpen(open);
+            if (!open) {
+              setSelectedProgramForCheckout(null);
+              setPaymentRef("");
+              setBankTransferConfirmed(false);
+              setBankAccountHolder("");
+              setBankPaymentDate("");
+              setPaymentConfirmationChecked(false);
+              setCheckoutSuccess(false);
+            }
+          }}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Secure Checkout</DialogTitle>
+                <DialogDescription>
+                  Confirm your enrollment and payment details to reserve your seat in the program.
+                </DialogDescription>
+              </DialogHeader>
+
+              {selectedProgramForCheckout ? (
+                <div className="mt-6 space-y-6">
+                  <div className="rounded-3xl border border-border bg-slate-50 p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Course</p>
+                        <h2 className="text-2xl font-semibold text-navy">{selectedProgramForCheckout.title}</h2>
+                        <p className="mt-2 text-sm text-foreground/70">{selectedProgramForCheckout.summary}</p>
+                        <div className="mt-4 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                          <span>{selectedProgramForCheckout.duration}</span>
+                          <span>{selectedProgramForCheckout.certification}</span>
+                        </div>
+                      </div>
+                      <div className="rounded-3xl bg-white border border-border px-4 py-3 text-right">
+                        <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Price</p>
+                        <p className="mt-2 text-3xl font-semibold text-navy">
+                          KSH {Number(selectedProgramForCheckout.price_ksh ?? 0).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="text-xs font-semibold uppercase text-muted-foreground">Payment method</label>
+                      <select
+                        value={paymentMethod}
+                        onChange={(evt) => {
+                          const method = evt.target.value as "M-Pesa" | "Bank Transfer" | "PayPal";
+                          setPaymentMethod(method);
+                          setBankTransferConfirmed(false);
+                          setPaymentRef("");
+                          setBankAccountHolder("");
+                          setBankPaymentDate("");
+                        }}
+                        className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                      >
+                        <option value="M-Pesa">M-Pesa</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="PayPal">PayPal</option>
+                      </select>
+                    </div>
+                    {paymentMethod !== "PayPal" ? (
+                      <div>
+                        <label className="text-xs font-semibold uppercase text-muted-foreground">
+                          {paymentMethod === "M-Pesa" ? "Transaction Code" : "Bank Reference Number"}
+                        </label>
+                        <input
+                          type="text"
+                          value={paymentRef}
+                          onChange={(evt) => setPaymentRef(evt.target.value)}
+                          placeholder={paymentMethod === "M-Pesa" ? "Enter M-Pesa transaction code" : "Enter bank reference number"}
+                          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="text-xs font-semibold uppercase text-muted-foreground">PayPal Transaction ID</label>
+                        <input
+                          type="text"
+                          value={paymentRef}
+                          onChange={(evt) => setPaymentRef(evt.target.value)}
+                          placeholder="Enter PayPal transaction ID"
+                          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {paymentMethod === "M-Pesa" && (
+                    <div className="rounded-3xl border border-border bg-white p-4">
+                      <p className="text-sm font-semibold text-navy">Payment via M-Pesa</p>
+                      <div className="mt-3 grid gap-2 text-sm text-muted-foreground">
+                        <div className="rounded-2xl bg-slate-50 p-3">
+                          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Paybill Number</p>
+                          <p className="text-sm font-semibold text-navy">123456</p>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-3">
+                          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Account Number</p>
+                          <p className="text-sm font-semibold text-navy">{generatedPaymentReference}</p>
+                        </div>
+                        <div className="rounded-2xl bg-slate-50 p-3">
+                          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Amount</p>
+                          <p className="text-sm font-semibold text-navy">KSH {Number(selectedProgramForCheckout.price_ksh ?? 0).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 space-y-2 text-sm text-foreground/80">
+                        <p className="font-semibold text-navy">Instructions</p>
+                        <ol className="list-decimal list-inside space-y-1">
+                          <li>Open M-Pesa.</li>
+                          <li>Select Lipa na M-Pesa.</li>
+                          <li>Select Paybill.</li>
+                          <li>Enter the Paybill Number above.</li>
+                          <li>Enter the Account Number shown above.</li>
+                          <li>Enter the exact amount.</li>
+                          <li>Complete the transaction.</li>
+                          <li>Enter the transaction code above.</li>
+                        </ol>
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentMethod === "Bank Transfer" && (
+                    <div className="rounded-3xl border border-border bg-white p-4">
+                      {!bankTransferConfirmed ? (
+                        <div className="space-y-4">
+                          <p className="text-sm font-semibold text-navy">Bank transfer may take longer to verify.</p>
+                          <p className="text-sm text-muted-foreground">
+                            Do you want to continue with Bank Transfer?
+                          </p>
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setBankTransferConfirmed(true)}
+                              className="rounded-md bg-medical px-4 py-2 text-sm font-semibold text-white hover:bg-medical/90"
+                            >
+                              Continue
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPaymentMethod("M-Pesa");
+                                setPaymentRef("");
+                              }}
+                              className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-2xl bg-slate-50 p-3">
+                              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Bank Name</p>
+                              <p className="text-sm font-semibold text-navy">AMMTTI Bank</p>
+                            </div>
+                            <div className="rounded-2xl bg-slate-50 p-3">
+                              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Account Name</p>
+                              <p className="text-sm font-semibold text-navy">AMMTTI Education</p>
+                            </div>
+                            <div className="rounded-2xl bg-slate-50 p-3">
+                              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Account Number</p>
+                              <p className="text-sm font-semibold text-navy">9876543210</p>
+                            </div>
+                            <div className="rounded-2xl bg-slate-50 p-3">
+                              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Branch</p>
+                              <p className="text-sm font-semibold text-navy">Nairobi</p>
+                            </div>
+                            <div className="rounded-2xl bg-slate-50 p-3">
+                              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">SWIFT Code</p>
+                              <p className="text-sm font-semibold text-navy">AMMTKE22</p>
+                            </div>
+                          </div>
+                          <div className="rounded-2xl bg-slate-50 p-3">
+                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Amount</p>
+                            <p className="text-sm font-semibold text-navy">KSH {Number(selectedProgramForCheckout.price_ksh ?? 0).toLocaleString()}</p>
+                          </div>
+                          <div className="rounded-2xl bg-slate-50 p-3">
+                            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Payment reference</p>
+                            <p className="text-sm font-semibold text-navy">{generatedPaymentReference}</p>
+                          </div>
+                          <div className="space-y-2 text-sm text-foreground/80">
+                            <p className="font-semibold text-navy">Instructions</p>
+                            <ol className="list-decimal list-inside space-y-1">
+                              <li>Transfer the exact course amount.</li>
+                              <li>Use your generated enrollment reference above as the payment reference.</li>
+                              <li>Keep proof of payment.</li>
+                              <li>Enter the bank transaction details below.</li>
+                            </ol>
+                          </div>
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <div>
+                              <label className="text-xs font-semibold uppercase text-muted-foreground">Account Holder Name</label>
+                              <input
+                                type="text"
+                                value={bankAccountHolder}
+                                onChange={(evt) => setBankAccountHolder(evt.target.value)}
+                                placeholder="Optional"
+                                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-semibold uppercase text-muted-foreground">Payment Date</label>
+                              <input
+                                type="date"
+                                value={bankPaymentDate}
+                                onChange={(evt) => setBankPaymentDate(evt.target.value)}
+                                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {paymentMethod === "PayPal" && (
+                    <div className="rounded-3xl border border-border bg-white p-4 text-sm text-muted-foreground">
+                      <p className="font-semibold text-navy">PayPal Checkout</p>
+                      <p className="mt-3">You will be redirected to PayPal to complete payment.</p>
+                      <p className="mt-2">After completing PayPal, enter the transaction ID above and confirm.</p>
+                    </div>
+                  )}
+
+                  <div className="flex items-start gap-3 rounded-3xl border border-border bg-slate-50 p-4">
+                    <input
+                      id="payment-confirmation"
+                      type="checkbox"
+                      checked={paymentConfirmationChecked}
+                      onChange={(evt) => setPaymentConfirmationChecked(evt.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-border text-medical focus:ring-medical"
+                    />
+                    <label htmlFor="payment-confirmation" className="text-sm text-foreground/80">
+                      I confirm the payment information provided is accurate.
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Select a program and open checkout to continue.</p>
+              )}
+
+              {checkoutSuccess && (
+                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
+                  <p className="font-semibold">Payment Submitted</p>
+                  <p className="mt-2">
+                    Your payment has been received and is awaiting verification by an administrator. You will receive a notification once your enrollment is activated.
+                  </p>
+                </div>
+              )}
+
+              <DialogFooter className="mt-6 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCheckoutOpen(false);
+                    setSelectedProgramForCheckout(null);
+                    setPaymentRef("");
+                    setPaymentConfirmationChecked(false);
+                    setBankTransferConfirmed(false);
+                    setCheckoutSuccess(false);
+                  }}
+                  className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+                >
+                  {checkoutSuccess ? "Close" : "Cancel"}
+                </button>
+                {!checkoutSuccess && (
+                  <button
+                    type="button"
+                    disabled={
+                      !selectedProgramForCheckout ||
+                      !paymentConfirmationChecked ||
+                      !paymentRef.trim() ||
+                      (paymentMethod === "Bank Transfer" && !bankTransferConfirmed) ||
+                      checkout.isPending
+                    }
+                    onClick={() => {
+                      if (!selectedProgramForCheckout) return;
+                      if (!paymentConfirmationChecked) {
+                        toast.error("Please confirm that your payment information is accurate.");
+                        return;
+                      }
+                      if (!paymentRef.trim()) {
+                        toast.error("Please provide your payment transaction reference.");
+                        return;
+                      }
+                      if (paymentMethod === "Bank Transfer" && !bankTransferConfirmed) {
+                        toast.error("Please confirm the bank transfer details before submitting.");
+                        return;
+                      }
+                      checkout.mutate({
+                        programId: selectedProgramForCheckout.id,
+                        amount: Number(selectedProgramForCheckout.price_ksh ?? 0),
+                        reference: paymentRef,
+                        method: paymentMethod,
+                      });
+                    }}
+                    className="rounded-md bg-medical px-4 py-2 text-sm font-semibold text-white hover:bg-medical/90 disabled:opacity-60"
+                  >
+                    {checkout.isPending ? "Processingâ€¦" : paymentMethod === "PayPal" ? "Proceed to PayPal" : "Submit Payment"}
+                  </button>
+                )}
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* COURSE RESOURCES SECTION */}
+          {selectedMenu === "resources" && (
+          <section className="mx-auto max-w-7xl px-5 lg:px-8 pb-16">
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight text-navy sm:text-4xl">
+                  Course Resources
+                </h1>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Study materials and resources for your enrolled programs.
+                </p>
+              </div>
+
+              {enrollments && enrollments.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-border p-12 text-center">
+                  <h3 className="text-xl font-semibold text-navy">No active enrollments</h3>
+                  <p className="mt-2 text-sm text-muted-foreground mb-6">
+                    Enroll in a program to access course resources.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSelectedMenu("overview");
+                      try {
+                        localStorage.setItem("portal.menu.selected", "overview");
+                      } catch (e) {}
+                    }}
+                    className="inline-flex items-center gap-2 rounded-md bg-medical text-white px-6 py-2.5 text-sm font-semibold hover:bg-medical/90"
+                  >
+                    Browse Programs
+                  </button>
+                </div>
+              ) : activeCompletedEnrollments.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-border p-12 text-center">
+                  <h3 className="text-xl font-semibold text-navy">No active enrollments</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Resources will become available once your enrollment is activated.
+                  </p>
+                </div>
+              ) : groupedResources.size === 0 ? (
+                <div className="rounded-3xl border border-dashed border-border p-12 text-center">
+                  <h3 className="text-xl font-semibold text-navy">No resources available</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Course materials for your enrolled programs will appear here when instructors upload them.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {Array.from(groupedResources.values()).map((group) => (
+                    <div key={group.programId} className="space-y-3">
+                      <h2 className="text-xl font-semibold text-navy">{group.programTitle}</h2>
+                      <div className="space-y-2">
+                        {group.resources.map((resource: any) => (
+                          <div key={resource.id} className="rounded-xl border border-border bg-white p-4 shadow-sm hover:shadow-md transition">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-navy">{resource.title}</h3>
+                                <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-1 text-xs text-muted-foreground">
+                                  <span className="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                                    {resource.kind}
+                                  </span>
+                                  <span className="hidden sm:inline">Â·</span>
+                                  <span>{group.programTitle}</span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => openResource(resource.id)}
+                                className="inline-flex items-center gap-1.5 rounded bg-medical text-white px-4 py-2 text-xs font-semibold hover:bg-medical/90 transition whitespace-nowrap"
+                              >
+                                <ExternalLink className="size-3.5" /> Open
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+          )}
         </main>
       </div>
     </PageShell>
@@ -841,3 +1559,4 @@ function Stat({
     </div>
   );
 }
+

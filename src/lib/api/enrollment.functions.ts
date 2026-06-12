@@ -19,6 +19,7 @@ async function assertAdmin(
 
 const enrollmentStatusSchema = z.enum([
   "pending_payment",
+  "pending_payment_review",
   "payment_approved",
   "active",
   "completed",
@@ -26,6 +27,7 @@ const enrollmentStatusSchema = z.enum([
 ]);
 
 const paymentStatusSchema = z.enum(["pending", "approved", "rejected"]);
+const paymentMethodSchema = z.enum(["M-Pesa", "Bank Transfer", "PayPal"]);
 
 export const createEnrollment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -75,7 +77,7 @@ export const submitPayment = createServerFn({ method: "POST" })
       enrollmentId: z.string().uuid(),
       amount: z.number().positive(),
       reference: z.string().min(1).max(128),
-      method: z.string().min(1).max(64),
+      method: paymentMethodSchema,
     }),
   )
   .handler(async ({ data, context }) => {
@@ -103,7 +105,7 @@ export const submitPayment = createServerFn({ method: "POST" })
     if (payErr) throw payErr;
     const { error: updateErr } = await supabaseAdmin
       .from("course_enrollments")
-      .update({ status: "payment_approved" })
+      .update({ status: "pending_payment_review" })
       .eq("id", data.enrollmentId);
     if (updateErr) throw updateErr;
     try {
@@ -185,6 +187,14 @@ export const adminApproveEnrollment = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const supabaseAdmin = createSupabaseAdminClient();
     await assertAdmin(context.userId, supabaseAdmin);
+
+    const { error: paymentErr } = await supabaseAdmin
+      .from("payments")
+      .update({ status: "approved" })
+      .eq("enrollment_id", data.enrollmentId)
+      .eq("status", "pending");
+    if (paymentErr) throw paymentErr;
+
     const { error } = await supabaseAdmin
       .from("course_enrollments")
       .update({ status: "active" })
@@ -210,6 +220,14 @@ export const adminRejectEnrollment = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const supabaseAdmin = createSupabaseAdminClient();
     await assertAdmin(context.userId, supabaseAdmin);
+
+    const { error: paymentErr } = await supabaseAdmin
+      .from("payments")
+      .update({ status: "rejected" })
+      .eq("enrollment_id", data.enrollmentId)
+      .eq("status", "pending");
+    if (paymentErr) throw paymentErr;
+
     const { error } = await supabaseAdmin
       .from("course_enrollments")
       .update({ status: "rejected" })

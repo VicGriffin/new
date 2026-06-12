@@ -31,7 +31,7 @@ ALTER TABLE public.profiles VALIDATE CONSTRAINT chk_profiles_status;
 
 ALTER TABLE public.course_enrollments
   ADD CONSTRAINT chk_course_enrollments_status
-  CHECK (status IN ('pending_payment', 'payment_approved', 'active', 'completed', 'rejected')) NOT VALID;
+  CHECK (status IN ('pending_payment', 'pending_payment_review', 'payment_approved', 'active', 'completed', 'rejected')) NOT VALID;
 ALTER TABLE public.course_enrollments VALIDATE CONSTRAINT chk_course_enrollments_status;
 
 ALTER TABLE public.payments

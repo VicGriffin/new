@@ -22,7 +22,6 @@ export function PortalSidebar({ user, profile, onSignOut, collapsed = false, onT
     { key: "overview", label: "Overview", icon: LayoutGrid },
     { key: "enrollments", label: "My Enrollments", icon: BookOpen },
     { key: "resources", label: "Resources", icon: Library },
-    { key: "profile", label: "Profile", icon: User },
   ];
 
   const isActiveKey = (key: string) => selected === key;
