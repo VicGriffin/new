@@ -1,7 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 
 export const inp =
-  "w-full rounded-md border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical";
+  "w-full border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-medical";
 
 export function ActionBtn({
   onClick,
@@ -56,7 +56,7 @@ export function RowActions({ onEdit, onDelete }: { onEdit?: () => void; onDelete
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground text-sm">
+    <div className="border border-dashed border-border p-8 text-center text-muted-foreground text-sm">
       {message}
     </div>
   );

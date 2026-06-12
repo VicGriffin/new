@@ -162,14 +162,14 @@ export function Header() {
               <>
                 <Link
                   to={adminLink}
-                  className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition"
                 >
                   <ShieldCheck className="size-4" />
                   Admin
                 </Link>
                 <Link
                   to="/auth"
-                  className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition"
                 >
                   Join Now
                 </Link>
@@ -178,7 +178,7 @@ export function Header() {
             {!isGuest && showAdminNav && (
               <Link
                 to="/admin"
-                className="inline-flex items-center gap-1.5 rounded-md bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:bg-emerald-brand/90 transition"
+                className="inline-flex items-center gap-1.5 bg-emerald-brand px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:bg-emerald-brand/90 transition"
               >
                 <ShieldCheck className="size-4" />
                 Admin Dashboard
@@ -187,7 +187,7 @@ export function Header() {
             {!isGuest && showPortalNav && (
               <Link
                 to="/portal"
-                className="text-sm font-medium text-foreground/80 hover:text-medical px-3 py-2 rounded-md hover:bg-soft transition"
+                className="text-sm font-medium text-foreground/80 hover:text-medical px-3 py-2 hover:bg-soft transition"
               >
                 My Portal
               </Link>
@@ -195,7 +195,7 @@ export function Header() {
             {!isGuest && !showAdminNav && !showPortalNav && (
               <Link
                 to="/auth"
-                className="text-sm font-medium text-foreground/80 hover:text-medical px-3 py-2 rounded-md hover:bg-soft transition"
+                className="text-sm font-medium text-foreground/80 hover:text-medical px-3 py-2 hover:bg-soft transition"
               >
                 enroll Now
               </Link>
@@ -216,14 +216,14 @@ export function Header() {
               >
                 <Link
                   to={n.to}
-                  className="px-3.5 py-2 text-sm font-medium text-foreground/80 rounded-md hover:text-medical hover:bg-soft transition flex items-center gap-1"
+                  className="px-3.5 py-2 text-sm font-medium text-foreground/80 hover:text-medical hover:bg-soft transition flex items-center gap-1"
                   activeProps={{ className: "text-medical bg-soft" }}
                 >
                   {n.label}
                   {n.dropdown && <ChevronDown className="size-4" />}
                 </Link>
                 {n.dropdown && openDropdown === n.label && (
-                  <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 min-w-56">
+                  <div className="absolute top-full left-0 mt-1 bg-background border border-border shadow-lg z-50 min-w-56">
                     {programsDropdown.map((item) => (
                       <Link
                         key={item.label}
@@ -244,7 +244,7 @@ export function Header() {
         <div className="hidden lg:flex items-center gap-2">
           <Link
             to="/membership"
-            className="inline-flex items-center gap-1.5 rounded-md bg-medical px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-medical/90 transition"
+            className="inline-flex items-center gap-1.5 bg-medical px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-medical/90 transition"
           >
             Apply for Membership
           </Link>
@@ -266,7 +266,7 @@ export function Header() {
                   <>
                     <button
                       onClick={() => setOpenDropdown(openDropdown === n.label ? null : n.label)}
-                      className="w-full text-left px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft flex items-center justify-between"
+                      className="w-full text-left px-3 py-2.5 text-sm font-medium hover:bg-soft flex items-center justify-between"
                     >
                       {n.label}
                       <ChevronDown
@@ -276,7 +276,7 @@ export function Header() {
                       />
                     </button>
                     {openDropdown === n.label && (
-                      <div className="ml-2 bg-soft/50 rounded-md mt-1">
+                      <div className="ml-2 bg-soft/50 mt-1">
                         {programsDropdown.map((item) => (
                           <Link
                             key={item.label}
@@ -286,7 +286,7 @@ export function Header() {
                               setOpenDropdown(null);
                               setOpen(false);
                             }}
-                            className="block px-3 py-2 text-sm text-foreground/80 hover:text-medical hover:bg-soft rounded-md transition"
+                            className="block px-3 py-2 text-sm text-foreground/80 hover:text-medical hover:bg-soft transition"
                           >
                             {item.label}
                           </Link>
@@ -298,7 +298,7 @@ export function Header() {
                   <Link
                     to={n.to}
                     onClick={() => setOpen(false)}
-                    className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft block"
+                    className="px-3 py-2.5 text-sm font-medium hover:bg-soft block"
                   >
                     {n.label}
                   </Link>
@@ -309,7 +309,7 @@ export function Header() {
               <Link
                 to="/admin"
                 onClick={() => setOpen(false)}
-                className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft inline-flex items-center gap-2"
+                className="px-3 py-2.5 text-sm font-medium hover:bg-soft inline-flex items-center gap-2"
               >
                 <ShieldCheck className="size-4" />
                 Admin Dashboard
@@ -318,7 +318,7 @@ export function Header() {
               <Link
                 to="/portal"
                 onClick={() => setOpen(false)}
-                className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft"
+                className="px-3 py-2.5 text-sm font-medium hover:bg-soft"
               >
                 My Portal
               </Link>
@@ -326,7 +326,7 @@ export function Header() {
               <Link
                 to="/auth"
                 onClick={() => setOpen(false)}
-                className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft"
+                className="px-3 py-2.5 text-sm font-medium hover:bg-soft"
               >
                 Enroll Now
               </Link>
@@ -334,7 +334,7 @@ export function Header() {
             <Link
               to="/membership"
               onClick={() => setOpen(false)}
-              className="mt-2 rounded-md bg-medical px-4 py-3 text-sm font-semibold text-white text-center"
+              className="mt-2 bg-medical px-4 py-3 text-sm font-semibold text-white text-center"
             >
               Apply for Membership
             </Link>

@@ -76,7 +76,7 @@ function Events() {
         {isLoading && <p className="mt-6 text-muted-foreground">Loading events…</p>}
         {error && <p className="mt-6 text-destructive">Could not load events.</p>}
         {!isLoading && !events?.length && (
-          <p className="mt-6 rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+          <p className="mt-6 border border-dashed border-border p-8 text-center text-muted-foreground">
             No upcoming events scheduled. Subscribe to our news for announcements.
           </p>
         )}
@@ -117,9 +117,9 @@ function EventCard({
 }) {
   const start = new Date(event.starts_at);
   return (
-    <article className="rounded-xl border border-border bg-card p-6 flex flex-wrap gap-6">
+    <article className="border border-border bg-card p-6 flex flex-wrap gap-6">
       <div
-        className={`grid place-items-center w-20 h-20 rounded-xl text-white font-bold ${past ? "bg-muted text-muted-foreground" : "bg-navy"}`}
+        className={`grid place-items-center w-20 h-20 text-white font-bold ${past ? "bg-muted text-muted-foreground" : "bg-navy"}`}
       >
         <div className="text-center">
           <div className="text-xs uppercase">

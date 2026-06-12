@@ -75,9 +75,9 @@ function AdminLogin() {
         <div className="absolute inset-0 bg-navy/80" aria-hidden />
       </div>
       <div className="absolute inset-0 hero-mesh opacity-60" aria-hidden />
-      <div className="relative w-full max-w-md rounded-2xl bg-card border border-border shadow-2xl p-8">
+      <div className="relative w-full max-w-md bg-card border border-border shadow-2xl p-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="size-12 rounded-xl bg-medical/10 text-medical grid place-items-center">
+          <div className="size-12 bg-medical/10 text-medical grid place-items-center">
             <ShieldCheck className="size-6" />
           </div>
           <div>
@@ -97,7 +97,7 @@ function AdminLogin() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
+              className="mt-1.5 w-full border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
             />
           </label>
           <label className="block">
@@ -110,13 +110,13 @@ function AdminLogin() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
+              className="mt-1.5 w-full border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
             />
           </label>
           <button
             type="submit"
             disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-medical text-white py-2.5 font-semibold hover:bg-medical/90 disabled:opacity-60"
+            className="w-full inline-flex items-center justify-center gap-2 bg-medical text-white py-2.5 font-semibold hover:bg-medical/90 disabled:opacity-60"
           >
             <LogIn className="size-4" />
             {loading ? "Signing in…" : "Sign in to Admin"}

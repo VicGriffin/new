@@ -75,7 +75,7 @@ export function PortalSidebar({ user, profile, onSignOut, collapsed = false, onT
               title={item.label}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-medical",
+                "w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-medical",
                 active ? "bg-emerald-brand text-white" : "text-muted-foreground hover:bg-gray-100 hover:text-navy",
                 collapsed ? "justify-center" : "justify-start",
               )}
@@ -94,7 +94,7 @@ export function PortalSidebar({ user, profile, onSignOut, collapsed = false, onT
             // Navigate to profile edit
             window.location.hash = "#edit-profile";
           }}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-gray-100 hover:text-navy transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-gray-100 hover:text-navy transition-colors"
         >
           <User className="size-5" />
           <div className="text-left">
@@ -106,7 +106,7 @@ export function PortalSidebar({ user, profile, onSignOut, collapsed = false, onT
         </button>
         <button
           onClick={onSignOut}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
         >
           <LogOut className="size-5" />
           Sign Out

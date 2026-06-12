@@ -198,7 +198,7 @@ function StudyWorkspace() {
           </p>
           <Link
             to="/portal"
-            className="inline-flex items-center gap-2 rounded-md bg-medical px-6 py-3 font-semibold text-white hover:bg-medical/90 transition"
+            className="inline-flex items-center gap-2 bg-medical px-6 py-3 font-semibold text-white hover:bg-medical/90 transition"
           >
             <ArrowLeft className="size-4" /> Return to Dashboard
           </Link>
@@ -275,7 +275,7 @@ function StudyWorkspace() {
 
       <div className="mx-auto max-w-7xl px-5 lg:px-8 py-8 grid lg:grid-cols-12 gap-8">
         {/* Left Sidebar Curriculum Navigation */}
-        <aside className="lg:col-span-4 bg-card border border-border rounded-2xl p-5 h-fit max-h-[80vh] overflow-y-auto space-y-5">
+        <aside className="lg:col-span-4 bg-card border border-border p-5 h-fit max-h-[80vh] overflow-y-auto space-y-5">
           <h3 className="font-bold text-navy flex items-center gap-2 pb-3 border-b border-border">
             <BookOpen className="size-4 text-medical" /> Course Syllabus
           </h3>
@@ -296,7 +296,7 @@ function StudyWorkspace() {
                             setActiveModuleIndex(modIdx);
                             setActiveTopicIndex(topIdx);
                           }}
-                          className={`w-full text-left text-xs p-2.5 rounded-md flex items-center justify-between gap-3 transition ${
+                          className={`w-full text-left text-xs p-2.5 flex items-center justify-between gap-3 transition ${
                             isActive
                               ? "bg-medical text-white font-semibold"
                               : "hover:bg-soft text-foreground/80"
@@ -321,7 +321,7 @@ function StudyWorkspace() {
         </aside>
 
         {/* Main Content Workspace */}
-        <main className="lg:col-span-8 bg-card border border-border rounded-2xl p-6 lg:p-8 space-y-6">
+        <main className="lg:col-span-8 bg-card border border-border p-6 lg:p-8 space-y-6">
           {activeTopic ? (
             <>
               <div className="space-y-2 border-b border-border pb-4">
@@ -342,7 +342,7 @@ function StudyWorkspace() {
               {/* Study reading content simulator */}
               <div className="prose prose-sm max-w-none text-foreground/80 leading-relaxed space-y-4">
                 <p className="font-semibold text-navy text-sm">Learning Objective:</p>
-                <p className="bg-soft p-3.5 rounded-lg border border-medical/15 text-xs text-foreground/90 italic">
+                <p className="bg-soft p-3.5 border border-medical/15 text-xs text-foreground/90 italic">
                   Gain core competencies regarding the principles of "{activeTopic}" as configured
                   in the AMTMTI training curriculum guidelines. Identify primary outcomes and
                   clinical decision parameters.
@@ -395,7 +395,7 @@ function StudyWorkspace() {
                 <div className="flex gap-2">
                   <button
                     onClick={handleMarkCompleted}
-                    className="inline-flex items-center gap-2 rounded-md bg-medical px-6 py-2.5 text-sm font-semibold text-white hover:bg-medical/90 shadow-md transition"
+                    className="inline-flex items-center gap-2 bg-medical px-6 py-2.5 text-sm font-semibold text-white hover:bg-medical/90 shadow-md transition"
                   >
                     <BookOpenCheck className="size-4" /> Mark Completed & Next{" "}
                     <ChevronRight className="size-4" />

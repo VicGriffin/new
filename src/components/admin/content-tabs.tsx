@@ -1050,7 +1050,7 @@ export function ApplicationsTab() {
   });
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-x-auto">
+    <div className="border border-border bg-card overflow-x-auto">
       <table className="w-full text-sm min-w-[640px]">
         <thead className="bg-soft text-xs uppercase text-muted-foreground">
           <tr>
@@ -1128,7 +1128,7 @@ export function ContactsTab() {
       {data?.map((c: any) => (
         <div
           key={c.id}
-          className={`rounded-xl border p-5 ${c.is_archived ? "opacity-60 border-border bg-muted/30" : c.is_read ? "border-border bg-card" : "border-medical/30 bg-medical/5"}`}
+          className={`border p-5 ${c.is_archived ? "opacity-60 border-border bg-muted/30" : c.is_read ? "border-border bg-card" : "border-medical/30 bg-medical/5"}`}
         >
           <div className="flex justify-between gap-3 flex-wrap">
             <div>
@@ -1244,7 +1244,7 @@ export function EnrollmentsTab() {
       {data?.map((e: any) => {
         const linkedPayment = e.payments?.[0];
         return (
-          <div key={e.id} className="rounded-lg border border-border bg-card p-5 space-y-4">
+          <div key={e.id} className="border border-border bg-card p-5 space-y-4">
             <div className="flex flex-wrap justify-between items-start gap-3">
               <div>
                 <div className="font-semibold text-navy">
@@ -1327,14 +1327,14 @@ function CrudLayout({
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <form
-        className="rounded-xl border border-border bg-card p-5 space-y-3 h-fit"
+        className="border border-border bg-card p-5 space-y-3 h-fit"
         onSubmit={onSubmit}
       >
         <h3 className="font-bold text-navy">{title}</h3>
         {form}
         <button
           type="submit"
-          className="w-full rounded-md bg-medical text-white py-2.5 text-sm font-semibold"
+          className="w-full bg-medical text-white py-2.5 text-sm font-semibold"
         >
           {submitLabel}
         </button>
@@ -1354,7 +1354,7 @@ function ListRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-4 flex items-center gap-3">
+    <div className="border border-border bg-card p-4 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-navy truncate">{title}</div>
         {sub && <div className="text-xs text-muted-foreground truncate">{sub}</div>}

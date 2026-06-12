@@ -113,20 +113,20 @@ function Research() {
             <div className="mt-8 flex flex-wrap gap-3">
               <a
                 href="#publications"
-                className="inline-flex items-center gap-2 rounded-md bg-emerald-brand px-6 py-3 font-semibold text-navy"
+                className="inline-flex items-center gap-2 bg-emerald-brand px-6 py-3 font-semibold text-navy"
               >
                 View publications <ArrowRight className="size-4" />
               </a>
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 rounded-md glass px-6 py-3 font-semibold text-white"
+                className="inline-flex items-center gap-2 glass px-6 py-3 font-semibold text-white"
               >
                 Propose a collaboration
               </Link>
             </div>
           </div>
           <div className="lg:col-span-5 space-y-5">
-            <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+            <div className="overflow-hidden border border-white/10 shadow-2xl">
               <img
                 src={imageUrl("Pharmaceutical_care.png")}
                 alt="Pharmaceutical care research"
@@ -140,7 +140,7 @@ function Research() {
                 ["12", "Country partners"],
                 ["7", "Funded grants"],
               ].map(([n, l]) => (
-                <div key={l as string} className="glass rounded-2xl p-5">
+                <div key={l as string} className="glass p-5">
                   <div className="text-3xl font-bold text-emerald-brand">{n}</div>
                   <div className="text-xs text-white/70 mt-1">{l}</div>
                 </div>
@@ -159,9 +159,9 @@ function Research() {
           {areasWithCount.map((a) => (
             <div
               key={a.t}
-              className="rounded-2xl bg-card border border-border p-6 hover:border-medical/40 hover:shadow-lg transition"
+              className="bg-card border border-border p-6 hover:border-medical/40 hover:shadow-lg transition"
             >
-              <div className="size-11 rounded-lg bg-medical/10 text-medical grid place-items-center">
+              <div className="size-11 bg-medical/10 text-medical grid place-items-center">
                 <Microscope className="size-5" />
               </div>
               <h3 className="mt-5 font-bold text-navy text-lg">{a.t}</h3>
@@ -190,7 +190,7 @@ function Research() {
             <p className="mt-10 text-center text-muted-foreground">Loading publications…</p>
           )}
           {!isLoading && !articles?.length && (
-            <p className="mt-10 rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+            <p className="mt-10 border border-dashed border-border p-8 text-center text-muted-foreground">
               Publications will appear here once published by our research team.
             </p>
           )}
@@ -198,9 +198,9 @@ function Research() {
             {articles?.map((p) => (
               <article
                 key={p.id}
-                className="flex gap-5 rounded-xl bg-card border border-border p-5 hover:border-medical/40 transition"
+                className="flex gap-5 bg-card border border-border p-5 hover:border-medical/40 transition"
               >
-                <div className="hidden sm:grid place-items-center w-16 h-16 rounded-lg bg-navy text-white font-bold text-sm">
+                <div className="hidden sm:grid place-items-center w-16 h-16 bg-navy text-white font-bold text-sm">
                   {p.published_date ? new Date(p.published_date).getFullYear() : "—"}
                 </div>
                 <div className="flex-1">
@@ -239,8 +239,8 @@ function Research() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-20 grid lg:grid-cols-2 gap-6">
-        <div className="rounded-2xl bg-card border border-border p-8">
-          <div className="size-12 rounded-xl bg-emerald-brand/15 text-emerald-brand grid place-items-center">
+        <div className="bg-card border border-border p-8">
+          <div className="size-12 bg-emerald-brand/15 text-emerald-brand grid place-items-center">
             <Users className="size-5" />
           </div>
           <h3 className="mt-5 text-2xl font-bold text-navy">Research partnerships</h3>
@@ -259,10 +259,10 @@ function Research() {
             ))}
           </div>
         </div>
-        <div className="rounded-2xl bg-navy text-white p-8 relative overflow-hidden">
+        <div className="bg-navy text-white p-8 relative overflow-hidden">
           <div className="absolute inset-0 hero-mesh opacity-70" aria-hidden />
           <div className="relative">
-            <div className="size-12 rounded-xl bg-emerald-brand/20 text-emerald-brand grid place-items-center">
+            <div className="size-12 bg-emerald-brand/20 text-emerald-brand grid place-items-center">
               <BookOpen className="size-5" />
             </div>
             <h3 className="mt-5 text-2xl font-bold">Call for collaboration</h3>
@@ -272,7 +272,7 @@ function Research() {
             </p>
             <Link
               to="/contact"
-              className="mt-6 inline-flex items-center gap-2 rounded-md bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-navy"
+              className="mt-6 inline-flex items-center gap-2 bg-emerald-brand px-5 py-2.5 text-sm font-semibold text-navy"
             >
               Get in touch <ArrowRight className="size-4" />
             </Link>

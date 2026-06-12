@@ -124,7 +124,7 @@ function Programs() {
             </div>
           </div>
           <div className="hidden lg:block lg:col-span-5">
-            <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+            <div className="overflow-hidden border border-white/10 shadow-2xl">
               <img
                 src={imageUrl("clinical_pharmacy.png")}
                 alt="Clinical pharmacy training"
@@ -177,7 +177,7 @@ function Programs() {
           </p>
         )}
         {!isLoading && !error && !filtered.length && (
-          <p className="mt-10 rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
+          <p className="mt-10 border border-dashed border-border p-12 text-center text-muted-foreground">
             No programs match your search. Try a different filter or keyword.
           </p>
         )}
@@ -188,7 +188,7 @@ function Programs() {
             return (
               <article
                 key={p.id}
-                className="grid lg:grid-cols-12 gap-6 rounded-2xl border border-border bg-card overflow-hidden hover:shadow-xl hover:shadow-medical/5 transition"
+                className="grid lg:grid-cols-12 gap-6 border border-border bg-card overflow-hidden hover:shadow-xl hover:shadow-medical/5 transition"
               >
                 <div className="relative lg:col-span-3 bg-gradient-to-br from-medical to-emerald-brand p-8 text-white min-h-[180px]">
                   <GradIcon className="size-10" />
@@ -228,13 +228,13 @@ function Programs() {
                     <Link
                       to="/programs/$slug"
                       params={{ slug: p.slug }}
-                      className="inline-flex items-center gap-2 rounded-md bg-medical px-5 py-2.5 text-sm font-semibold text-white hover:bg-medical/90"
+                      className="inline-flex items-center gap-2 bg-medical px-5 py-2.5 text-sm font-semibold text-white hover:bg-medical/90"
                     >
                       View details <ArrowRight className="size-4" />
                     </Link>
                     <Link
                       to="/auth"
-                      className="inline-flex items-center gap-2 rounded-md border border-border px-5 py-2.5 text-sm font-semibold text-navy hover:border-medical hover:text-medical"
+                      className="inline-flex items-center gap-2 border border-border px-5 py-2.5 text-sm font-semibold text-navy hover:border-medical hover:text-medical"
                     >
                       Enroll via portal
                     </Link>

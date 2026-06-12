@@ -89,7 +89,7 @@ export function UsersTab() {
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <form
-        className="rounded-xl border border-border bg-card p-5 space-y-3 h-fit"
+        className="border border-border bg-card p-5 space-y-3 h-fit"
         onSubmit={(e) => {
           e.preventDefault();
           create.mutate();
@@ -134,7 +134,7 @@ export function UsersTab() {
         <button
           type="submit"
           disabled={create.isPending}
-          className="w-full rounded-md bg-medical text-white py-2.5 text-sm font-semibold"
+          className="w-full bg-medical text-white py-2.5 text-sm font-semibold"
         >
           Create user
         </button>
@@ -143,7 +143,7 @@ export function UsersTab() {
       <div className="lg:col-span-2 space-y-3">
         {isLoading && <EmptyState message="Loading users…" />}
         {users?.map((u: any) => (
-          <div key={u.id} className="rounded-lg border border-border bg-card p-4">
+          <div key={u.id} className="border border-border bg-card p-4">
             <div className="flex flex-wrap justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">

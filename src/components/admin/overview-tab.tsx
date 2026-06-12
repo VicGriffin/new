@@ -122,7 +122,7 @@ export function OverviewTab({ onNavigate }: { onNavigate: (tab: string) => void 
     <div className="space-y-8">
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {cards.map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-border bg-card p-5">
+          <div key={label} className="border border-border bg-card p-5">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
             <div className="mt-1 text-3xl font-bold text-navy">{value ?? "—"}</div>
           </div>
@@ -130,7 +130,7 @@ export function OverviewTab({ onNavigate }: { onNavigate: (tab: string) => void 
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 rounded-xl border border-border bg-card p-6">
+        <div className="lg:col-span-2 border border-border bg-card p-6">
           <h3 className="font-bold text-navy flex items-center gap-2">
             <Activity className="size-4 text-medical" /> Recent activity
           </h3>
@@ -154,7 +154,7 @@ export function OverviewTab({ onNavigate }: { onNavigate: (tab: string) => void 
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-xl border border-border bg-card p-6">
+          <div className="border border-border bg-card p-6">
             <h3 className="font-bold text-navy flex items-center gap-2">
               <Plus className="size-4 text-medical" /> Quick actions
             </h3>
@@ -164,14 +164,14 @@ export function OverviewTab({ onNavigate }: { onNavigate: (tab: string) => void 
                   key={a.tab}
                   type="button"
                   onClick={() => onNavigate(a.tab)}
-                  className="text-left text-sm px-3 py-2 rounded-md border border-border hover:border-medical hover:text-medical transition"
+                  className="text-left text-sm px-3 py-2 border border-border hover:border-medical hover:text-medical transition"
                 >
                   {a.label}
                 </button>
               ))}
             </div>
           </div>
-          <div className="rounded-xl border border-emerald-brand/30 bg-emerald-brand/5 p-6">
+          <div className="border border-emerald-brand/30 bg-emerald-brand/5 p-6">
             <h3 className="font-bold text-navy flex items-center gap-2">
               <CheckCircle2 className="size-4 text-emerald-brand" /> System status
             </h3>

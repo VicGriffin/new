@@ -116,8 +116,8 @@ function About() {
             d: "A continent where every patient receives safe, effective, and appropriate medication therapy — delivered by trained, certified, and continuously learning professionals.",
           },
         ].map((b) => (
-          <div key={b.t} className="rounded-2xl bg-card border border-border p-8 lg:p-10">
-            <div className="size-12 rounded-xl bg-medical/10 text-medical grid place-items-center">
+          <div key={b.t} className="bg-card border border-border p-8 lg:p-10">
+            <div className="size-12 bg-medical/10 text-medical grid place-items-center">
               <b.icon className="size-5" />
             </div>
             <h2 className="mt-5 text-2xl font-bold text-navy">{b.t}</h2>
@@ -132,8 +132,8 @@ function About() {
           <h2 className="text-3xl lg:text-4xl font-bold text-navy">Our core values</h2>
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {values.map((v) => (
-              <div key={v.t} className="rounded-2xl bg-card border border-border p-6">
-                <div className="size-11 rounded-lg bg-emerald-brand/15 text-emerald-brand grid place-items-center">
+              <div key={v.t} className="bg-card border border-border p-6">
+                <div className="size-11 bg-emerald-brand/15 text-emerald-brand grid place-items-center">
                   <v.icon className="size-5" />
                 </div>
                 <h3 className="mt-4 font-bold text-navy">{v.t}</h3>
@@ -185,7 +185,7 @@ function About() {
           </p>
           <div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {leaders.map((l) => (
-              <div key={l.n} className="rounded-2xl bg-card border border-border p-6 text-center">
+              <div key={l.n} className="bg-card border border-border p-6 text-center">
                 <div className="mx-auto size-20 rounded-full bg-gradient-to-br from-medical to-emerald-brand" />
                 <h3 className="mt-4 font-bold text-navy">{l.n}</h3>
                 <p className="text-xs font-semibold uppercase tracking-wider text-medical">{l.r}</p>
@@ -221,7 +221,7 @@ function About() {
         <div className="mt-16 text-center">
           <Link
             to="/programs"
-            className="inline-flex items-center gap-2 rounded-md bg-medical px-6 py-3.5 font-semibold text-white"
+            className="inline-flex items-center gap-2 bg-medical px-6 py-3.5 font-semibold text-white"
           >
             Explore programs <ArrowRight className="size-4" />
           </Link>

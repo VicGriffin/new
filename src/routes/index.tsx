@@ -233,33 +233,33 @@ function Home() {
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
                   to="/programs"
-                  className="inline-flex items-center gap-2 rounded-md bg-emerald-brand px-6 py-3.5 font-semibold text-navy hover:opacity-90 transition shadow-lg shadow-emerald-brand/20"
+                  className="inline-flex items-center gap-2 bg-emerald-brand px-6 py-3.5 font-semibold text-navy hover:opacity-90 transition shadow-lg shadow-emerald-brand/20"
                 >
                   Explore Programs <ArrowRight className="size-4" />
                 </Link>
                 <Link
                   to="/membership"
-                  className="inline-flex items-center gap-2 rounded-md bg-white px-6 py-3.5 font-semibold text-navy hover:bg-white/90 transition"
+                  className="inline-flex items-center gap-2 bg-white px-6 py-3.5 font-semibold text-navy hover:bg-white/90 transition"
                 >
                   Join Membership
                 </Link>
                 <Link
                   to="/contact"
-                  className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/10 px-6 py-3.5 font-semibold text-white hover:bg-white/15 transition"
+                  className="inline-flex items-center gap-2 border border-white/20 bg-white/10 px-6 py-3.5 font-semibold text-white hover:bg-white/15 transition"
                 >
                   Talk to Admissions
                 </Link>
               </div>
               <div className="mt-10 grid gap-3 sm:grid-cols-3 text-xs text-white/70">
-                <div className="rounded-3xl bg-white/10 p-4">
+                <div className="bg-white/10 p-4">
                   <p className="text-2xl font-bold text-emerald-brand">12K+</p>
                   <p className="mt-1 uppercase tracking-[0.2em]">Professionals trained</p>
                 </div>
-                <div className="rounded-3xl bg-white/10 p-4">
+                <div className="bg-white/10 p-4">
                   <p className="text-2xl font-bold text-emerald-brand">26</p>
                   <p className="mt-1 uppercase tracking-[0.2em]">Countries served</p>
                 </div>
-                <div className="rounded-3xl bg-white/10 p-4">
+                <div className="bg-white/10 p-4">
                   <p className="text-2xl font-bold text-emerald-brand">45+</p>
                   <p className="mt-1 uppercase tracking-[0.2em]">Research publications</p>
                 </div>
@@ -269,7 +269,7 @@ function Home() {
             <div className="lg:col-span-5">
               <div className="relative rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                  <div className="size-12 rounded-3xl bg-emerald-brand/20 grid place-items-center">
+                  <div className="size-12 bg-emerald-brand/20 grid place-items-center">
                     <HeartPulse className="size-5 text-emerald-brand" />
                   </div>
                   <div>
@@ -290,7 +290,7 @@ function Home() {
                     ["48", "Modules"],
                     ["10", "Credits"],
                   ].map(([n, l]) => (
-                    <div key={l} className="rounded-3xl bg-white/10 p-4">
+                    <div key={l} className="bg-white/10 p-4">
                       <div className="text-xl font-bold text-emerald-brand">{n}</div>
                       <div className="mt-1 uppercase tracking-[0.18em] text-white/60">{l}</div>
                     </div>
@@ -302,7 +302,7 @@ function Home() {
                 >
                   View Program <ArrowRight className="size-4" />
                 </Link>
-                <div className="mt-5 flex items-center gap-3 rounded-3xl bg-black/20 p-4 text-sm">
+                <div className="mt-5 flex items-center gap-3 bg-black/20 p-4 text-sm">
                   <div className="flex -space-x-2">
                     {[
                       "bg-emerald-brand",
@@ -386,9 +386,9 @@ function Home() {
             {whyUs.map((f) => (
               <div
                 key={f.t}
-                className="group rounded-2xl bg-card p-6 border border-border hover:border-medical/40 hover:shadow-xl hover:shadow-medical/5 transition"
+                className="group bg-card p-6 border border-border hover:border-medical/40 hover:shadow-xl hover:shadow-medical/5 transition"
               >
-                <div className="size-12 rounded-xl bg-medical/10 grid place-items-center text-medical group-hover:bg-medical group-hover:text-white transition">
+                <div className="size-12 bg-medical/10 grid place-items-center text-medical group-hover:bg-medical group-hover:text-white transition">
                   <f.icon className="size-5" />
                 </div>
                 <h3 className="mt-5 text-lg font-bold text-navy">{f.t}</h3>
@@ -422,7 +422,7 @@ function Home() {
             <Link
               to="/programs"
               key={p.t}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 hover:-translate-y-1 hover:shadow-2xl hover:shadow-medical/10 transition"
+              className="group relative overflow-hidden border border-border bg-card p-6 hover:-translate-y-1 hover:shadow-2xl hover:shadow-medical/10 transition"
             >
               <div
                 className="absolute -right-8 -top-8 size-32 rounded-full bg-gradient-to-br from-medical/10 to-emerald-brand/10 blur-2xl group-hover:scale-150 transition"
@@ -431,16 +431,16 @@ function Home() {
               <div className="relative">
                 {/* thumbnail */}
                 {p.img ? (
-                  <div className="overflow-hidden rounded-lg">
+                  <div className="overflow-hidden">
                     <img
                       src={imageUrl(p.img)}
                       alt={p.t}
-                      className="w-full h-40 object-cover object-center transition-transform group-hover:scale-105 rounded-lg"
+                      className="w-full h-40 object-cover object-center transition-transform group-hover:scale-105"
                     />
                   </div>
                 ) : null}
                 <div className="flex items-center justify-between mt-4">
-                  <div className="size-11 rounded-lg bg-navy text-white grid place-items-center">
+                  <div className="size-11 bg-navy text-white grid place-items-center">
                     <p.icon className="size-5" />
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-brand/15 text-emerald-brand px-2.5 py-1">
@@ -479,14 +479,14 @@ function Home() {
               </p>
               <Link
                 to="/research"
-                className="mt-7 inline-flex items-center gap-2 rounded-md bg-emerald-brand px-6 py-3 font-semibold text-navy hover:opacity-90 transition"
+                className="mt-7 inline-flex items-center gap-2 bg-emerald-brand px-6 py-3 font-semibold text-navy hover:opacity-90 transition"
               >
                 Explore Research <ArrowRight className="size-4" />
               </Link>
             </div>
             <div className="lg:col-span-6 grid sm:grid-cols-2 gap-3">
               {research.map((r) => (
-                <div key={r.area} className="relative aspect-[16/10] rounded-xl overflow-hidden">
+                <div key={r.area} className="relative aspect-[16/10] overflow-hidden">
                   {r.img ? (
                     <img
                       src={imageUrl(r.img)}
@@ -527,7 +527,7 @@ function Home() {
             { title: "Institutional briefing", img: "news_hero.png" },
             { title: "Upcoming symposium", img: "news_hero1.png" },
           ].map((n) => (
-            <Link key={n.title} to="/news" className="group rounded-2xl overflow-hidden border border-border bg-card">
+            <Link key={n.title} to="/news" className="group overflow-hidden border border-border bg-card">
               <div className="w-full h-44 overflow-hidden">
                 <img src={imageUrl(n.img)} alt={n.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
               </div>
@@ -542,7 +542,7 @@ function Home() {
 
       {/* Membership */}
       <section className="mx-auto max-w-7xl px-5 lg:px-8 py-20 lg:py-28">
-        <div className="rounded-3xl bg-gradient-to-br from-soft via-background to-soft border border-border p-8 lg:p-14 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-soft via-background to-soft border border-border p-8 lg:p-14 relative overflow-hidden">
           <div
             className="absolute -top-20 -right-20 size-72 rounded-full bg-emerald-brand/10 blur-3xl"
             aria-hidden
@@ -573,20 +573,20 @@ function Home() {
               </div>
               <Link
                 to="/membership"
-                className="mt-7 inline-flex items-center gap-2 rounded-md bg-medical px-6 py-3 font-semibold text-white hover:bg-medical/90"
+                className="mt-7 inline-flex items-center gap-2 bg-medical px-6 py-3 font-semibold text-white hover:bg-medical/90"
               >
                 Apply for Membership <ArrowRight className="size-4" />
               </Link>
             </div>
             <div className="lg:col-span-5">
-              <div className="overflow-hidden rounded-2xl mb-6">
+              <div className="overflow-hidden mb-6">
                 <img
                   src={imageUrl("membership_hero.png")}
                   alt="Membership"
-                  className="w-full h-56 object-cover object-center rounded-2xl shadow-md"
+                  className="w-full h-56 object-cover object-center shadow-md"
                 />
               </div>
-              <div className="rounded-2xl bg-navy text-white p-6 shadow-2xl">
+              <div className="bg-navy text-white p-6 shadow-2xl">
                 <p className="text-xs uppercase tracking-wider text-emerald-brand font-bold">
                   Member Benefits
                 </p>
@@ -625,7 +625,7 @@ function Home() {
             {testimonials.map((t) => (
               <figure
                 key={t.n}
-                className="rounded-2xl bg-card border border-border p-6 flex flex-col"
+                className="bg-card border border-border p-6 flex flex-col"
               >
                 <Quote className="size-7 text-emerald-brand" />
                 <blockquote className="mt-4 text-foreground/85 leading-relaxed flex-1">
@@ -665,7 +665,7 @@ function Home() {
 
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-5 lg:px-8 pb-24">
-        <div className="rounded-3xl hero-mesh text-white p-10 lg:p-16 text-center relative overflow-hidden">
+        <div className="hero-mesh text-white p-10 lg:p-16 text-center relative overflow-hidden">
           <div className="absolute inset-0 grid-pattern opacity-20" aria-hidden />
           <div className="relative max-w-3xl mx-auto">
             <h2 className="text-3xl lg:text-5xl font-bold leading-tight">
@@ -678,13 +678,13 @@ function Home() {
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
                 to="/programs"
-                className="inline-flex items-center gap-2 rounded-md bg-emerald-brand px-6 py-3.5 font-semibold text-navy hover:opacity-90"
+                className="inline-flex items-center gap-2 bg-emerald-brand px-6 py-3.5 font-semibold text-navy hover:opacity-90"
               >
                 Apply Now <ArrowRight className="size-4" />
               </Link>
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 rounded-md glass px-6 py-3.5 font-semibold text-white hover:bg-white/15"
+                className="inline-flex items-center gap-2 glass px-6 py-3.5 font-semibold text-white hover:bg-white/15"
               >
                 Talk to Admissions
               </Link>
