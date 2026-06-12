@@ -94,7 +94,7 @@ function Membership() {
             </p>
           </div>
           <div className="hidden lg:block lg:col-span-5">
-            <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+            <div className="overflow-hidden border border-white/10 shadow-2xl">
               <img
                 src={imageUrl("hero-medical-professionals.png")}
                 alt="Membership community"
@@ -111,10 +111,10 @@ function Membership() {
           {tiers.map((t) => (
             <div
               key={t.t}
-              className={`rounded-2xl border p-6 flex flex-col ${t.featured ? "bg-navy text-white border-emerald-brand shadow-2xl shadow-medical/20 lg:-translate-y-3" : "bg-card border-border"}`}
+              className={`border p-6 flex flex-col ${t.featured ? "bg-navy text-white border-emerald-brand shadow-2xl shadow-medical/20 lg:-translate-y-3" : "bg-card border-border"}`}
             >
               <div
-                className={`size-11 rounded-lg grid place-items-center ${t.featured ? "bg-emerald-brand/20 text-emerald-brand" : "bg-medical/10 text-medical"}`}
+                className={`size-11 grid place-items-center ${t.featured ? "bg-emerald-brand/20 text-emerald-brand" : "bg-medical/10 text-medical"}`}
               >
                 <t.icon className="size-5" />
               </div>
@@ -146,7 +146,7 @@ function Membership() {
               </ul>
               <button
                 onClick={() => setTier(t.t)}
-                className={`mt-6 inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition ${t.featured ? "bg-emerald-brand text-navy hover:opacity-90" : "bg-medical text-white hover:bg-medical/90"}`}
+                className={`mt-6 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold transition ${t.featured ? "bg-emerald-brand text-navy hover:opacity-90" : "bg-medical text-white hover:bg-medical/90"}`}
               >
                 Choose {t.t.split(" ")[0]} <ArrowRight className="size-4" />
               </button>
@@ -165,7 +165,7 @@ function Membership() {
             We'll review and respond within 3 business days.
           </p>
           <form
-            className="mt-10 rounded-2xl bg-card border border-border p-6 lg:p-8 space-y-5"
+            className="mt-10 bg-card border border-border p-6 lg:p-8 space-y-5"
             onSubmit={submit}
           >
             <div className="grid md:grid-cols-2 gap-5">
@@ -226,7 +226,7 @@ function Membership() {
             </Field>
             <button
               disabled={sending}
-              className="w-full rounded-md bg-medical px-6 py-3.5 font-semibold text-white hover:bg-medical/90 transition disabled:opacity-60"
+              className="w-full bg-medical px-6 py-3.5 font-semibold text-white hover:bg-medical/90 transition disabled:opacity-60"
             >
               {sending ? "Submitting…" : "Submit application"}
             </button>
@@ -238,7 +238,7 @@ function Membership() {
 }
 
 const inp =
-  "w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical";
+  "w-full border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical";
 function Field({
   label,
   required,

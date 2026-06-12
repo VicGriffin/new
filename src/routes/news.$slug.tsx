@@ -74,7 +74,7 @@ function NewsDetail() {
           <p className="mt-4 text-lg text-foreground/75 leading-relaxed">{post.excerpt}</p>
         )}
         {post.cover_url && (
-          <img src={post.cover_url} alt="" className="mt-8 rounded-2xl w-full object-cover" />
+          <img src={post.cover_url} alt="" className="mt-8 w-full object-cover" />
         )}
         {post.body && (
           <div className="mt-8 prose prose-neutral max-w-none text-foreground/85 whitespace-pre-wrap leading-relaxed">

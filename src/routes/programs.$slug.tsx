@@ -140,19 +140,19 @@ function ProgramDetail() {
 
               <div className="mt-8 grid gap-3 sm:grid-cols-3">
                 {program.duration && (
-                  <div className="rounded-3xl border border-border bg-white p-5 shadow-sm">
+                  <div className="border border-border bg-white p-5 shadow-sm">
                     <div className="text-sm font-semibold text-slate-500">Duration</div>
                     <div className="mt-2 text-lg font-semibold text-navy">{program.duration}</div>
                   </div>
                 )}
                 {program.mode && (
-                  <div className="rounded-3xl border border-border bg-white p-5 shadow-sm">
+                  <div className="border border-border bg-white p-5 shadow-sm">
                     <div className="text-sm font-semibold text-slate-500">Mode of study</div>
                     <div className="mt-2 text-lg font-semibold text-navy">{program.mode}</div>
                   </div>
                 )}
                 {program.certification && (
-                  <div className="rounded-3xl border border-border bg-white p-5 shadow-sm">
+                  <div className="border border-border bg-white p-5 shadow-sm">
                     <div className="text-sm font-semibold text-slate-500">Certification</div>
                     <div className="mt-2 text-lg font-semibold text-navy">{program.certification}</div>
                   </div>
@@ -161,7 +161,7 @@ function ProgramDetail() {
 
               <div className="mt-10 space-y-12">
                 {(program.summary || program.description) && (
-                  <section className="rounded-3xl border border-border bg-white p-8 shadow-sm">
+                  <section className="border border-border bg-white p-8 shadow-sm">
                     <h2 className="text-2xl font-bold text-navy">Program overview</h2>
                     <p className="mt-4 text-foreground/80 leading-relaxed whitespace-pre-wrap">
                       {program.description ?? program.summary}
@@ -170,7 +170,7 @@ function ProgramDetail() {
                 )}
 
                 {learningOutcomes.length > 0 && (
-                  <section className="rounded-3xl border border-border bg-white p-8 shadow-sm">
+                  <section className="border border-border bg-white p-8 shadow-sm">
                     <div className="flex items-center gap-3">
                       <Sparkles className="size-5 text-medical" />
                       <h2 className="text-2xl font-bold text-navy">Learning outcomes</h2>
@@ -186,7 +186,7 @@ function ProgramDetail() {
                 )}
 
                 {curriculumModules.length > 0 && (
-                  <section className="rounded-3xl border border-border bg-white p-8 shadow-sm">
+                  <section className="border border-border bg-white p-8 shadow-sm">
                     <div className="flex items-center gap-3">
                       <ListChecks className="size-5 text-medical" />
                       <h2 className="text-2xl font-bold text-navy">Curriculum modules</h2>
@@ -195,7 +195,7 @@ function ProgramDetail() {
                       {curriculumModules.map((module, index) => (
                         <details
                           key={`${module.module_title}-${index}`}
-                          className="group rounded-3xl border border-border bg-slate-50 p-5 transition hover:border-medical/30"
+                          className="group border border-border bg-slate-50 p-5 transition hover:border-medical/30"
                         >
                           <summary className="flex cursor-pointer items-center justify-between gap-4 text-lg font-semibold text-navy list-none">
                             <span>{module.module_title}</span>
@@ -220,7 +220,7 @@ function ProgramDetail() {
                 )}
 
                 {requirements.length > 0 && (
-                  <section className="rounded-3xl border border-border bg-white p-8 shadow-sm">
+                  <section className="border border-border bg-white p-8 shadow-sm">
                     <h2 className="text-2xl font-bold text-navy">Requirements</h2>
                     <ul className="mt-6 grid gap-3 text-foreground/80 pl-5 list-disc">
                       {requirements.map((requirement, index) => (
@@ -233,20 +233,20 @@ function ProgramDetail() {
             </div>
 
             <aside className="space-y-6">
-              <div className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+              <div className="border border-border bg-white p-6 shadow-sm">
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                   Apply for this program
                 </div>
                 <div className="mt-6 space-y-4">
                   <Link
                     to={applyUrl}
-                    className="block rounded-2xl bg-medical px-5 py-4 text-center text-sm font-semibold text-white transition hover:bg-medical/90"
+                    className="block bg-medical px-5 py-4 text-center text-sm font-semibold text-white transition hover:bg-medical/90"
                   >
                     Apply now
                   </Link>
                   <Link
                     to="/contact"
-                    className="block rounded-2xl border border-border px-5 py-4 text-center text-sm font-semibold text-navy transition hover:border-medical hover:text-medical"
+                    className="block border border-border px-5 py-4 text-center text-sm font-semibold text-navy transition hover:border-medical hover:text-medical"
                   >
                     Ask a question
                   </Link>
@@ -254,7 +254,7 @@ function ProgramDetail() {
               </div>
 
               {(program.summary || program.description) && (
-                <div className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+                <div className="border border-border bg-white p-6 shadow-sm">
                   <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                     Program snapshot
                   </h3>

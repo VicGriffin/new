@@ -1,4 +1,4 @@
-﻿import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/site/layout";
@@ -430,7 +430,9 @@ function Portal() {
                 const next = !s;
                 try {
                   localStorage.setItem("portal.sidebar.collapsed", next ? "true" : "false");
-                } catch (e) {}
+                } catch {
+                  // Silently ignore localStorage errors
+                }
                 return next;
               });
             }}
@@ -442,7 +444,9 @@ function Portal() {
               setSelectedMenu(k);
               try {
                 localStorage.setItem("portal.menu.selected", k);
-              } catch (e) {}
+              } catch {
+                // Silently ignore localStorage errors
+              }
             }}
           />
         </div>
@@ -454,7 +458,7 @@ function Portal() {
               aria-label={sidebarOpen ? "Close menu" : "Open menu"}
               aria-expanded={sidebarOpen}
               onClick={() => setSidebarOpen((s) => !s)}
-              className="p-2 rounded-md bg-white/90 shadow-sm"
+              className="p-2 bg-white/90 shadow-sm"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 {sidebarOpen ? (
@@ -470,7 +474,7 @@ function Portal() {
           {selectedMenu === "overview" && (
           <section className="mx-auto max-w-7xl px-5 lg:px-8 pb-16 space-y-10 lg:grid lg:grid-cols-[2.3fr_1fr] lg:items-start lg:gap-8">
             <div className="space-y-8">
-              <div className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+              <div className="border border-border bg-white p-6 shadow-sm">
                 <div className="max-w-3xl space-y-3">
                   <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">Welcome back</p>
                   <h1 className="text-3xl font-semibold tracking-tight text-navy sm:text-4xl">
@@ -482,25 +486,25 @@ function Portal() {
                 </div>
 
                 <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-3xl border border-border bg-slate-50 p-5 transition hover:shadow-md">
+                  <div className="border border-border bg-slate-50 p-5 transition hover:shadow-md">
                     <p className="text-3xl font-semibold text-navy">{total}</p>
                     <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                       Total Enrollments
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-border bg-slate-50 p-5 transition hover:shadow-md">
+                  <div className="border border-border bg-slate-50 p-5 transition hover:shadow-md">
                     <p className="text-3xl font-semibold text-navy">{active}</p>
                     <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                       In Progress
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-border bg-slate-50 p-5 transition hover:shadow-md">
+                  <div className="border border-border bg-slate-50 p-5 transition hover:shadow-md">
                     <p className="text-3xl font-semibold text-navy">{completed}</p>
                     <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                       Completed
                     </p>
                   </div>
-                  <div className="rounded-3xl border border-border bg-slate-50 p-5 transition hover:shadow-md">
+                  <div className="border border-border bg-slate-50 p-5 transition hover:shadow-md">
                     <p className="text-3xl font-semibold text-navy">{pending}</p>
                     <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
                       Pending
@@ -518,7 +522,7 @@ function Portal() {
                 </div>
                 <div className="space-y-4">
                   {!enrollments?.length && (
-                    <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                    <div className="border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
                       No enrollments yet. Browse programs below.
                     </div>
                   )}
@@ -530,7 +534,7 @@ function Portal() {
                     const isCompleted = e.status === "completed";
 
                     return (
-                      <div key={e.id} className="rounded-3xl border border-border bg-white p-5 shadow-sm space-y-4">
+                      <div key={e.id} className="border border-border bg-white p-5 shadow-sm space-y-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <div className="font-semibold text-navy">{e.programs?.title}</div>
@@ -560,7 +564,7 @@ function Portal() {
                         </div>
 
                         {isPendingPayment && (
-                          <div className="p-4 bg-red-50 border border-red-100 rounded-lg space-y-3">
+                          <div className="p-4 bg-red-50 border border-red-100 space-y-3">
                             <div className="flex gap-2 items-start">
                               <Lock className="size-4 text-red-600 shrink-0 mt-0.5" />
                               <div>
@@ -649,7 +653,7 @@ function Portal() {
                         )}
 
                         {isPaymentApproved && (
-                          <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
+                          <div className="p-4 bg-amber-50 border border-amber-100">
                             <div className="flex gap-2">
                               <Clock className="size-4 text-amber-700 shrink-0 mt-0.5" />
                               <div>
@@ -717,7 +721,9 @@ function Portal() {
                           setSelectedBrowseCategory(category.key);
                           try {
                             localStorage.setItem("portal.browse.category", category.key);
-                          } catch (e) {}
+                          } catch {
+                            // Silently ignore localStorage errors
+                          }
                         }}
                       >
                         {category.label}
@@ -726,7 +732,7 @@ function Portal() {
                   </div>
                 </div>
 
-                <div className="rounded-3xl border border-border bg-slate-50 p-5">
+                <div className="border border-border bg-slate-50 p-5">
                   <p className="text-sm font-medium text-navy">{activeBrowseCategory.label}</p>
                   <p className="mt-2 text-sm text-muted-foreground">{activeBrowseCategory.description}</p>
                 </div>
@@ -737,9 +743,9 @@ function Portal() {
                     return (
                       <div
                         key={p.id}
-                        className="rounded-3xl border border-border bg-white p-5 shadow-sm flex flex-col"
+                        className="border border-border bg-white p-5 shadow-sm flex flex-col"
                       >
-                        <div className="size-10 grid place-items-center rounded-lg bg-medical/10 text-medical">
+                        <div className="size-10 grid place-items-center bg-medical/10 text-medical">
                           <GraduationCap className="size-5" />
                         </div>
                         <h3 className="mt-3 font-bold text-navy">{p.title}</h3>
@@ -757,7 +763,7 @@ function Portal() {
                               setIsCheckoutOpen(true);
                             }
                           }}
-                          className="mt-4 rounded-md bg-medical text-white px-4 py-2 text-sm font-semibold hover:bg-medical/90 disabled:opacity-60"
+                          className="mt-4 bg-medical text-white px-4 py-2 text-sm font-semibold hover:bg-medical/90 disabled:opacity-60"
                         >
                           {isEnrolled ? "Enrolled" : "Enroll & Pay"}
                         </button>
@@ -774,7 +780,7 @@ function Portal() {
             </div>
 
             <aside className="space-y-6">
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="border border-border bg-card p-5">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-navy flex items-center gap-2">
                     <User className="size-4" /> Profile
@@ -799,7 +805,7 @@ function Portal() {
                         placeholder={k.replace("_", " ")}
                         value={profileForm[k]}
                         onChange={(evt) => setProfileForm({ ...profileForm, [k]: evt.target.value })}
-                        className="w-full rounded-md border border-input px-3 py-2 text-sm"
+                        className="w-full border border-input px-3 py-2 text-sm"
                       />
                     ))}
                     <textarea
@@ -807,20 +813,20 @@ function Portal() {
                       rows={3}
                       value={profileForm.bio}
                       onChange={(evt) => setProfileForm({ ...profileForm, bio: evt.target.value })}
-                      className="w-full rounded-md border border-input px-3 py-2 text-sm resize-none"
+                      className="w-full border border-input px-3 py-2 text-sm resize-none"
                     />
                     <div className="flex gap-2">
                       <button
                         type="submit"
                         disabled={saveProfile.isPending}
-                        className="flex-1 rounded-md bg-medical text-white py-2 text-sm font-semibold"
+                        className="flex-1 bg-medical text-white py-2 text-sm font-semibold"
                       >
                         Save
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingProfile(false)}
-                        className="flex-1 rounded-md border border-border py-2 text-sm"
+                        className="flex-1 border border-border py-2 text-sm"
                       >
                         Cancel
                       </button>
@@ -850,7 +856,7 @@ function Portal() {
                 )}
               </div>
 
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="border border-border bg-card p-5">
                 <h3 className="font-bold text-navy flex items-center gap-2">
                   <Bell className="size-4" /> Notifications
                 </h3>
@@ -861,7 +867,7 @@ function Portal() {
                   {notifications?.map((n: any) => (
                     <li
                       key={n.id}
-                      className={`rounded-md p-3 border ${n.is_read ? "bg-muted/40 border-border" : "bg-medical/5 border-medical/20"}`}
+                      className={`p-3 border ${n.is_read ? "bg-muted/40 border-border" : "bg-medical/5 border-medical/20"}`}
                     >
                       <div className="flex justify-between gap-2">
                         <div className="font-medium text-navy text-sm">{n.title}</div>
@@ -880,7 +886,7 @@ function Portal() {
                 </ul>
               </div>
 
-              <div className="rounded-xl border border-border bg-card p-5">
+              <div className="border border-border bg-card p-5">
                 <h3 className="font-bold text-navy flex items-center gap-2">
                   <Library className="size-4" /> Resources
                 </h3>
@@ -891,7 +897,7 @@ function Portal() {
                 ) : (
                   <ul className="mt-4 space-y-2 text-sm">
                     {resources.map((r: any) => (
-                      <li key={r.id} className="rounded-md border border-border p-3">
+                      <li key={r.id} className="border border-border p-3">
                         <div className="font-medium text-navy">{r.title}</div>
                         <div className="text-xs text-muted-foreground">
                           {r.programs?.title} Â· {r.kind}
@@ -950,7 +956,7 @@ function Portal() {
               {/* Enrollment Cards */}
               <div className="space-y-4">
                 {filteredEnrollments.length === 0 ? (
-                  <div className="rounded-3xl border border-dashed border-border p-12 text-center">
+                  <div className="border border-dashed border-border p-12 text-center">
                     <h3 className="text-xl font-semibold text-navy">No enrollments found</h3>
                     <p className="mt-2 text-sm text-muted-foreground mb-6">
                       You haven't enrolled in any programs yet.
@@ -960,9 +966,11 @@ function Portal() {
                         setSelectedMenu("overview");
                         try {
                           localStorage.setItem("portal.menu.selected", "overview");
-                        } catch (e) {}
+                        } catch {
+                          // Silently ignore localStorage errors
+                        }
                       }}
-                      className="inline-flex items-center gap-2 rounded-md bg-medical text-white px-6 py-2.5 text-sm font-semibold hover:bg-medical/90"
+                      className="inline-flex items-center gap-2 bg-medical text-white px-6 py-2.5 text-sm font-semibold hover:bg-medical/90"
                     >
                       Browse Programs
                     </button>
@@ -976,7 +984,7 @@ function Portal() {
                     const isCompleted = e.status === "completed";
 
                     return (
-                      <div key={e.id} className="rounded-3xl border border-border bg-white p-5 shadow-sm space-y-4">
+                      <div key={e.id} className="border border-border bg-white p-5 shadow-sm space-y-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <div className="font-semibold text-navy">{e.programs?.title}</div>
@@ -1006,7 +1014,7 @@ function Portal() {
                         </div>
 
                         {isPendingPayment && (
-                          <div className="p-4 bg-red-50 border border-red-100 rounded-lg space-y-3">
+                          <div className="p-4 bg-red-50 border border-red-100 space-y-3">
                             <div className="flex gap-2 items-start">
                               <Lock className="size-4 text-red-600 shrink-0 mt-0.5" />
                               <div>
@@ -1095,7 +1103,7 @@ function Portal() {
                         )}
 
                         {isPaymentApproved && (
-                          <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
+                          <div className="p-4 bg-amber-50 border border-amber-100">
                             <div className="flex gap-2">
                               <Clock className="size-4 text-amber-700 shrink-0 mt-0.5" />
                               <div>
@@ -1166,7 +1174,7 @@ function Portal() {
 
               {selectedProgramForCheckout ? (
                 <div className="mt-6 space-y-6">
-                  <div className="rounded-3xl border border-border bg-slate-50 p-5">
+                  <div className="border border-border bg-slate-50 p-5">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">Course</p>
@@ -1177,7 +1185,7 @@ function Portal() {
                           <span>{selectedProgramForCheckout.certification}</span>
                         </div>
                       </div>
-                      <div className="rounded-3xl bg-white border border-border px-4 py-3 text-right">
+                      <div className="bg-white border border-border px-4 py-3 text-right">
                         <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Price</p>
                         <p className="mt-2 text-3xl font-semibold text-navy">
                           KSH {Number(selectedProgramForCheckout.price_ksh ?? 0).toLocaleString()}
@@ -1199,7 +1207,7 @@ function Portal() {
                           setBankAccountHolder("");
                           setBankPaymentDate("");
                         }}
-                        className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                        className="mt-2 w-full border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
                       >
                         <option value="M-Pesa">M-Pesa</option>
                         <option value="Bank Transfer">Bank Transfer</option>
@@ -1216,7 +1224,7 @@ function Portal() {
                           value={paymentRef}
                           onChange={(evt) => setPaymentRef(evt.target.value)}
                           placeholder={paymentMethod === "M-Pesa" ? "Enter M-Pesa transaction code" : "Enter bank reference number"}
-                          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                          className="mt-2 w-full border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
                         />
                       </div>
                     ) : (
@@ -1227,25 +1235,25 @@ function Portal() {
                           value={paymentRef}
                           onChange={(evt) => setPaymentRef(evt.target.value)}
                           placeholder="Enter PayPal transaction ID"
-                          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                          className="mt-2 w-full border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
                         />
                       </div>
                     )}
                   </div>
 
                   {paymentMethod === "M-Pesa" && (
-                    <div className="rounded-3xl border border-border bg-white p-4">
+                    <div className="border border-border bg-white p-4">
                       <p className="text-sm font-semibold text-navy">Payment via M-Pesa</p>
                       <div className="mt-3 grid gap-2 text-sm text-muted-foreground">
-                        <div className="rounded-2xl bg-slate-50 p-3">
+                        <div className="bg-slate-50 p-3">
                           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Paybill Number</p>
                           <p className="text-sm font-semibold text-navy">123456</p>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 p-3">
+                        <div className="bg-slate-50 p-3">
                           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Account Number</p>
                           <p className="text-sm font-semibold text-navy">{generatedPaymentReference}</p>
                         </div>
-                        <div className="rounded-2xl bg-slate-50 p-3">
+                        <div className="bg-slate-50 p-3">
                           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Amount</p>
                           <p className="text-sm font-semibold text-navy">KSH {Number(selectedProgramForCheckout.price_ksh ?? 0).toLocaleString()}</p>
                         </div>
@@ -1267,7 +1275,7 @@ function Portal() {
                   )}
 
                   {paymentMethod === "Bank Transfer" && (
-                    <div className="rounded-3xl border border-border bg-white p-4">
+                    <div className="border border-border bg-white p-4">
                       {!bankTransferConfirmed ? (
                         <div className="space-y-4">
                           <p className="text-sm font-semibold text-navy">Bank transfer may take longer to verify.</p>
@@ -1278,7 +1286,7 @@ function Portal() {
                             <button
                               type="button"
                               onClick={() => setBankTransferConfirmed(true)}
-                              className="rounded-md bg-medical px-4 py-2 text-sm font-semibold text-white hover:bg-medical/90"
+                              className="bg-medical px-4 py-2 text-sm font-semibold text-white hover:bg-medical/90"
                             >
                               Continue
                             </button>
@@ -1288,7 +1296,7 @@ function Portal() {
                                 setPaymentMethod("M-Pesa");
                                 setPaymentRef("");
                               }}
-                              className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+                              className="border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
                             >
                               Cancel
                             </button>
@@ -1297,32 +1305,32 @@ function Portal() {
                       ) : (
                         <div className="space-y-4">
                           <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="rounded-2xl bg-slate-50 p-3">
+                            <div className="bg-slate-50 p-3">
                               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Bank Name</p>
                               <p className="text-sm font-semibold text-navy">AMMTTI Bank</p>
                             </div>
-                            <div className="rounded-2xl bg-slate-50 p-3">
+                            <div className="bg-slate-50 p-3">
                               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Account Name</p>
                               <p className="text-sm font-semibold text-navy">AMMTTI Education</p>
                             </div>
-                            <div className="rounded-2xl bg-slate-50 p-3">
+                            <div className="bg-slate-50 p-3">
                               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Account Number</p>
                               <p className="text-sm font-semibold text-navy">9876543210</p>
                             </div>
-                            <div className="rounded-2xl bg-slate-50 p-3">
+                            <div className="bg-slate-50 p-3">
                               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Branch</p>
                               <p className="text-sm font-semibold text-navy">Nairobi</p>
                             </div>
-                            <div className="rounded-2xl bg-slate-50 p-3">
+                            <div className="bg-slate-50 p-3">
                               <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">SWIFT Code</p>
                               <p className="text-sm font-semibold text-navy">AMMTKE22</p>
                             </div>
                           </div>
-                          <div className="rounded-2xl bg-slate-50 p-3">
+                          <div className="bg-slate-50 p-3">
                             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Amount</p>
                             <p className="text-sm font-semibold text-navy">KSH {Number(selectedProgramForCheckout.price_ksh ?? 0).toLocaleString()}</p>
                           </div>
-                          <div className="rounded-2xl bg-slate-50 p-3">
+                          <div className="bg-slate-50 p-3">
                             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Payment reference</p>
                             <p className="text-sm font-semibold text-navy">{generatedPaymentReference}</p>
                           </div>
@@ -1343,7 +1351,7 @@ function Portal() {
                                 value={bankAccountHolder}
                                 onChange={(evt) => setBankAccountHolder(evt.target.value)}
                                 placeholder="Optional"
-                                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                                className="mt-2 w-full border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
                               />
                             </div>
                             <div>
@@ -1352,7 +1360,7 @@ function Portal() {
                                 type="date"
                                 value={bankPaymentDate}
                                 onChange={(evt) => setBankPaymentDate(evt.target.value)}
-                                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
+                                className="mt-2 w-full border border-border bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-medical outline-none"
                               />
                             </div>
                           </div>
@@ -1362,14 +1370,14 @@ function Portal() {
                   )}
 
                   {paymentMethod === "PayPal" && (
-                    <div className="rounded-3xl border border-border bg-white p-4 text-sm text-muted-foreground">
+                    <div className="border border-border bg-white p-4 text-sm text-muted-foreground">
                       <p className="font-semibold text-navy">PayPal Checkout</p>
                       <p className="mt-3">You will be redirected to PayPal to complete payment.</p>
                       <p className="mt-2">After completing PayPal, enter the transaction ID above and confirm.</p>
                     </div>
                   )}
 
-                  <div className="flex items-start gap-3 rounded-3xl border border-border bg-slate-50 p-4">
+                  <div className="flex items-start gap-3 border border-border bg-slate-50 p-4">
                     <input
                       id="payment-confirmation"
                       type="checkbox"
@@ -1387,7 +1395,7 @@ function Portal() {
               )}
 
               {checkoutSuccess && (
-                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
+                <div className="border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
                   <p className="font-semibold">Payment Submitted</p>
                   <p className="mt-2">
                     Your payment has been received and is awaiting verification by an administrator. You will receive a notification once your enrollment is activated.
@@ -1406,7 +1414,7 @@ function Portal() {
                     setBankTransferConfirmed(false);
                     setCheckoutSuccess(false);
                   }}
-                  className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+                  className="border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
                 >
                   {checkoutSuccess ? "Close" : "Cancel"}
                 </button>
@@ -1441,7 +1449,7 @@ function Portal() {
                         method: paymentMethod,
                       });
                     }}
-                    className="rounded-md bg-medical px-4 py-2 text-sm font-semibold text-white hover:bg-medical/90 disabled:opacity-60"
+                    className="bg-medical px-4 py-2 text-sm font-semibold text-white hover:bg-medical/90 disabled:opacity-60"
                   >
                     {checkout.isPending ? "Processingâ€¦" : paymentMethod === "PayPal" ? "Proceed to PayPal" : "Submit Payment"}
                   </button>
@@ -1464,7 +1472,7 @@ function Portal() {
               </div>
 
               {enrollments && enrollments.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border p-12 text-center">
+                <div className="border border-dashed border-border p-12 text-center">
                   <h3 className="text-xl font-semibold text-navy">No active enrollments</h3>
                   <p className="mt-2 text-sm text-muted-foreground mb-6">
                     Enroll in a program to access course resources.
@@ -1474,22 +1482,24 @@ function Portal() {
                       setSelectedMenu("overview");
                       try {
                         localStorage.setItem("portal.menu.selected", "overview");
-                      } catch (e) {}
+                      } catch {
+                        // Silently ignore localStorage errors
+                      }
                     }}
-                    className="inline-flex items-center gap-2 rounded-md bg-medical text-white px-6 py-2.5 text-sm font-semibold hover:bg-medical/90"
+                    className="inline-flex items-center gap-2 bg-medical text-white px-6 py-2.5 text-sm font-semibold hover:bg-medical/90"
                   >
                     Browse Programs
                   </button>
                 </div>
               ) : activeCompletedEnrollments.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border p-12 text-center">
+                <div className="border border-dashed border-border p-12 text-center">
                   <h3 className="text-xl font-semibold text-navy">No active enrollments</h3>
                   <p className="mt-2 text-sm text-muted-foreground">
                     Resources will become available once your enrollment is activated.
                   </p>
                 </div>
               ) : groupedResources.size === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border p-12 text-center">
+                <div className="border border-dashed border-border p-12 text-center">
                   <h3 className="text-xl font-semibold text-navy">No resources available</h3>
                   <p className="mt-2 text-sm text-muted-foreground">
                     Course materials for your enrolled programs will appear here when instructors upload them.
@@ -1502,7 +1512,7 @@ function Portal() {
                       <h2 className="text-xl font-semibold text-navy">{group.programTitle}</h2>
                       <div className="space-y-2">
                         {group.resources.map((resource: any) => (
-                          <div key={resource.id} className="rounded-xl border border-border bg-white p-4 shadow-sm hover:shadow-md transition">
+                          <div key={resource.id} className="border border-border bg-white p-4 shadow-sm hover:shadow-md transition">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                               <div className="flex-1">
                                 <h3 className="font-semibold text-navy">{resource.title}</h3>
@@ -1548,8 +1558,8 @@ function Stat({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5 flex items-center gap-4">
-      <div className="size-12 rounded-lg bg-medical/10 text-medical grid place-items-center">
+    <div className="border border-border bg-card p-5 flex items-center gap-4">
+      <div className="size-12 bg-medical/10 text-medical grid place-items-center">
         <Icon className="size-5" />
       </div>
       <div>

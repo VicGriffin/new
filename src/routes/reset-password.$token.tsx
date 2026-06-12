@@ -91,7 +91,7 @@ function ResetPasswordPage() {
   return (
     <PageShell>
       <section className="bg-soft px-6 py-16">
-        <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl">
+        <div className="mx-auto w-full max-w-md border border-border bg-card p-8 shadow-xl">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-medical">
             Secure password reset
           </p>
@@ -102,7 +102,7 @@ function ResetPasswordPage() {
 
           {error && (
             <div
-              className="mt-6 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              className="mt-6 border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
               role="alert"
             >
               {error}
@@ -111,13 +111,13 @@ function ResetPasswordPage() {
 
           {success ? (
             <div className="mt-6 space-y-4">
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+              <div className="border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
                 Your password has been updated successfully.
               </div>
               <button
                 type="button"
                 onClick={() => nav({ to: "/auth", replace: true })}
-                className="w-full rounded-md bg-medical py-2.5 font-semibold text-white transition hover:bg-medical/90"
+                className="w-full bg-medical py-2.5 font-semibold text-white transition hover:bg-medical/90"
               >
                 Sign in
               </button>
@@ -141,7 +141,7 @@ function ResetPasswordPage() {
               <PasswordRequirements password={password} strength={strength} />
               <button
                 disabled={loading || !ready}
-                className="w-full rounded-md bg-medical py-2.5 font-semibold text-white transition hover:bg-medical/90 disabled:opacity-60"
+                className="w-full bg-medical py-2.5 font-semibold text-white transition hover:bg-medical/90 disabled:opacity-60"
               >
                 {loading ? "Updating password…" : "Update password"}
               </button>
@@ -182,7 +182,7 @@ function PasswordRequirements({
 }) {
   const percent = (strength.score / strength.checks.length) * 100;
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-3">
+    <div className="border border-border bg-muted/30 p-3">
       <div className="flex items-center justify-between text-xs font-semibold text-navy">
         <span>Password strength</span>
         <span>{password ? strength.label : "Not started"}</span>
@@ -231,7 +231,7 @@ function PasswordInput({
           minLength={8}
           maxLength={72}
           autoComplete="new-password"
-          className="w-full rounded-md border border-input bg-background px-4 py-2.5 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
+          className="w-full border border-input bg-background px-4 py-2.5 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
         />
         <button
           type="button"

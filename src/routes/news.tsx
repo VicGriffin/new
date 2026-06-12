@@ -61,7 +61,7 @@ function NewsList() {
             </p>
           </div>
           <div className="hidden lg:block lg:col-span-5">
-            <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+            <div className="overflow-hidden border border-white/10 shadow-2xl">
               <img
                 src={imageUrl("news_hero1.png")}
                 alt="Institutional event imagery"
@@ -80,7 +80,7 @@ function NewsList() {
           </div>
         )}
         {!isLoading && !error && !posts?.length && (
-          <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
+          <div className="border border-dashed border-border p-12 text-center text-muted-foreground">
             No news posts yet. Check back soon.
           </div>
         )}
@@ -88,7 +88,7 @@ function NewsList() {
           {posts?.map((post) => (
             <article
               key={post.id}
-              className="rounded-2xl border border-border bg-card overflow-hidden hover:shadow-lg hover:border-medical/30 transition flex flex-col"
+              className="border border-border bg-card overflow-hidden hover:shadow-lg hover:border-medical/30 transition flex flex-col"
             >
               {post.cover_url ? (
                 <img src={post.cover_url} alt="" className="h-44 w-full object-cover" />

@@ -50,7 +50,7 @@ function ForgotPasswordPage() {
   return (
     <PageShell>
       <section className="bg-soft px-6 py-16">
-        <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-xl">
+        <div className="mx-auto w-full max-w-md border border-border bg-card p-8 shadow-xl">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-medical">
             Password recovery
           </p>
@@ -61,7 +61,7 @@ function ForgotPasswordPage() {
           </p>
 
           {submitted ? (
-            <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            <div className="mt-6 border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
               Check your inbox for a reset link. For security, the message is the same even if the
               email is not registered.
             </div>
@@ -69,7 +69,7 @@ function ForgotPasswordPage() {
             <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
               {error && (
                 <div
-                  className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  className="border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                   role="alert"
                 >
                   {error}
@@ -86,12 +86,12 @@ function ForgotPasswordPage() {
                   required
                   maxLength={200}
                   autoComplete="email"
-                  className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
+                  className="mt-1.5 w-full border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
                 />
               </label>
               <button
                 disabled={loading}
-                className="w-full rounded-md bg-medical py-2.5 font-semibold text-white transition hover:bg-medical/90 disabled:opacity-60"
+                className="w-full bg-medical py-2.5 font-semibold text-white transition hover:bg-medical/90 disabled:opacity-60"
               >
                 {loading ? "Sending reset link…" : "Send reset link"}
               </button>

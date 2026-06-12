@@ -117,7 +117,7 @@ function Admin() {
             <button
               type="button"
               onClick={signOut}
-              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-brand text-navy px-4 py-2.5 text-sm font-semibold"
+              className="inline-flex items-center gap-1.5 bg-emerald-brand text-navy px-4 py-2.5 text-sm font-semibold"
             >
               <LogOut className="size-4" />
               Sign out

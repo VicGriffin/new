@@ -95,8 +95,8 @@ function Contact() {
               lines: ["Thika Superhighway", "Kimbo Ruiru, Kenya."],
             },
           ].map((c) => (
-            <div key={c.l} className="flex gap-4 rounded-2xl bg-card border border-border p-5">
-              <div className="size-11 shrink-0 rounded-lg bg-medical/10 text-medical grid place-items-center">
+            <div key={c.l} className="flex gap-4 bg-card border border-border p-5">
+              <div className="size-11 shrink-0 bg-medical/10 text-medical grid place-items-center">
                 <c.icon className="size-5" />
               </div>
               <div>
@@ -109,7 +109,7 @@ function Contact() {
               </div>
             </div>
           ))}
-          <div className="rounded-2xl overflow-hidden border border-border bg-card aspect-[4/3]">
+          <div className="overflow-hidden border border-border bg-card aspect-[4/3]">
             <iframe
               title="AMTMTI location"
               src="https://www.openstreetmap.org/export/embed.html?bbox=36.7900%2C-1.2780%2C36.8200%2C-1.2600&layer=mapnik"
@@ -122,7 +122,7 @@ function Contact() {
         <div className="lg:col-span-7">
           <form
             onSubmit={onSubmit}
-            className="rounded-2xl bg-card border border-border p-6 lg:p-8 space-y-5"
+            className="bg-card border border-border p-6 lg:p-8 space-y-5"
           >
             <div className="grid md:grid-cols-2 gap-5">
               <Field label="Name" required>
@@ -177,7 +177,7 @@ function Contact() {
             </Field>
             <button
               disabled={sending}
-              className="inline-flex items-center gap-2 rounded-md bg-medical px-6 py-3.5 font-semibold text-white hover:bg-medical/90 disabled:opacity-60"
+              className="inline-flex items-center gap-2 bg-medical px-6 py-3.5 font-semibold text-white hover:bg-medical/90 disabled:opacity-60"
             >
               <Send className="size-4" /> {sending ? "Sending…" : "Send message"}
             </button>
@@ -194,7 +194,7 @@ function Contact() {
 }
 
 const inp =
-  "w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical";
+  "w-full border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical";
 function Field({
   label,
   required,

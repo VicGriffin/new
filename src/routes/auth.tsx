@@ -303,7 +303,7 @@ function AuthPage() {
         </div>
 
         <div className="flex items-center justify-center p-6 lg:p-12 bg-soft">
-          <div className="w-full max-w-md rounded-2xl bg-card border border-border p-8 shadow-xl">
+          <div className="w-full max-w-md bg-card border border-border p-8 shadow-xl">
             {mode !== "reset" && mode !== "updatePassword" && (
               <div className="flex gap-2 mb-6">
                 {(["signin", "signup"] as const).map((m) => (
@@ -315,7 +315,7 @@ function AuthPage() {
                       setConfirmPassword("");
                       setMode(m);
                     }}
-                    className={`flex-1 py-2 rounded-md text-sm font-semibold transition ${mode === m ? "bg-medical text-white" : "bg-muted text-foreground/70"}`}
+                    className={`flex-1 py-2 text-sm font-semibold transition ${mode === m ? "bg-medical text-white" : "bg-muted text-foreground/70"}`}
                   >
                     {m === "signin" ? "Sign in" : "Create account"}
                   </button>
@@ -337,7 +337,7 @@ function AuthPage() {
             {mode !== "reset" && mode !== "updatePassword" && (
               <button
                 onClick={handleGoogle}
-                className="w-full flex items-center justify-center gap-3 rounded-md border border-border bg-background py-2.5 text-sm font-semibold hover:bg-muted transition"
+                className="w-full flex items-center justify-center gap-3 border border-border bg-background py-2.5 text-sm font-semibold hover:bg-muted transition"
               >
                 <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
                   <path
@@ -372,7 +372,7 @@ function AuthPage() {
 
             {authError && (
               <div
-                className="mb-4 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                className="mb-4 border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
                 role="alert"
               >
                 {authError}
@@ -470,7 +470,7 @@ function AuthPage() {
 
               <button
                 disabled={loading}
-                className="w-full rounded-md bg-medical text-white py-2.5 font-semibold hover:bg-medical/90 transition disabled:opacity-60"
+                className="w-full bg-medical text-white py-2.5 font-semibold hover:bg-medical/90 transition disabled:opacity-60"
               >
                 {loading
                   ? "Please wait…"
@@ -551,7 +551,7 @@ function PasswordRequirements({
 }) {
   const percent = (strength.score / strength.checks.length) * 100;
   return (
-    <div className="rounded-lg border border-border bg-muted/30 p-3">
+    <div className="border border-border bg-muted/30 p-3">
       <div className="flex items-center justify-between text-xs font-semibold text-navy">
         <span>Password strength</span>
         <span>{password ? strength.label : "Not started"}</span>
@@ -606,7 +606,7 @@ function Input({
         minLength={minLength}
         maxLength={maxLength}
         autoComplete={autoComplete}
-        className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
+        className="mt-1.5 w-full border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
       />
       {/* Input component intentionally minimal; callers render errors separately when needed */}
     </label>
@@ -648,7 +648,7 @@ function PasswordInput({
           maxLength={72}
           autoComplete={autoComplete}
           aria-invalid={Boolean(error)}
-          className="w-full rounded-md border border-input bg-background px-4 py-2.5 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
+          className="w-full border border-input bg-background px-4 py-2.5 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
         />
         <button
           type="button"
@@ -681,7 +681,7 @@ function SelectInput({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
+        className="mt-1.5 w-full border border-input bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-medical"
       >
         <option value="">Select country</option>
         {options.map((option) => (
