@@ -2,13 +2,14 @@ import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-ro
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/site/layout";
+import { PortalSidebar } from "@/components/site/portal-sidebar";
 import { getResourceDownloadUrl, adminDeleteResource } from "@/lib/api/resource.functions";
 import {
   createEnrollment,
   submitPayment as submitPaymentServer,
   updateProgress,
 } from "@/lib/api/enrollment.functions";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BookOpen,
   GraduationCap,
@@ -25,6 +26,46 @@ import {
   CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
+
+const browseProgramCategories = [
+  {
+    key: "mtm",
+    label: "MTM courses",
+    description: "Explore all Medication Therapy Management pathways.",
+    filter: () => true,
+  },
+  {
+    key: "professional-development",
+    label: "Professional Development Courses",
+    description: "Browse professional CPD courses designed for working clinicians.",
+    filter: (program: any) => {
+      const level = (program.level ?? "").toLowerCase();
+      return level.includes("professional") || level.includes("cpd");
+    },
+  },
+  {
+    key: "certificate",
+    label: "Certificate courses",
+    description: "Find certificate-level MTM training for pharmacy and clinical teams.",
+    filter: (program: any) => (program.level ?? "").toLowerCase().includes("certificate"),
+  },
+  {
+    key: "short",
+    label: "Short courses",
+    description: "Show short-term programs and CPD modules with faster completion.",
+    filter: (program: any) => {
+      const duration = (program.duration ?? "").toLowerCase();
+      const weeks = Number(duration.match(/(\d+)/)?.[1] ?? 0);
+      return duration.includes("week") && weeks > 0 && weeks <= 12;
+    },
+  },
+  {
+    key: "diploma",
+    label: "Diploma courses",
+    description: "Browse diploma and postgraduate diploma MTM programs.",
+    filter: (program: any) => (program.level ?? "").toLowerCase().includes("diploma"),
+  },
+];
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => ({ meta: [{ title: "E-Learning Portal — AMTMTI" }] }),
@@ -55,10 +96,11 @@ export const Route = createFileRoute("/_authenticated/portal")({
       .maybeSingle();
 
     const status = profile?.status ?? "pending";
-    if (status !== "approved") {
+    // Only block rejected or suspended accounts
+    if (status === "rejected" || status === "suspended") {
       throw redirect({
         to: "/auth",
-        search: { reason: status === "suspended" || status === "rejected" ? status : "pending" },
+        search: { reason: status },
       });
     }
 
@@ -68,6 +110,28 @@ export const Route = createFileRoute("/_authenticated/portal")({
 });
 
 function Portal() {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("portal.sidebar.collapsed") === "true";
+    } catch (e) {
+      return false;
+    }
+  });
+  const [sidebarOpen, setSidebarOpen] = useState(false); // mobile drawer open
+  const [selectedBrowseCategory, setSelectedBrowseCategory] = useState(() => {
+    try {
+      return localStorage.getItem("portal.browse.category") || "mtm";
+    } catch (e) {
+      return "mtm";
+    }
+  });
+  const [selectedMenu, setSelectedMenu] = useState<string>(() => {
+    try {
+      return localStorage.getItem("portal.menu.selected") || "overview";
+    } catch (e) {
+      return "overview";
+    }
+  });
   const nav = useNavigate();
   const qc = useQueryClient();
   const [editingProfile, setEditingProfile] = useState(false);
@@ -111,6 +175,15 @@ function Portal() {
           .order("created_at")
       ).data ?? [],
   });
+
+  const activeBrowseCategory = browseProgramCategories.find(
+    (category) => category.key === selectedBrowseCategory,
+  ) ?? browseProgramCategories[0];
+
+  const filteredPrograms = useMemo(
+    () => (programs ?? []).filter(activeBrowseCategory.filter),
+    [programs, activeBrowseCategory],
+  );
 
   const { data: enrollments } = useQuery({
     queryKey: ["enrollments", user?.id],
@@ -248,46 +321,109 @@ function Portal() {
   const active = (enrollments ?? []).filter(
     (e: { status: string }) => e.status === "active",
   ).length;
+  const pending = (enrollments ?? []).filter(
+    (e: { status: string }) => e.status === "pending_payment" || e.status === "payment_approved" || e.status === "pending"
+  ).length;
+  const total = enrollments?.length ?? 0;
+  const displayName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "User";
 
   return (
     <PageShell>
       <section className="hero-mesh text-white">
-        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-12 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <div className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-brand">
-              Welcome back
-            </div>
-            <h1 className="mt-1 text-3xl lg:text-4xl font-bold">
-              {profile?.full_name || user?.email}
+        <div className="mx-auto max-w-7xl px-5 lg:px-8 py-12">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold text-emerald-brand">Welcome back, {displayName} 👋</p>
+            <h1 className="mt-4 text-4xl lg:text-5xl font-bold tracking-tight">
+              Here's an overview of your learning journey.
             </h1>
-            <p className="mt-1 text-white/70 text-sm">
-              {profile?.profession || "Student"} · {profile?.country || "—"}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={signOut}
-              className="inline-flex items-center gap-1.5 rounded-md bg-white/10 hover:bg-white/15 px-4 py-2.5 text-sm font-semibold border border-white/15"
-            >
-              <LogOut className="size-4" />
-              Sign out
-            </button>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total Enrollments</p>
+                <p className="mt-3 text-3xl font-semibold text-white">{total}</p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">In Progress</p>
+                <p className="mt-3 text-3xl font-semibold text-white">{active}</p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Completed</p>
+                <p className="mt-3 text-3xl font-semibold text-white">{completed}</p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Pending</p>
+                <p className="mt-3 text-3xl font-semibold text-white">{pending}</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 lg:px-8 py-10 grid lg:grid-cols-4 gap-5">
-        <Stat icon={BookOpen} label="Enrolled" value={(enrollments?.length ?? 0).toString()} />
-        <Stat icon={Clock} label="In progress" value={active.toString()} />
-        <Stat icon={CheckCircle2} label="Completed" value={completed.toString()} />
-        <Stat
-          icon={Bell}
-          label="Notifications"
-          value={(notifications?.filter((n: any) => !n.is_read).length ?? 0).toString()}
-        />
-      </section>
+      <div className="flex bg-gray-50 min-h-screen">
+        <div className="w-64 flex-shrink-0">
+          <PortalSidebar
+            user={user || undefined}
+            profile={profile || undefined}
+            onSignOut={signOut}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={() => {
+              setSidebarCollapsed((s) => {
+                const next = !s;
+                try {
+                  localStorage.setItem("portal.sidebar.collapsed", next ? "true" : "false");
+                } catch (e) {}
+                return next;
+              });
+            }}
+            open={sidebarOpen}
+            onOpen={() => setSidebarOpen(true)}
+            onClose={() => setSidebarOpen(false)}
+            selected={selectedMenu}
+            onSelect={(k) => {
+              setSelectedMenu(k);
+              try {
+                localStorage.setItem("portal.menu.selected", k);
+              } catch (e) {}
+            }}
+          />
+        </div>
 
-      <section className="mx-auto max-w-7xl px-5 lg:px-8 pb-16 grid lg:grid-cols-3 gap-8">
+        <main className={`flex-1 overflow-y-auto ml-0 ${sidebarCollapsed ? "lg:ml-16" : "lg:ml-64"} transition-all`}>
+          {/* Mobile hamburger (visible on small screens) */}
+          <div className="lg:hidden fixed top-4 left-4 z-60">
+            <button
+              aria-label={sidebarOpen ? "Close menu" : "Open menu"}
+              aria-expanded={sidebarOpen}
+              onClick={() => setSidebarOpen((s) => !s)}
+              className="p-2 rounded-md bg-white/90 shadow-sm"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                {sidebarOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+          <section className="mx-auto max-w-7xl px-5 lg:px-8 py-10">
+            <div className="rounded-3xl border border-border bg-white p-8 shadow-sm">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-navy">Active Programs</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {enrollments?.length ? "View the programs you are currently enrolled in." : "No active enrollments yet."}
+                  </p>
+                </div>
+                {!enrollments?.length && (
+                  <div className="rounded-2xl bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+                    Browse our programs to get started.
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="mx-auto max-w-7xl px-5 lg:px-8 pb-16 grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-10">
           <div>
             <h2 className="text-2xl font-bold text-navy">My Programs</h2>
@@ -473,9 +609,43 @@ function Portal() {
           </div>
 
           <div>
-            <h2 className="text-2xl font-bold text-navy">Browse Programs</h2>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-navy">Browse Programs</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Select a category to explore the programs that match your goals.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {browseProgramCategories.map((category) => (
+                  <button
+                    key={category.key}
+                    type="button"
+                    className={`rounded-full px-4 py-2 text-sm font-semibold transition border ${
+                      selectedBrowseCategory === category.key
+                        ? "bg-navy text-white border-navy"
+                        : "border-border text-foreground/75 hover:border-medical hover:text-medical"
+                    }`}
+                    onClick={() => {
+                      setSelectedBrowseCategory(category.key);
+                      try {
+                        localStorage.setItem("portal.browse.category", category.key);
+                      } catch (e) {}
+                    }}
+                  >
+                    {category.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-3xl border border-border bg-slate-50 p-5">
+              <p className="text-sm font-medium text-navy">{activeBrowseCategory.label}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{activeBrowseCategory.description}</p>
+            </div>
+
             <div className="mt-5 grid sm:grid-cols-2 gap-4">
-              {programs?.map((p: any) => {
+              {filteredPrograms?.map((p: any) => {
                 const isEnrolled = enrolledIds.has(p.id);
                 return (
                   <div
@@ -500,9 +670,9 @@ function Portal() {
                   </div>
                 );
               })}
-              {!programs?.length && (
+              {!filteredPrograms?.length && (
                 <p className="text-sm text-muted-foreground col-span-2">
-                  No published programs available yet.
+                  No programs match this category yet. Try another category.
                 </p>
               )}
             </div>
@@ -645,7 +815,9 @@ function Portal() {
             )}
           </div>
         </aside>
-      </section>
+          </section>
+        </main>
+      </div>
     </PageShell>
   );
 }

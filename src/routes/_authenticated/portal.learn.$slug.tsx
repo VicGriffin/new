@@ -38,10 +38,11 @@ export const Route = createFileRoute("/_authenticated/portal/learn/$slug")({
       .eq("id", u.user.id)
       .maybeSingle();
     const status = profile?.status ?? "pending";
-    if (status !== "approved") {
+    // Only block rejected or suspended accounts
+    if (status === "rejected" || status === "suspended") {
       throw redirect({
         to: "/auth",
-        search: { reason: status === "suspended" || status === "rejected" ? status : "pending" },
+        search: { reason: status },
       });
     }
     return { user: u.user };

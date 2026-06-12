@@ -13,12 +13,13 @@ export const Route = createFileRoute("/_authenticated")({
       getUserStatus(data.user.id),
     ]);
 
-    if (role !== "admin" && status !== "approved") {
+    // Only block rejected or suspended accounts
+    if (role !== "admin" && (status === "rejected" || status === "suspended")) {
       await supabase.auth.signOut();
       throw redirect({
         to: "/auth",
         search: {
-          reason: status === "suspended" || status === "rejected" ? "suspended" : "pending",
+          reason: status,
         },
       });
     }

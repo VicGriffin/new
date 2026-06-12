@@ -133,7 +133,9 @@ function Admin() {
               key={t.k}
               type="button"
               onClick={() => setTab(t.k)}
-              className={`flex items-center gap-2 px-4 py-3.5 text-sm font-semibold border-b-2 transition whitespace-nowrap ${tab === t.k ? "border-medical text-medical" : "border-transparent text-foreground/60 hover:text-foreground"}`}
+              className={`flex items-center gap-2 px-4 py-3.5 text-sm font-semibold border-b-2 transition whitespace-nowrap ${
+                tab === t.k ? "border-medical text-medical" : "border-transparent text-foreground/60 hover:text-foreground"
+              }`}
             >
               <t.icon className="size-4" />
               {t.label}

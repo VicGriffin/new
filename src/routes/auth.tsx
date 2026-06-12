@@ -92,11 +92,18 @@ function AuthPage() {
         setMode("updatePassword");
         return;
       }
-      const [role, status] = await Promise.all([
-        getEffectiveRole(data.session.user.id),
-        getUserStatus(data.session.user.id),
-      ]);
+      let role, status;
+      try {
+        [role, status] = await Promise.all([
+          getEffectiveRole(data.session.user.id),
+          getUserStatus(data.session.user.id),
+        ]);
+      } catch (err) {
+        console.warn("[Auth] checkSession role/status lookup failed:", err);
+        return;
+      }
       if (role === "admin") {
+        // Admins always go to /admin regardless of profile status
         nav({ to: "/admin", replace: true });
       } else if (status === "approved") {
         nav({ to: "/portal", replace: true });
@@ -203,23 +210,32 @@ function AuthPage() {
         const { error, data } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         if (data?.user) {
-          const [role, status] = await Promise.all([
-            getEffectiveRole(data.user.id),
-            getUserStatus(data.user.id),
-          ]);
+          let role, status;
+          try {
+            [role, status] = await Promise.all([
+              getEffectiveRole(data.user.id),
+              getUserStatus(data.user.id),
+            ]);
+          } catch (lookupErr) {
+            console.error("[Auth] Role/status lookup failed after sign-in:", lookupErr);
+            // If lookup fails entirely, redirect to portal and let the route guard handle it
+            nav({ to: "/portal", replace: true });
+            return;
+          }
           if (role === "admin") {
+            // Admins always go to /admin regardless of profile status
             nav({ to: "/admin", replace: true });
-          } else if (status !== "approved") {
+          } else if (status === "rejected" || status === "suspended") {
+            // Only block rejected or suspended accounts
             await supabase.auth.signOut();
             const message =
-              status === "pending"
-                ? "Your account is pending approval. Please wait for an admin to approve it."
-                : status === "rejected"
-                  ? "Your account has been rejected. Contact support for help."
-                  : "Your account is not yet approved.";
+              status === "rejected"
+                ? "Your account has been rejected. Contact support for help."
+                : "Your account has been suspended. Contact support for help.";
             setAuthError(message);
             toast.error(message);
           } else {
+            // Allow signin for pending, approved, or any other status
             nav({ to: "/portal", replace: true });
           }
         } else {

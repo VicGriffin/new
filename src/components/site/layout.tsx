@@ -134,6 +134,11 @@ export function Header() {
     return null;
   }
 
+  // Hide the global header for authenticated users (portal shows its own layout)
+  if (!isGuest) {
+    return null;
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/85 backdrop-blur-xl">
       <div className="border-b border-border bg-background/90">
@@ -145,7 +150,7 @@ export function Header() {
             </div>
             <div className="flex flex-col gap-1">
               <span className="font-semibold uppercase tracking-[0.18em]">Contact</span>
-              <span>+254 721 421 719 +254 721 421 719</span>
+              <span>+254 721 421 719</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="font-semibold uppercase tracking-[0.18em]">Location</span>
@@ -192,7 +197,7 @@ export function Header() {
                 to="/auth"
                 className="text-sm font-medium text-foreground/80 hover:text-medical px-3 py-2 rounded-md hover:bg-soft transition"
               >
-                Join Now
+                enroll Now
               </Link>
             )}
           </div>
@@ -323,7 +328,7 @@ export function Header() {
                 onClick={() => setOpen(false)}
                 className="px-3 py-2.5 rounded-md text-sm font-medium hover:bg-soft"
               >
-                Join Now
+                Enroll Now
               </Link>
             )}
             <Link
@@ -460,11 +465,46 @@ export function Footer() {
 }
 
 export function PageShell({ children }: { children: React.ReactNode }) {
+  const [hasSession, setHasSession] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth
+      .getSession()
+      .then(({ data }: any) => {
+        if (!mounted) return;
+        setHasSession(!!data.session?.user);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setHasSession(false);
+      });
+
+    try {
+      const { data: sub } = supabase.auth.onAuthStateChange((_event: any, s: any) => {
+        if (!mounted) return;
+        setHasSession(!!s?.user);
+      });
+      return () => {
+        mounted = false;
+        try {
+          sub.subscription.unsubscribe();
+        } catch (e) {
+          /* ignore */
+        }
+      };
+    } catch (e) {
+      return () => {
+        mounted = false;
+      };
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header />
       <main className="flex-1">{children}</main>
-      <Footer />
+      {!hasSession && <Footer />}
     </div>
   );
 }

@@ -66,12 +66,12 @@ const whyUs = [
   {
     icon: Award,
     t: "Expert Trainers",
-    d: "Faculty drawn from leading universities, ministries of health, and clinical practice across Africa.",
+    d: "We have  highly experienced  trainers in all areas of disciplines, hence  ensuring quality, value and efficiency in our trainings",
   },
   {
     icon: BookOpen,
     t: "Industry-Relevant Curriculum",
-    d: "Built with regulators, payers, and hospital networks to match real-world MTM workflows.",
+    d: "Our courses reflect world industrial curriculum, future innovation and j9b security",
   },
   {
     icon: Globe2,
@@ -343,7 +343,7 @@ function Home() {
               The Institute
             </span>
             <h2 className="mt-3 text-3xl lg:text-4xl font-bold text-navy leading-tight">
-              A world-class home for medication therapy management in Africa
+              A world class home for Medicating Therapy Management Training in Africa
             </h2>
           </div>
           <div className="lg:col-span-7">
