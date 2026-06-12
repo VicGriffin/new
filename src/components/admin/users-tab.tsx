@@ -87,60 +87,8 @@ export function UsersTab() {
   }
 
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
-      <form
-        className="border border-border bg-card p-5 space-y-3 h-fit"
-        onSubmit={(e) => {
-          e.preventDefault();
-          create.mutate();
-        }}
-      >
-        <h3 className="font-bold text-navy">Create user</h3>
-        <input
-          required
-          type="email"
-          placeholder="Email"
-          value={createForm.email}
-          onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-          className={inp}
-        />
-        <input
-          required
-          type="password"
-          placeholder="Password (min 8)"
-          minLength={8}
-          value={createForm.password}
-          onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
-          className={inp}
-        />
-        <input
-          required
-          placeholder="Full name"
-          value={createForm.full_name}
-          onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })}
-          className={inp}
-        />
-        <select
-          value={createForm.role}
-          onChange={(e) => setCreateForm({ ...createForm, role: e.target.value as AppRole })}
-          className={inp}
-        >
-          {ALL_ROLES.map((r) => (
-            <option key={r} value={r}>
-              {r}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          disabled={create.isPending}
-          className="w-full bg-medical text-white py-2.5 text-sm font-semibold"
-        >
-          Create user
-        </button>
-      </form>
-
-      <div className="lg:col-span-2 space-y-3">
+    <div className="space-y-3">
+      <div className="space-y-3">
         {isLoading && <EmptyState message="Loading users…" />}
         {users?.map((u: any) => (
           <div key={u.id} className="border border-border bg-card p-4">
